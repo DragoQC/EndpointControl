@@ -51,6 +51,8 @@ public sealed class NativeAgentHub
             using(var output=zip.CreateEntry(name,CompressionLevel.Fastest).Open())using(var input=File.OpenRead(path))input.CopyTo(output);
             using(var writer=new StreamWriter(zip.CreateEntry("MeshAllAgent.msh").Open(),new UTF8Encoding(false)))writer.Write(policy);
             using(var writer=new StreamWriter(zip.CreateEntry("README.txt").Open()))writer.Write("MeshAll Agent\n\nKeep the executable and MeshAllAgent.msh together.\nWindows: run MeshAllAgent.exe and choose Install / Update.\nLinux: chmod +x MeshAllAgent; sudo ./MeshAllAgent -fullinstall\n\nThe C/C++ agent technology retains its upstream Apache-2.0 license.\nMeshAll orchestration and UI are MIT licensed.\n");
+            using(var writer=new StreamWriter(zip.CreateEntry("LICENSE.txt").Open()))writer.Write(File.ReadAllText(Path.Combine(AppContext.BaseDirectory,"NativeBinaries","LICENSE")));
+            using(var writer=new StreamWriter(zip.CreateEntry("NOTICE.txt").Open()))writer.Write("Native agent technology: Intel Corporation and contributors, Apache-2.0, with retained dependency notices. MeshAll modifications: DragoQC and contributors.\nComplete source and component notices: https://github.com/DragoQC/MeshAll/tree/main/components/agent-native\n");
         }
         return buffer.ToArray();
     }

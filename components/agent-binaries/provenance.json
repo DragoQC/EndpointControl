@@ -2,11 +2,13 @@
   {
     "platform": "win-x64",
     "file": "MeshAllAgent.exe",
-    "size": 3444736,
-    "sha384": "319d3ad514173be85838bf7ba5995e11671d8f8e6df8e51b74c8304c3caf70e754e69db74b1baec1a6430ece213ab293",
-    "origin": "Ylianst/MeshAgent legacy-1.2.6",
-    "sourceFile": "MeshService64.exe",
-    "license": "Apache-2.0"
+    "size": 3559424,
+    "sha384": "b0d11491fed718133d8cc0082b84e41aed60a7a86e9bb97edf8694f2908b425c383654d79e7fad89cb493926e6a7cf78",
+    "origin": "DragoQC/MeshAll GitHub Actions",
+    "sourceFile": "meshservice/Release/MeshService64.exe",
+    "license": "Apache-2.0",
+    "sourceCommit": "d786b3e",
+    "workflowRun": 39873839533
   },
   {
     "platform": "win-arm64",

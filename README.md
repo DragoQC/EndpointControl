@@ -34,7 +34,7 @@ As root:
 curl -fsSL https://raw.githubusercontent.com/DragoQC/MeshAll/main/install.sh | bash
 ```
 
-The URL is available after the repository's first publication. Local source:
+The public repository is <https://github.com/DragoQC/MeshAll>. Local source:
 
 ```bash
 bash install.sh --source "$PWD" --host YOUR_SERVER_IP

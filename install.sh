@@ -97,10 +97,11 @@ PY
   printf '%s  %s\n' "$EXPECTED" "$WORK/guacamole.tar.gz" | sha256sum --check --status
   tar -xzf "$WORK/guacamole.tar.gz" -C "$WORK"
   python3 - "$WORK/guacamole-server-1.6.0" "$PREFIX/protocol-worker" <<'PY'
-import subprocess,sys
+import os,subprocess,sys
 source,prefix=sys.argv[1:]
-subprocess.run(['./configure','--prefix='+prefix,'--disable-guaclog'],cwd=source,check=True)
-subprocess.run(['make','-j2'],cwd=source,check=True)
+environment=dict(os.environ,CFLAGS=os.environ.get('CFLAGS','-O2')+' -Wno-error=deprecated-declarations')
+subprocess.run(['./configure','--prefix='+prefix,'--disable-guaclog','--disable-werror'],cwd=source,env=environment,check=True)
+subprocess.run(['make','-j2'],cwd=source,env=environment,check=True)
 subprocess.run(['make','install'],cwd=source,check=True)
 PY
   [[ -f "$PREFIX/protocol-worker/lib/libguac-client-rdp.so" ]] || die 'The RDP protocol library was not built.'

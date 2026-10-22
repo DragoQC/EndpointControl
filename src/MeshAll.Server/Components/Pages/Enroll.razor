@@ -1,0 +1,21 @@
+@page "/enroll"
+@attribute [Authorize(Roles = "Admin")]
+@inherits PageBase
+@inject IConfiguration Config
+@inject IJSRuntime JS
+<PageTitle>Add a device · MeshAll</PageTitle>
+<div class="page-heading"><div><div class="breadcrumb"><a href="/devices">Devices</a> / Add a device</div><h1>Bring another device home.</h1><p class="muted">Connect the native MeshAll Agent directly to your C# orchestrator.</p></div></div>
+<Notice Error="@Error" Success="@Success" />
+<div class="enroll-grid"><section class="panel editor-panel"><h2>Create an enrollment key</h2><form @onsubmit="Generate" @onsubmit:preventDefault><label>Key name<input @bind="name" required maxlength="70" /></label><label>Device group<select @bind="group">@foreach (var g in groups) { <option value="@g.Id">@g.Name</option> }</select></label><div class="form-grid"><label>Maximum devices<input type="number" @bind="uses" min="1" max="100" /></label><label>Expires in (hours)<input type="number" @bind="hours" min="1" max="168" /></label></div><button class="button primary" disabled="@Busy">Create enrollment key</button></form></section>
+<section class="panel editor-panel"><span class="stat-icon blue"><Icon Name="windows" /></span><h2 class="mt-4">Proven native technology. Your workspace.</h2><p class="muted">Download the package, extract it with its enrollment policy, and run the native installer on the target.</p>@if (token is not null) { <label>Windows command<textarea class="code-input" readonly rows="3" value="@Command"></textarea></label><button class="button small" @onclick="Copy">Copy command</button><p class="muted small-text mt-3">Keep MeshAllAgent.exe and MeshAllAgent.msh together. The enrollment key expires automatically.</p><div class="download-links">@foreach(var platform in new[]{"win-x64","win-arm64","linux-x64","linux-arm64"}) { <a class="button" href="@($"/api/agents/native-package?token={token}&platform={platform}")"><Icon Name="download" />@platform</a> }</div> } else { <div class="code-placeholder">Create a key to download a native agent package.</div> }</section></div>
+<section class="panel"><div class="panel-header"><h2>Enrollment keys</h2></div><div class="table-scroll"><table><thead><tr><th>Name</th><th>Expires</th><th>Uses remaining</th><th></th></tr></thead><tbody>@foreach (var t in tokens) { <tr><td>@t.Name</td><td>@t.Expires.ToLocalTime().ToString("g")</td><td>@t.Remaining</td><td><button class="link-button danger-text" @onclick="() => Revoke(t)">Revoke</button></td></tr> }</tbody></table></div></section>
+@code {
+    protected override bool AdminPage => true;
+    private List<GroupInfo> groups = []; private List<TokenInfo> tokens = [];
+    private string name = "", group = "default"; private int uses = 1, hours = 24; private string? token;
+    private string Command => ".\\MeshAllAgent.exe -fullinstall";
+    protected override Task LoadAsync() { groups = Store.Groups(); tokens = Store.Tokens(); return Task.CompletedTask; }
+    private Task Generate() => Act(() => { token = Store.CreateToken(name, group, uses, hours).Token; Store.Audit(CurrentUser!.Name, "Enrollment key created", name); }, "Enrollment key created.", true);
+    private Task Revoke(TokenInfo t) => Act(() => { Store.RevokeToken(t.Id); Store.Audit(CurrentUser!.Name, "Enrollment key revoked", t.Name); }, "Enrollment key revoked.", true);
+    private async Task Copy() { try { await JS.InvokeVoidAsync("navigator.clipboard.writeText", Command); Success = "Command copied."; } catch (JSException) { Error = "Select and copy the command manually."; } }
+}

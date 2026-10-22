@@ -1,0 +1,19 @@
+@inject Store Store
+<div class="mb-6"><h2>MeshAll remote tools</h2><p class="muted small-text mt-2">Independent C# agent transports and MeshAll browser clients. Configure the target service and credentials, then connect.</p></div>
+<div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 mb-6">
+@foreach (var tool in tools) { <button class="panel p-6 text-left hover:border-mesh focus-visible:outline-mesh" @onclick="() => selected = tool.Id"><span class="stat-icon @(tool.Id == "rdp" ? "blue" : "teal")"><Icon Name="@tool.Icon" /></span><h2 class="mt-4">@tool.Name</h2><p class="muted small-text mt-2">@tool.Description</p></button> }
+</div>
+@if (selected is not null) { <section class="panel"><div class="panel-header"><h2>@tools.First(t => t.Id == selected).Name</h2><div class="inline-actions"><a class="text-link" href="@($"/remote/{DeviceId}/{selected}")" target="_blank" rel="noopener">Open in new tab</a><button class="link-button" @onclick="() => selected = null">Close</button></div></div><iframe class="remote-frame" src="@($"/remote/{DeviceId}/{selected}")" @key="selected" title="@selected" allow="clipboard-read; clipboard-write; fullscreen"></iframe></section> }
+<section class="panel editor-panel"><h2>Standalone transport</h2><p class="muted">MeshAll Agent establishes its own authenticated connection to the C# server. Remote-tool sessions follow MeshAll’s group policy and visible screen-consent prompt.</p><a class="text-link" href="/compatibility">View implementation &amp; verification status</a></section>
+@code {
+    [Parameter] public string DeviceId { get; set; } = "";
+    private string? selected;
+    private readonly (string Id, string Name, string Description, string Icon)[] tools = [
+        ("rdp", "Remote Desktop (RDP)", "Connect through the agent to the target’s RDP service.", "windows"),
+        ("vnc", "VNC", "MeshAll’s RFB client over the C# agent TCP transport.", "monitor"),
+        ("ssh", "SSH", "Connect to SSH with a password, key, or stored credentials.", "terminal"),
+        ("amt", "Intel AMT KVM", "Hardware-level management through the AMT protocol.", "server"),
+        ("terminal", "Interactive terminal", "MeshAll’s Windows ConPTY / Linux PTY terminal.", "terminal"),
+        ("powershell", "PowerShell terminal", "An interactive PowerShell session on Windows agents.", "terminal")
+    ];
+}

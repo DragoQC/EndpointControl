@@ -1,0 +1,38 @@
+[
+  {
+    "platform": "win-x64",
+    "file": "MeshAllAgent.exe",
+    "size": 3444736,
+    "sha384": "319d3ad514173be85838bf7ba5995e11671d8f8e6df8e51b74c8304c3caf70e754e69db74b1baec1a6430ece213ab293",
+    "origin": "Ylianst/MeshAgent legacy-1.2.6",
+    "sourceFile": "MeshService64.exe",
+    "license": "Apache-2.0"
+  },
+  {
+    "platform": "win-arm64",
+    "file": "MeshAllAgent.exe",
+    "size": 3637760,
+    "sha384": "08a3372068b5f636c89b909d0dac1d4fafac7ff8bbe55a78b27593dae1606ceef69bfa5078ece112915272b96f8c46bb",
+    "origin": "Ylianst/MeshAgent legacy-1.2.6",
+    "sourceFile": "MeshServiceARM64.exe",
+    "license": "Apache-2.0"
+  },
+  {
+    "platform": "linux-x64",
+    "file": "MeshAllAgent",
+    "size": 3757520,
+    "sha384": "1bf04d9ced5c4be006d1ed714da04048d26e8f3ffdd02f39b69a73b6d73da98682dda7401ef33f04c621549aff6c3a28",
+    "origin": "Ylianst/MeshAgent legacy-1.2.6",
+    "sourceFile": "meshagent_x86-64",
+    "license": "Apache-2.0"
+  },
+  {
+    "platform": "linux-arm64",
+    "file": "MeshAllAgent",
+    "size": 3256688,
+    "sha384": "56ad2fafbc15bac635c526c6f106dd0213c0b222265685f00cdd56ad8c3dfe7de6c4d8f52ea9ca183d50bc8d8c198477",
+    "origin": "Ylianst/MeshAgent legacy-1.2.6",
+    "sourceFile": "meshagent_aarch64",
+    "license": "Apache-2.0"
+  }
+]

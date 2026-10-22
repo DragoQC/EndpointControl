@@ -1,0 +1,40 @@
+name: Build MeshAll
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  orchestrator:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm --prefix src/MeshAll.Server ci
+      - run: npm --prefix src/MeshAll.Server run build
+      - run: dotnet build MeshAll.slnx -c Release
+      - run: bash -n install.sh
+  native-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: microsoft/setup-msbuild@v2
+      - name: Prepare native source metadata
+        shell: pwsh
+        run: |
+          $sha = git rev-parse HEAD
+          $date = git show -s --format=%cI HEAD
+          "#define SOURCE_COMMIT_HASH `"$sha`"`n#define SOURCE_COMMIT_DATE `"$date`"" | Set-Content components/agent-native/microscript/ILibDuktape_Commit.h -Encoding utf8
+      - name: Build native agent
+        run: msbuild components/agent-native/meshservice/MeshService-2022.vcxproj /m /p:Configuration=Release /p:Platform=x64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MeshAll-native-agent-win-x64
+          path: |
+            components/agent-native/**/MeshService64.exe
+            components/agent-native/**/MeshAllAgent.exe

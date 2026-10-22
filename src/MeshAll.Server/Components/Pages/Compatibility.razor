@@ -1,0 +1,14 @@
+@page "/compatibility"
+@attribute [Authorize]
+@inherits PageBase
+<PageTitle>Implementation status · MeshAll</PageTitle>
+<div class="page-heading"><div><div class="breadcrumb">Workspace / Implementation status</div><h1>Native technology. A C# control plane.</h1><p class="muted">Full parity is the acceptance target. Each workflow is verified against the new orchestrator.</p></div></div>
+<section class="panel"><div class="panel-header"><div><h2>Architecture</h2><p>Blazor Server, Tailwind and SQLite manage the fleet; native components handle remote access.</p></div></div><div class="table-scroll"><table><thead><tr><th>Component</th><th>Technology</th><th>Source</th></tr></thead><tbody>
+<tr><td>Orchestration and management</td><td>ASP.NET Core / C# / SQLite</td><td><code>src/MeshAll.Server</code></td></tr>
+<tr><td>Management UI</td><td>Blazor Server + Tailwind</td><td><code>Components/</code> and <code>Styles/</code></td></tr>
+<tr><td>Native PC agent</td><td>C/C++ and agent-side JavaScript</td><td><code>components/agent-native</code>, <code>agent-core</code></td></tr>
+<tr><td>Desktop and AMT viewers</td><td>Retained browser protocol components</td><td><code>components/viewers</code></td></tr>
+<tr><td>Terminal / VNC / RDP rendering</td><td>Declared, licensed rendering dependencies</td><td>xterm.js / noVNC / Guacamole</td></tr>
+</tbody></table></div></section>
+<section class="panel editor-panel"><h2>Verification</h2><p class="muted">Native authentication, enrollment, core updates, desktop, terminal, files, RDP, VNC, SSH, AMT, routing, recordings, identity integrations, and mobile workflows have separate acceptance checks. Source availability and a visible control do not by themselves establish end-to-end parity.</p><p class="muted small-text">The detailed matrix is maintained in <code>docs/COMPATIBILITY.md</code>. MeshAll does not run the original JavaScript server underneath this interface.</p></section>
+<section class="panel editor-panel"><h2>Licensing</h2><p class="muted">MeshAll’s original management/orchestration code is MIT licensed. Retained native components and third-party dependencies preserve their own licenses and attribution. See <code>THIRD_PARTY_NOTICES.md</code>.</p></section>

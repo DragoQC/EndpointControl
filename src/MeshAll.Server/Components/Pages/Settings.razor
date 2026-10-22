@@ -1,0 +1,21 @@
+@page "/settings"
+@attribute [Authorize(Roles = "Admin")]
+@inherits PageBase
+@inject IConfiguration Config
+<PageTitle>Settings · MeshAll</PageTitle>
+<div class="page-heading"><div><div class="breadcrumb">Workspace / Settings</div><h1>Make it your workspace.</h1><p class="muted">The essentials, without the clutter.</p></div></div>
+<Notice Error="@Error" Success="@Success" />
+<section class="health-strip"><Icon Name="server" /><div><strong>@Gateway.Status</strong><span>Owned engine and agent source are included in this repository.</span></div><a class="text-link ml-auto" href="/install">Install on Debian 13</a></section>
+<div class="settings-grid"><section class="panel editor-panel"><h2>Workspace</h2><form @onsubmit="Save" @onsubmit:preventDefault><label>Workspace name<input @bind="siteName" maxlength="70" required /></label><label>Public server URL<input @bind="publicUrl" type="url" required /><small>Used in agent enrollment commands. Use the HTTPS URL your devices can reach.</small></label><button class="button primary" disabled="@Busy">Save settings</button></form></section>
+<section class="panel editor-panel"><h2>About this server</h2><dl class="details-grid"><dt>Version</dt><dd>@Wire.Version</dd><dt>Runtime</dt><dd>.NET @System.Environment.Version</dd><dt>Storage</dt><dd>SQLite, WAL mode</dd><dt>Agent transport</dt><dd>Authenticated WebSocket</dd><dt>Data directory</dt><dd class="break-word">@Store.DataDirectory</dd><dt>Devices connected</dt><dd>@Gateway.OnlineCount</dd></dl><p class="muted small-text">Back up the entire data directory while the server is stopped. It includes the database and session encryption keys.</p></section></div>
+@code {
+    protected override bool AdminPage => true;
+    private string siteName = "", publicUrl = ""; private bool loaded;
+    protected override Task LoadAsync() { if (!loaded) { siteName = Store.Setting("siteName", Config["MeshAll:SiteName"] ?? "My workspace"); publicUrl = Store.Setting("publicUrl", Config["MeshAll:PublicUrl"] ?? "http://localhost:5188"); loaded = true; } return Task.CompletedTask; }
+    private Task Save() => Act(() => {
+        if (string.IsNullOrWhiteSpace(siteName) || siteName.Length > 70) throw new InvalidOperationException("Enter a workspace name of 1–70 characters.");
+        if (!Uri.TryCreate(publicUrl, UriKind.Absolute, out var uri) || uri.Scheme is not ("http" or "https") || !string.IsNullOrEmpty(uri.UserInfo) || uri.AbsolutePath != "/" || !string.IsNullOrEmpty(uri.Query) || !string.IsNullOrEmpty(uri.Fragment)) throw new InvalidOperationException("Enter an HTTP or HTTPS origin without a path or credentials.");
+        Store.Setting("siteName", siteName.Trim(), true); Store.Setting("publicUrl", uri.GetLeftPart(UriPartial.Authority), true);
+        Store.Audit(CurrentUser!.Name, "Workspace settings saved", "MeshAll");
+    }, "Settings saved. Reload to update the workspace header.", true);
+}

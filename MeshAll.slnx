@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="src/MeshAll.Shared/MeshAll.Shared.csproj" />
+  <Project Path="src/MeshAll.Server/MeshAll.Server.csproj" />
+  <Project Path="src/MeshAll.Agent/MeshAll.Agent.csproj" />
+</Solution>

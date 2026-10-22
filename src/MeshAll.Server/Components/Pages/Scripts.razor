@@ -1,0 +1,18 @@
+@page "/scripts"
+@attribute [Authorize(Roles = "Admin,Operator")]
+@inherits PageBase
+@inject IJSRuntime JS
+<PageTitle>Scripts · MeshAll</PageTitle>
+<div class="page-heading"><div><div class="breadcrumb">Workspace / Scripts</div><h1>The right command, ready.</h1><p class="muted">Keep useful PowerShell and shell scripts close. Run them from a device’s Commands tab.</p></div><button class="button primary" @onclick="New"><Icon Name="plus" />New script</button></div>
+<Notice Error="@Error" Success="@Success" />
+@if (editing) { <section class="panel editor-panel"><h2>@(editId is null ? "New script" : "Edit script")</h2><form @onsubmit="Save" @onsubmit:preventDefault><div class="form-grid"><label>Script name<input @bind="name" required maxlength="80" /></label><label>Platform<select @bind="platform"><option>Windows</option><option>Linux</option><option>Any</option></select></label></div><label>Script<textarea class="code-input" @bind="code" rows="12" required maxlength="16000" spellcheck="false"></textarea></label><div class="form-actions"><button type="button" class="button" @onclick="() => editing = false">Cancel</button><button class="button primary" disabled="@Busy">Save script</button></div></form></section> }
+<section class="panel">@if (scripts.Count == 0) { <EmptyState Icon="terminal" Title="Build your own toolkit" Text="Save a script you use often. It will be available on matching devices." /> } else { <div class="table-scroll"><table><thead><tr><th>Script</th><th>Platform</th><th>Preview</th><th></th></tr></thead><tbody>@foreach (var s in scripts) { <tr><td><span class="file-name"><Icon Name="terminal" /><strong>@s.Name</strong></span></td><td><span class="group-pill">@s.Platform</span></td><td><code class="script-preview">@s.Code.Split('\n')[0]</code></td><td><div class="inline-actions"><button class="link-button" @onclick="() => Edit(s)">Edit</button><button class="link-button danger-text" disabled="@Busy" @onclick="() => Delete(s)">Delete</button></div></td></tr> }</tbody></table></div> }</section>
+@code {
+    protected override bool ManagePage => true;
+    private List<ScriptInfo> scripts = []; private bool editing; private string? editId; private string name = "", platform = "Windows", code = "";
+    protected override Task LoadAsync() { scripts = Store.Scripts(); return Task.CompletedTask; }
+    private void New() { editId = null; name = code = ""; platform = "Windows"; editing = true; }
+    private void Edit(ScriptInfo s) { editId = s.Id; name = s.Name; code = s.Code; platform = s.Platform; editing = true; }
+    private Task Save() => Act(() => { Store.SaveScript(editId, name, platform, code); Store.Audit(CurrentUser!.Name, "Script saved", name); editing = false; }, "Script saved.");
+    private async Task Delete(ScriptInfo s) { if (await JS.InvokeAsync<bool>("confirm", $"Delete {s.Name}?")) await Act(() => { Store.DeleteScript(s.Id); Store.Audit(CurrentUser!.Name, "Script deleted", s.Name); }, "Script deleted."); }
+}

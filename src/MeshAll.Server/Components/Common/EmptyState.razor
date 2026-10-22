@@ -1,0 +1,7 @@
+<div class="empty-state mx-auto text-center"><span class="empty-icon"><Icon Name="@Icon" /></span><h3>@Title</h3><p>@Text</p>@ChildContent</div>
+@code {
+    [Parameter] public string Icon { get; set; } = "monitor";
+    [Parameter] public string Title { get; set; } = "Nothing here yet";
+    [Parameter] public string Text { get; set; } = "";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

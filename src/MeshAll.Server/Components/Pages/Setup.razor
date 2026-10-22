@@ -1,0 +1,19 @@
+@page "/setup"
+@attribute [ExcludeFromInteractiveRouting]
+@layout AuthLayout
+@inject Store Store
+<PageTitle>Set up · MeshAll</PageTitle>
+<section class="auth-card"><span class="auth-eyebrow">A fresh start</span><h1>Make yourself at home.</h1>
+@if (Store.HasUsers) { <p>Setup is complete.</p><a class="button primary" href="/login">Sign in</a> }
+else {
+    <p class="muted">Create the first administrator for this workspace.</p>
+    @if (Failed) { <Notice Error="Setup failed. Check the setup key and use a password of at least 12 characters." /> }
+    <form action="/auth/setup" method="post" data-enhance="false"><AntiforgeryToken />
+        <label>Setup key<input name="key" type="password" required autocomplete="off" /><small>Find this in the server’s Data/bootstrap.key file.</small></label>
+        <label>Your username<input name="username" required maxlength="50" autocomplete="username" /></label>
+        <label>Password<input name="password" type="password" required minlength="12" maxlength="256" autocomplete="new-password" /><small>At least 12 characters.</small></label>
+        <button type="submit" class="button primary full-width">Create workspace <Icon Name="arrow" /></button>
+    </form>
+}
+</section>
+@code { [SupplyParameterFromQuery(Name = "failed")] public bool Failed { get; set; } }

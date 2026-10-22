@@ -1,0 +1,3 @@
+<section class="panel"><div class="panel-header"><div><h2>Remote desktop</h2><p>Native screen capture and viewing, managed by MeshAll’s C# control plane.</p></div><a class="button small" href="@($"/remote/{DeviceId}/desktop")" target="_blank" rel="noopener">Open in new tab</a></div>
+<iframe class="remote-frame" src="@($"/remote/{DeviceId}/desktop")" title="Remote desktop" allow="clipboard-read; clipboard-write; fullscreen"></iframe></section>
+@code { [Parameter] public string DeviceId { get; set; } = ""; [Parameter] public bool Supported { get; set; } }

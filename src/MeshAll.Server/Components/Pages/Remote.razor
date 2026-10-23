@@ -5,15 +5,17 @@
 @inject Workspace Workspace
 @inject Store Store
 @inject IJSRuntime JS
+@inject AgentGateway Agents
 <PageTitle>@Label · MeshAll</PageTitle>
 <div class="tool-heading flex flex-wrap items-center justify-between gap-4 pb-4"><div><h2>@Label <span class="muted">/ @device?.Name</span></h2><p class="muted small-text" role="status">@status</p></div><div class="inline-actions">@if (running) { <button class="button danger small" @onclick="Disconnect">Disconnect</button> } else { <button class="button primary small" disabled="@(busy || !ready)" @onclick="Connect"><Icon Name="monitor" />Connect</button> }</div></div>
 <Notice Error="@error" />
 @if (!running) {
-<form class="panel editor-panel" @onsubmit="Connect" @onsubmit:preventDefault>
+<form class="panel editor-panel" @onsubmit="Connect" @onsubmit:preventDefault><fieldset disabled="@(!ready || busy)">
     @if (Tool is "rdp" or "vnc" or "ssh") { <div class="form-grid"><label>Remote port<input type="number" @bind="port" min="1" max="65535" /></label>@if (Tool == "rdp") { <label>Domain<input @bind="domain" autocomplete="off" /></label> }<label>Username<input @bind="username" autocomplete="off" /></label><label>Password<input @bind="password" type="password" autocomplete="off" /></label></div> }
     @if (Tool == "ssh") { <label>Private key (optional)<textarea @bind="privateKey" rows="3" class="code-input" maxlength="16000" autocomplete="off"></textarea><small>Password is used as the key passphrase when a key is provided.</small></label> }
+    @if (Tool is "rdp" or "vnc" or "ssh") { <label class="checkbox-label"><input type="checkbox" @bind="direct" />Connect directly from the orchestrator to @device?.Inventory?.Ip</label><p class="muted small-text mt-2">Use direct/agentless access when the target service is reachable and the native agent is offline.</p> }
     <p class="muted small-text mt-4">MeshAll uses its own agent connection. The target service must be enabled for RDP, VNC, or SSH. Screen-access policy is enforced before opening a screen transport.</p>
-</form>
+</fieldset></form>
 }
 @if (Tool is "desktop" or "amt" && running) { <div class="tool-controls"><label class="checkbox-label"><input type="checkbox" @bind="control" @bind:after="SetControl" />Enable keyboard &amp; mouse</label><button class="button small" @onclick="SendCad">Ctrl+Alt+Delete</button></div> }
 <div class="remote-surface" style="@(running ? "" : "display:none")"><canvas id="remote-canvas" @ref="canvas" tabindex="0" aria-label="Remote display"></canvas><div id="remote-terminal" @ref="terminal"></div><div id="remote-vnc" @ref="vnc"></div></div>
@@ -22,12 +24,12 @@
     [Parameter] public string Tool { get; set; } = "desktop";
     private DeviceInfo? device; private ElementReference canvas, terminal, vnc;
     private string username = "", password = "", domain = "", privateKey = "", status = "Disconnected"; private string? error;
-    private int port; private bool busy, running, control, ready;
+    private int port; private bool busy, running, control, ready, direct;
     private DotNetObjectReference<Remote>? reference;
     private string Label => Tool switch { "desktop" => "Agent desktop", "terminal" => "Agent terminal", "powershell" => "PowerShell terminal", "rdp" => "Remote Desktop (RDP)", "vnc" => "VNC", "ssh" => "SSH", "amt" => "Intel AMT KVM", _ => "Remote tool" };
     protected override async Task OnInitializedAsync()
     {
-        try { await Workspace.RequireAsync(manage: true); device = Store.FindDevice(Id); port = Tool switch { "rdp" => 3389, "vnc" => 5900, "ssh" => 22, _ => 0 }; if (Tool is not ("desktop" or "terminal" or "powershell" or "rdp" or "vnc" or "ssh" or "amt") || device is null) error = "Remote tool or device not found."; }
+        try { await Workspace.RequireAsync(manage: true); device = Store.FindDevice(Id); port = Tool switch { "rdp" => 3389, "vnc" => 5900, "ssh" => 22, _ => 0 }; direct=Tool is "rdp" or "vnc" or "ssh"&&!Agents.Online(Id); if (Tool is not ("desktop" or "terminal" or "powershell" or "rdp" or "vnc" or "ssh" or "amt") || device is null) error = "Remote tool or device not found."; }
         catch (Exception ex) { error = ex.Message; }
     }
     protected override void OnAfterRender(bool firstRender) { if (firstRender) { ready = true; StateHasChanged(); } }
@@ -39,7 +41,7 @@
             if (Store.FindDevice(Id) is not { Disabled: false }) throw new InvalidOperationException("Device access is blocked in MeshAll.");
             reference ??= DotNetObjectReference.Create(this);
             running = true; status = Tool is "rdp" or "vnc" or "amt" && Store.RequiresDesktopConsent(Id) ? "Waiting for the person at the PC to approve screen access…" : "Connecting…"; await InvokeAsync(StateHasChanged); await Task.Yield();
-            await JS.InvokeVoidAsync("meshAll.remote.connect", new { id = Id, tool = Tool, port, username, password, domain, privateKey, native = Store.IsNative(Id) }, reference);
+            await JS.InvokeVoidAsync("meshAll.remote.connect", new { id = Id, tool = Tool, port, username, password, domain, privateKey, direct, native = Store.IsNative(Id) }, reference);
             password = privateKey = "";
         } catch (Exception ex) { error = ex.Message; running = false; status = "Disconnected"; }
         finally { busy = false; }

@@ -9,7 +9,9 @@ public sealed class NetworkGateway(Store store, AgentGateway agents, ProtocolWor
     public async Task ProxyAsync(HttpContext context, string id, string tool)
     {
         if (!context.WebSockets.IsWebSocketRequest || !AgentGateway.SameOrigin(context) || tool is not ("terminal" or "powershell" or "vnc" or "rdp" or "ssh" or "amt")) { context.Response.StatusCode = 403; return; }
-        var device = store.FindDevice(id); if (device is not { Disabled: false } || !agents.Online(id)) { context.Response.StatusCode = 409; return; }
+        var direct=context.Request.Query["direct"]=="1"&&tool is "rdp" or "vnc" or "ssh" or "amt";
+        var device = store.FindDevice(id); if (device is not { Disabled: false } || !direct&&!agents.Online(id)) { context.Response.StatusCode = 409; return; }
+        if(direct&&(!System.Net.IPAddress.TryParse(device.Inventory?.Ip,out _)||tool is "rdp" or "vnc" or "amt"&&store.RequiresDesktopConsent(id))){context.Response.StatusCode=403;return;}
         var terminal=tool is "terminal" or "powershell";
         var port = terminal?0:int.TryParse(context.Request.Query["port"], out var requested) ? requested : tool switch { "vnc" => 5900, "rdp" => 3389, "ssh" => 22, _ => 16994 };
         if (!terminal&&port is < 1 or > 65535) { context.Response.StatusCode = 400; return; }
@@ -25,7 +27,7 @@ public sealed class NetworkGateway(Store store, AgentGateway agents, ProtocolWor
                 options = JsonSerializer.Deserialize<JsonElement>(setup);
             }
             var screen = tool is "rdp" or "vnc" or "amt";
-            await using var remote = await agents.OpenStreamAsync(id, new(session, context.User.Identity!.Name!, screen && store.RequiresDesktopConsent(id), tool, "127.0.0.1", port), stop.Token);
+            await using var remote = direct?await AgentGateway.OpenDirectStreamAsync(device.Inventory!.Ip,port,stop.Token):await agents.OpenStreamAsync(id, new(session, context.User.Identity!.Name!, screen && store.RequiresDesktopConsent(id), tool, "127.0.0.1", port), stop.Token);
             await using var protocol = tool is "rdp" or "ssh" ? await worker.OpenAsync(tool, options, remote, stop.Token) : null;
             store.Audit(context.User.Identity!.Name!, "Remote session opened", device.Name, tool);
             async Task Output()

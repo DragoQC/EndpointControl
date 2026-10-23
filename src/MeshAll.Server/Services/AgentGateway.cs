@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
+using System.Net.Sockets;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
@@ -129,6 +130,15 @@ public sealed class AgentGateway(Store store, ILogger<AgentGateway> logger)
         }
     }
     public Task<RemoteStream> OpenStreamAsync(string id, SessionRequest request, CancellationToken ct) => native.TryGetValue(id,out var peer)?peer.OpenStreamAsync(request,ct):RemoteStream.OpenAsync(this, id, request, request.Kind is "terminal" or "powershell" ? "terminal.open" : "tcp.open", ct);
+    public static async Task<RemoteStream> OpenDirectStreamAsync(string host,int port,CancellationToken ct)
+    {
+        var client=new TcpClient{NoDelay=true};
+        try{await client.ConnectAsync(host,port,ct);}catch{client.Dispose();throw;}
+        var stream=client.GetStream();var stop=CancellationTokenSource.CreateLinkedTokenSource(ct);var channel=Channel.CreateBounded<byte[]>(64);
+        async Task Read(){try{var buffer=new byte[32768];int count;while((count=await stream.ReadAsync(buffer,stop.Token))>0)await channel.Writer.WriteAsync(buffer[..count],stop.Token);}catch(Exception ex)when(ex is IOException or OperationCanceledException or ObjectDisposedException){}finally{channel.Writer.TryComplete();}}
+        var reading=Read();
+        return RemoteStream.External(Guid.NewGuid().ToString("N"),channel.Reader,(bytes,token)=>stream.WriteAsync(bytes,token).AsTask(),async()=>{await stop.CancelAsync();client.Dispose();await reading;stop.Dispose();},(_,_,_)=>Task.CompletedTask);
+    }
 
     public static bool SameOrigin(HttpContext context) => Uri.TryCreate(context.Request.Headers.Origin, UriKind.Absolute, out var origin) && origin.Scheme == context.Request.Scheme && string.Equals(origin.Authority, context.Request.Host.Value, StringComparison.OrdinalIgnoreCase);
     public async Task ProxyDesktopAsync(HttpContext context, string id)

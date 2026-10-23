@@ -11,6 +11,8 @@ artifacts/
 *.db*
 .env
 test-results/
+.venv/
+**/__pycache__/
 **/node_modules/
 **/wwwroot/downloads/
 upstream/MeshAgent/meshagent*

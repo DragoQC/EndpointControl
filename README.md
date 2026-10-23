@@ -62,6 +62,18 @@ the data directory. No shared default password is shipped. Enroll PCs from **Dev
 package contains `MeshAllAgent` and its `.msh` policy. Windows uses the
 `MeshAllAgent` service identity and **MeshAll Agent** display name.
 
+For an unattended service installation, extract the package first and run this
+from **Administrator PowerShell** in the extracted directory:
+
+```powershell
+.\MeshAllAgent.exe -fullinstall --copy-msh=1
+```
+
+The policy flag copies the separate `.msh` configuration into the
+installed service. Install the service before trying an interactive connection
+with a one-device key: the interactive process and system service can use
+different certificate identities.
+
 Updates:
 
 ```bash

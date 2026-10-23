@@ -56,7 +56,10 @@
                         tunnel.sendMessage=(...parts)=>{if(socket?.readyState===1)socket.send(parts.map(v=>String(v).length+'.'+v).join(',')+';');};
                         tunnel.connect=data=>{socket=new WebSocket(url(`/api/network/${options.id}/${options.tool}?port=${options.port}&direct=${options.direct?1:0}`));socket.binaryType='arraybuffer';socket.onopen=()=>{socket.send(data);tunnel.setUUID(crypto.randomUUID());tunnel.setState(Guacamole.Tunnel.State.OPEN);};socket.onmessage=e=>parser.receive(typeof e.data==='string'?e.data:decoder.decode(new Uint8Array(e.data),{stream:true}));socket.onerror=()=>tunnel.onerror?.(new Guacamole.Status(0x0200,'Remote protocol connection failed.'));socket.onclose=e=>{tunnel.setState(Guacamole.Tunnel.State.CLOSED);status(session,e.reason||'Disconnected',false);};};
                         tunnel.disconnect=()=>{socket?.close();tunnel.setState(Guacamole.Tunnel.State.CLOSED);};
-                        const client=new Guacamole.Client(tunnel);session.guac=client;surface.replaceChildren(client.getDisplay().getElement());
+                        const client=new Guacamole.Client(tunnel);session.guac=client;const display=client.getDisplay().getElement();
+                        // Guacamole paints canvases at negative z-index within each layer.
+                        // Keep those layers above the remote surface's background.
+                        display.style.isolation='isolate';surface.replaceChildren(display);
                         const mouse=new Guacamole.Mouse(client.getDisplay().getElement());mouse.onmousedown=mouse.onmouseup=mouse.onmousemove=s=>client.sendMouseState(s);
                         const keyboard=new Guacamole.Keyboard(surface);surface.tabIndex=0;surface.addEventListener('pointerdown',()=>surface.focus(),{signal:session.abort.signal});keyboard.onkeydown=key=>{client.sendKeyEvent(1,key);return false;};keyboard.onkeyup=key=>client.sendKeyEvent(0,key);session.keyboard=keyboard;
                         client.onstatechange=state=>{if(state===3)status(session,'Connected',true);else if(state===5)status(session,'Disconnected',false);};client.onerror=e=>status(session,e.message||'Remote login failed.',false);

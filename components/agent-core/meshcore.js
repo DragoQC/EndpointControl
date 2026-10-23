@@ -3109,11 +3109,6 @@ function tunnel_kvm_end()
                 {
                     MeshServerLogEx(29, null, "Remote Desktop Connection forcefully closed by local user (" + this.httprequest.remoteaddr + ")", this.httprequest);
                     meshallDesktopLocalClose(this.httprequest.desktop.kvm);
-                    for (var i in this.httprequest.desktop.kvm._pipedStreams)
-                    {
-                        this.httprequest.desktop.kvm._pipedStreams[i].end();
-                    }
-                    this.httprequest.desktop.kvm.end();
                 });
                 break;
             }
@@ -3136,8 +3131,7 @@ function kvm_tunnel_consentpromise_closehandler()
 }
 
 function meshallDesktopLocalClose(kvm) {
-    if (!kvm || !kvm.tunnels) return;
-    for (var i = 0; i < kvm.tunnels.length; i++) { try { kvm.tunnels[i].write(JSON.stringify({ ctrlChannel: '102938', type: 'meshall-desktop-ended', reason: 'local-user' })); } catch (ex) { } }
+    require('meshall-desktop-close')(kvm);
 }
 function kvm_consent_ok(ws) {
     // User Consent Prompt is not required because no user is present
@@ -3181,10 +3175,6 @@ function kvm_consent_ok(ws) {
                 console.info1('Connection Bar Forcefully closed');
                 meshallDesktopLocalClose(this.state.desktop.kvm);
                 MeshServerLogEx(29, null, "Remote Desktop Connection forcefully closed by local user (" + this.state.remoteaddr + ")", this.state);
-                for (var i in this.state.desktop.kvm._pipedStreams) {
-                    this.state.desktop.kvm._pipedStreams[i].end();
-                }
-                this.state.desktop.kvm.end();
             });
         }
     }
@@ -3298,10 +3288,6 @@ function kvm_consentpromise_resolved(always)
 				this.ws.httprequest.desktop.kvm.connectionBar.on('close', function () {
 					MeshServerLogEx(29, null, "Remote Desktop Connection forcefully closed by local user (" + this.httprequest.remoteaddr + ")", this.httprequest);
 					meshallDesktopLocalClose(this.httprequest.desktop.kvm);
-					for (var i in this.httprequest.desktop.kvm._pipedStreams) {
-						this.httprequest.desktop.kvm._pipedStreams[i].end();
-					}
-					this.httprequest.desktop.kvm.end();
 				});
 			}
 		}
@@ -3704,6 +3690,7 @@ function onTunnelData(data)
                 this.httprequest.desktop = { state: 0, kvm: mesh.getRemoteDesktopStream(tsid), tunnel: this };
                 this.httprequest.desktop.kvm.parent = this.httprequest.desktop;
                 this.desktop = this.httprequest.desktop;
+                if (!this.httprequest.desktop.kvm.connectionCount) this.httprequest.desktop.kvm._meshallLocalClosed = false;
 
                 // Add ourself to the list of remote desktop sessions
                 if (this.httprequest.desktop.kvm.tunnels == null) { this.httprequest.desktop.kvm.tunnels = []; }

@@ -10,7 +10,9 @@ They exercise TOTP interoperability, full-session gating, enforcement at the nex
 login, recovery/replay protection, CSRF, capability policies, role revocation,
 inventory merging and the native executable policy trailer. GitHub CI runs them.
 
-Desktop/sharing-bar lifecycle checks also run in Node:
+Desktop/sharing-bar lifecycle checks also run in Node, including immediate input
+and capture detachment, local-stop acknowledgement, bounded cleanup and native
+connection-count preservation:
 
 ```bash
 node --test tests/desktop-session.test.mjs tests/notifybar.test.cjs
@@ -86,8 +88,9 @@ The default run only checks commands, processes, files and terminal.
 
 Run `tests/windows-input-fixture.ps1` in the test user's interactive **console**
 session. It prints a unique temporary output path and shows a text box with a
-save button. In MeshAll's native desktop, enable keyboard/mouse, click the text
-box, type a unique marker and click **Save verification and close**.
+save button. In MeshAll's native desktop, confirm keyboard/mouse is already
+enabled, click the text box, type a unique marker and click **Save verification
+and close**.
 
 Use the separate **Commands** tab to read the printed output path with
 `Get-Content -LiteralPath 'THE_PRINTED_PATH'`. Check the exact marker, then remove
@@ -95,3 +98,10 @@ the result file and its uniquely named `MeshAll-Input-*` parent directory. This
 checks real keyboard input and mouse actions independently of the viewer pixels.
 An active RDP session and the console are distinct Windows sessions; ensure the
 fixture is visible in the session the native viewer is displaying.
+
+For Windows transition recovery, keep the same viewer open across lock/sign-in
+and an agent-service restart. Confirm capture updates and control returns without
+toggling the checkbox, then repeat the independent marker verification. If the
+group enables a sharing bar, close its actual Windows button and verify the
+viewer reports a local-user stop without reconnecting. A deliberate new
+**Connect** must create a usable sharing session again.

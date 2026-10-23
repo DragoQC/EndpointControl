@@ -10,7 +10,7 @@ not automatically a successful test against this new C# server.
 | Native agent authentication | C# certificate/nonce proof, TLS channel binding | Passed on Debian 13 and a Windows 11 system service |
 | Enrollment and native executables | C# one-use/expiring keys and embedded-policy executables | Single-file Linux enrollment and Windows native GUI update/automatic reconnect passed; macOS artifacts packaged/hash-verified, OS installation acceptance pending |
 | Agent core delivery | C# platform core packer and SHA384 update protocol | Linux and Windows core delivery and execution passed |
-| Desktop and optional approval | Retained native agent/core/viewer + C# relay | Windows frames, keyboard/mouse input and reconnect passed; opt-in approval acceptance pending |
+| Desktop and optional approval | Retained native agent/core/viewer + C# relay | Windows sign-in/capture transitions, automatic keyboard/mouse recovery, reconnect and local sharing-bar stop passed; opt-in approval acceptance pending |
 | Terminal / PowerShell | Native PTY + xterm.js + C# transport | Interactive agent terminal execution passed on Linux and Windows; separate PowerShell PTY acceptance pending |
 | Commands / processes | C# orchestration + native agent runtime | Output, successful exit status and process inventory passed on Linux and Windows |
 | Files | C# native file protocol | Linux and Windows listing, mkdir, binary upload/download comparison and cleanup passed |
@@ -118,7 +118,28 @@ desktop requires no external VNC setup; Web-VNC still requires an existing servi
 Browser fixtures verify both RFB None and password authentication.
 
 Saved-script types choose PowerShell, Command Prompt or Unix shell. Browser tests
-verify editor/selection/request routing. Live Windows probes verified real `.cmd`
-batch labels and extension, PowerShell `param(...)`/`.ps1`, Unicode output and
-explicit exit statuses 7 and 9. Unix file execution/exit and legacy-schema tests run
-in the server test suite.
+verify editor/selection/request routing. Live Windows probes and the deployed saved
+script library verified real `.cmd` batch labels and extension, PowerShell
+`param(...)`/`.ps1`, Unicode output and explicit exit statuses 7 and 9. Unix file
+execution/exit and legacy-schema tests run in the server test suite.
+
+### Live follow-up — 2026-10-23
+
+- The same native viewer progressed from the Windows lock/sign-in screen to the
+  signed-in desktop with control automatically enabled. A controlled WinForms
+  textbox received a unique keyboard marker, and a native mouse click saved it.
+  The independent command channel verified the exact file contents and cleaned
+  up the fixture. Real agent-service restart recovery and another independent
+  keyboard/mouse verification passed without toggling input.
+- Closing the actual Windows sharing bar reports a local-user stop and does not
+  reconnect automatically. Three consecutive stop / deliberate new Connect cycles
+  passed. Native input/capture pipes are detached immediately; teardown waits for
+  viewer acknowledgement with bounded fallback cleanup. The detached readable
+  stream resumes so native end notifications and connection counts remain valid.
+- Deployed saved `.cmd` and `.ps1` scripts selected their interpreters automatically
+  and returned actual exit codes 7 and 9. The PowerShell case preserved `param`,
+  `$PSCommandPath` and Unicode output; the batch case preserved labels and `%~x0`.
+- The password-authenticated VNC fixture passed visible framebuffer and reconnect
+  checks through the real Linux agent's native TCP tunnel.
+- Existing account IDs, names, password hashes, roles, disabled status, versions
+  and protected authenticator secrets matched the pre-update snapshot.

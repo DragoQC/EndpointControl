@@ -10,20 +10,20 @@
         <span class="workspace-label">@Store.Setting("siteName", Config["MeshAll:SiteName"] ?? "My workspace")</span>
         <div class="topbar-actions">
             <button class="theme-button" @onclick="ToggleTheme" aria-label="Toggle light or dark theme"><Icon Name="sun" /></button>
-            <AuthorizeView><Authorized Context="auth"><span class="avatar">@auth.User.Identity?.Name?[..1].ToUpperInvariant()</span><span class="account-name">@auth.User.Identity?.Name</span></Authorized></AuthorizeView>
+            <AuthorizeView><Authorized Context="auth"><span class="avatar">@auth.User.Identity?.Name?[..1].ToUpperInvariant()</span><a class="account-name" href="/account/security" data-enhance-nav="false">@auth.User.Identity?.Name</a></Authorized></AuthorizeView>
             <form method="post" action="/auth/logout" data-enhance="false"><AntiforgeryToken /><button class="signout" type="submit">Sign out</button></form>
         </div>
     </div>
 </header>
 <nav class="main-nav" aria-label="Main navigation"><div class="shell nav-inner">
-    <NavLink href="/" Match="NavLinkMatch.All"><Icon Name="grid" />Overview</NavLink>
-    <NavLink href="/devices"><Icon Name="monitor" />Devices</NavLink>
-    <NavLink href="/groups"><Icon Name="layers" />Device groups</NavLink>
-    <AuthorizeView Roles="Admin,Operator"><NavLink href="/scripts"><Icon Name="terminal" />Scripts</NavLink></AuthorizeView>
-    <NavLink href="/sessions"><Icon Name="activity" />Sessions</NavLink>
-    <AuthorizeView Roles="Admin"><NavLink href="/users"><Icon Name="users" />Users</NavLink></AuthorizeView>
-    <NavLink href="/audit"><Icon Name="clock" />Audit log</NavLink>
-    <AuthorizeView Roles="Admin"><NavLink href="/settings"><Icon Name="settings" />Settings</NavLink></AuthorizeView>
+    <AuthorizeView Policy="@Permissions.Inventory"><NavLink href="/" Match="NavLinkMatch.All"><Icon Name="grid" />Overview</NavLink><NavLink href="/devices"><Icon Name="monitor" />Devices</NavLink><NavLink href="/groups"><Icon Name="layers" />Device groups</NavLink></AuthorizeView>
+    <AuthorizeView Policy="@Permissions.Scripts"><NavLink href="/scripts"><Icon Name="terminal" />Scripts</NavLink></AuthorizeView>
+    <AuthorizeView Policy="@Permissions.Sessions"><NavLink href="/sessions"><Icon Name="activity" />Sessions</NavLink></AuthorizeView>
+    <AuthorizeView Policy="@Permissions.Users"><NavLink href="/users"><Icon Name="users" />Users</NavLink></AuthorizeView>
+    <AuthorizeView Policy="@Permissions.Roles"><NavLink href="/roles"><Icon Name="shield" />Roles</NavLink></AuthorizeView>
+    <AuthorizeView Policy="@Permissions.Audit"><NavLink href="/audit"><Icon Name="clock" />Audit log</NavLink></AuthorizeView>
+    <AuthorizeView Policy="@Permissions.Settings"><NavLink href="/settings"><Icon Name="settings" />Settings</NavLink></AuthorizeView>
+    <NavLink href="/account/security" data-enhance-nav="false"><Icon Name="shield" />Security</NavLink>
 </div></nav>
 <main id="main-content" class="shell main-content mx-auto w-full">@Body</main>
 <footer class="shell footer"><span><span class="tiny-brand">m</span> MeshAll <span class="muted">@Wire.Version</span></span><span>Built with .NET 10 <span class="footer-dot">•</span> Self-hosted, by you</span></footer>

@@ -1,8 +1,8 @@
 @page "/devices"
-@attribute [Authorize]
+@attribute [Authorize(Policy = Permissions.Inventory)]
 @inherits PageBase
 <PageTitle>Devices · MeshAll</PageTitle>
-<div class="page-heading"><div><div class="breadcrumb">Workspace / Devices</div><h1>Your devices</h1><p class="muted">A clear view of everything you manage.</p></div>@if (IsAdmin) { <a class="button primary" href="/enroll"><Icon Name="plus" />Add device</a> }</div>
+<div class="page-heading"><div><div class="breadcrumb">Workspace / Devices</div><h1>Your devices</h1><p class="muted">A clear view of everything you manage.</p></div>@if (Can(Permissions.Enroll)) { <a class="button primary" href="/enroll"><Icon Name="plus" />Add device</a> }</div>
 <Notice Error="@Error" />
 <section class="panel"><div class="filter-bar"><div class="search-field"><Icon Name="search" /><input @bind="search" @bind:event="oninput" placeholder="Search devices, IPs, or tags…" aria-label="Search devices" /></div>
 <select @bind="status" aria-label="Connection status"><option value="all">All statuses</option><option value="online">Online</option><option value="offline">Offline</option><option value="revoked">Revoked</option></select>

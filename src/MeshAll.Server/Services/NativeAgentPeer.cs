@@ -40,13 +40,17 @@ public sealed class NativeAgentPeer : IAsyncDisposable
             {
                 var issue=Text(data,"value");store.Audit("Agent","Agent core diagnostic",inventory.Hostname,issue.Length>2000?issue[..2000]:issue);
             }
+            store.TouchDevice(Id);
             if(action=="ping"){await SendJsonAsync(new{action="pong"},ct);return;}
+            if(action=="meshall-inventory" && data.TryGetProperty("inventory",out var report)&&report.ValueKind==JsonValueKind.Object)
+            {
+                inventory=NativeInventory.Apply(inventory,report,DateTimeOffset.UtcNow);store.UpdateInventory(Id,inventory);return;
+            }
             if(action=="coreinfo")
             {
                 var users=data.TryGetProperty("users",out var userList)&&userList.ValueKind==JsonValueKind.Array?string.Join(", ",userList.EnumerateArray().Select(u=>u.ToString())):inventory.Username;
-                inventory=inventory with{Os=Text(data,"osdesc",inventory.Os),Username=users};coreReady.TrySetResult();
+                inventory=inventory with{Os=Text(data,"osdesc",inventory.Os),Username=users};store.UpdateInventory(Id,inventory);coreReady.TrySetResult();
             }
-            store.UpdateInventory(Id,inventory);
             var response=Text(data,"responseid");
             if(response.Length>0&&requests.TryGetValue(response,out var pending))
             {
@@ -75,6 +79,7 @@ public sealed class NativeAgentPeer : IAsyncDisposable
     public async Task<object> ExecuteAsync(string operation,object payload,CancellationToken ct)
     {
         if(operation=="command")return await CommandAsync((CommandInput)payload,ct);
+        if(operation=="inventory.refresh"){await coreReady.Task.WaitAsync(TimeSpan.FromSeconds(30),ct);await SendJsonAsync(new{action="meshall-inventory"},ct);return "Inventory refresh requested";}
         if(operation=="processes")
         {
             var result=await CommandAsync(new(windows?"Get-Process | Select-Object Id,ProcessName,WorkingSet64 | ConvertTo-Json -Compress":"ps -eo pid=,rss=,comm="),ct);

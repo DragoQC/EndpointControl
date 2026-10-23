@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 if (Environment.GetEnvironmentVariable("MESHALL_CONNECTION_FILE") is { Length: > 0 } connectionFile)
@@ -19,6 +20,7 @@ builder.Services.AddSingleton<NativeTunnelHub>();
 builder.Services.AddSingleton<NativeAgentHub>();
 builder.Services.AddSingleton<AgentGateway>();
 builder.Services.AddScoped<Workspace>();
+builder.Services.AddSingleton<IAuthorizationHandler,PermissionHandler>();
 builder.Services.AddRazorComponents().AddInteractiveServerComponents(options => options.DetailedErrors = builder.Environment.IsDevelopment());
 builder.Services.AddCascadingAuthenticationState();
 var dataPath = Path.GetFullPath(builder.Configuration["MeshAll:DataDirectory"] ?? "Data", builder.Environment.ContentRootPath);
@@ -36,16 +38,18 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     options.Events.OnRedirectToAccessDenied = context => { context.Response.StatusCode = 403; return Task.CompletedTask; };
     options.Events.OnValidatePrincipal = async context =>
     {
-        var user = context.HttpContext.RequestServices.GetRequiredService<Store>()
-            .FindUser(context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier) ?? "");
-        if (user is null || user.Disabled || user.Version.ToString() != context.Principal?.FindFirstValue("version"))
+        var user = context.Principal is null?null:context.HttpContext.RequestServices.GetRequiredService<Store>().SessionUser(context.Principal,allowSetup:true);
+        if (user is null)
         { context.RejectPrincipal(); await context.HttpContext.SignOutAsync(); }
     };
+}).AddCookie(AccountAuthentication.ChallengeScheme,options=>
+{
+    options.Cookie.Name="MeshAll.SecondFactor";options.Cookie.HttpOnly=true;options.Cookie.SameSite=SameSiteMode.Strict;
+    options.Cookie.SecurePolicy=CookieSecurePolicy.SameAsRequest;options.ExpireTimeSpan=TimeSpan.FromMinutes(5);options.SlidingExpiration=false;
 });
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("Manage", policy => policy.RequireRole("Admin", "Operator"));
-    options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
+    foreach(var capability in Permissions.All)options.AddPolicy(capability.Id,policy=>policy.RequireAuthenticatedUser().AddRequirements(new PermissionRequirement(capability.Id)));
 });
 builder.Services.AddRateLimiter(options =>
 {
@@ -74,6 +78,13 @@ if(Array.IndexOf(args,"--native-policy") is var policyIndex && policyIndex>=0)
     if(policyIndex+1>=args.Length)throw new ArgumentException("Missing enrollment key.");
     Console.Write(app.Services.GetRequiredService<NativeAgentHub>().Policy(args[policyIndex+1]));return;
 }
+if(Array.IndexOf(args,"--reset-two-factor") is var resetIndex && resetIndex>=0)
+{
+    var name=resetIndex+1<args.Length?args[resetIndex+1]:throw new ArgumentException("Supply the account username.");
+    var user=store.Users().SingleOrDefault(u=>string.Equals(u.Name,name,StringComparison.OrdinalIgnoreCase))??throw new ArgumentException("Account not found.");
+    store.ResetTwoFactor(user.Id);store.Audit("Local administrator","Two-factor authentication reset",user.Name);
+    Console.WriteLine("Two-factor authentication reset; existing account sessions revoked.");return;
+}
 if (!store.HasUsers) app.Logger.LogInformation("MeshAll first run: open /setup. The setup key is in {Path}", store.BootstrapPath);
 if (!app.Environment.IsDevelopment()) app.UseExceptionHandler("/error", createScopeForErrors: true);
 app.Use(async (context, next) =>
@@ -85,23 +96,31 @@ app.Use(async (context, next) =>
     context.Response.Headers["Content-Security-Policy"] = $"frame-ancestors {(toolPage ? "'self'" : "'none'")}; object-src 'none'; base-uri 'self'";
     if (!context.Request.Path.StartsWithSegments("/_framework") && !context.Request.Path.StartsWithSegments("/app.css"))
         context.Response.Headers.CacheControl = "no-store";
-    await next();
+    try { await next(); }
+    catch(AntiforgeryValidationException) when(!context.Response.HasStarted)
+    {
+        context.Response.Clear();context.Response.StatusCode=400;
+        await context.Response.WriteAsync("The form expired. Reload the page and try again.");
+    }
 });
 app.UseRateLimiter();
 app.UseAuthentication();
+app.Use(async(context,next)=>
+{
+    if(context.User.HasClaim("setup_required","true")
+        && !context.Request.Path.StartsWithSegments("/account/security")&&!context.Request.Path.StartsWithSegments("/auth/2fa")
+        && context.Request.Path!="/auth/logout"&&!context.Request.Path.StartsWithSegments("/_framework")
+        && !context.Request.Path.StartsWithSegments("/_blazor")&&!context.Request.Path.StartsWithSegments("/vendor")
+        && context.Request.Path!="/app.js"&&context.Request.Path!="/app.css")
+    {
+        if(context.Request.Path.StartsWithSegments("/api"))context.Response.StatusCode=403;
+        else context.Response.Redirect("/account/security");return;
+    }
+    await next();
+});
 app.UseAuthorization();
 app.UseAntiforgery();
 app.UseWebSockets(new WebSocketOptions { KeepAliveInterval = TimeSpan.FromSeconds(20) });
-
-static async Task SignIn(HttpContext context, UserInfo user)
-{
-    var identity = new ClaimsIdentity(new[]
-    {
-        new Claim(ClaimTypes.NameIdentifier, user.Id), new Claim(ClaimTypes.Name, user.Name),
-        new Claim(ClaimTypes.Role, user.Role), new Claim("version", user.Version.ToString())
-    }, CookieAuthenticationDefaults.AuthenticationScheme);
-    await context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
-}
 
 app.MapPost("/auth/login", async (HttpContext context, IAntiforgery antiforgery, Store db) =>
 {
@@ -110,8 +129,16 @@ app.MapPost("/auth/login", async (HttpContext context, IAntiforgery antiforgery,
     var password = form["password"].ToString(); var name = form["username"].ToString();
     var user = password.Length <= 256 && name.Length <= 50 ? db.Authenticate(name, password) : null;
     if (user is null) { db.Audit("Anonymous", "Sign-in failed", "MeshAll"); return Results.LocalRedirect("/login?failed=true"); }
-    await SignIn(context, user); db.Audit(user.Name, "Signed in", "MeshAll");
-    return Results.LocalRedirect("/");
+    await context.SignOutAsync();await context.SignOutAsync(AccountAuthentication.ChallengeScheme);
+    if(user.TwoFactorEnabled)
+    {
+        var challenge=db.CreateLoginChallenge(user);
+        await context.SignInAsync(AccountAuthentication.ChallengeScheme,new ClaimsPrincipal(new ClaimsIdentity(new[]{new Claim("challenge",challenge)},AccountAuthentication.ChallengeScheme)));
+        return Results.LocalRedirect("/login/2fa");
+    }
+    var setup=db.RequireTwoFactor;
+    await AccountAuthentication.SignIn(context,user,setupOnly:setup); db.Audit(user.Name,setup?"Signed in for required two-factor enrollment":"Signed in","MeshAll");
+    return Results.LocalRedirect(setup?"/account/security":db.LandingPage(user));
 }).RequireRateLimiting("auth");
 
 app.MapPost("/auth/setup", async (HttpContext context, IAntiforgery antiforgery, Store db) =>
@@ -121,7 +148,7 @@ app.MapPost("/auth/setup", async (HttpContext context, IAntiforgery antiforgery,
     try
     {
         var user = db.Setup(form["key"].ToString(), form["username"].ToString(), form["password"].ToString());
-        await SignIn(context, user); return Results.LocalRedirect("/");
+        await AccountAuthentication.SignIn(context, user,setupOnly:db.RequireTwoFactor); return Results.LocalRedirect(db.RequireTwoFactor?"/account/security":"/");
     }
     catch (InvalidOperationException) { return Results.LocalRedirect("/setup?failed=true"); }
 }).RequireRateLimiting("auth");
@@ -129,8 +156,10 @@ app.MapPost("/auth/setup", async (HttpContext context, IAntiforgery antiforgery,
 app.MapPost("/auth/logout", async (HttpContext context, IAntiforgery antiforgery) =>
 {
     await antiforgery.ValidateRequestAsync(context);
-    await context.SignOutAsync(); return Results.LocalRedirect("/login");
+    await context.SignOutAsync();await context.SignOutAsync(AccountAuthentication.ChallengeScheme);return Results.LocalRedirect("/login");
 }).RequireAuthorization();
+
+app.MapAccountAuthentication();
 
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", version = Wire.Version }));
 app.MapGet("/downloads/MeshAll-source.tar.gz", (IWebHostEnvironment environment) =>
@@ -158,10 +187,11 @@ app.MapPost("/api/agents/enroll", (EnrollmentRequest request, Store db) =>
 app.Map("/api/agents/connect", (HttpContext context, AgentGateway gateway) => gateway.AcceptAsync(context));
 app.Map("/agent.ashx",(HttpContext context,NativeAgentHub hub)=>hub.AcceptAsync(context));
 app.Map("/native-relay.ashx",(HttpContext context,NativeTunnelHub hub)=>hub.AcceptAsync(context));
-app.MapGet("/api/agents/native-policy",(string token,NativeAgentHub hub)=>{try{return Results.File(System.Text.Encoding.UTF8.GetBytes(hub.Policy(token)),"application/octet-stream","MeshAllAgent.msh");}catch(InvalidOperationException){return Results.BadRequest("Enrollment key is invalid or expired.");}}).RequireAuthorization("Admin");
-app.MapGet("/api/agents/native-package",(string token,string platform,NativeAgentHub hub)=>{try{return Results.File(hub.Package(token,platform),"application/zip","MeshAll-Agent-"+platform+".zip");}catch(InvalidOperationException ex){return Results.BadRequest(ex.Message);}}).RequireRateLimiting("auth");
-app.Map("/api/remote/{id}/desktop", (HttpContext context, string id, AgentGateway gateway) => gateway.ProxyDesktopAsync(context, id)).RequireAuthorization("Manage");
-app.Map("/api/network/{id}/{tool}", (HttpContext context, string id, string tool, NetworkGateway gateway) => gateway.ProxyAsync(context, id, tool)).RequireAuthorization("Manage");
+app.MapGet("/api/agents/native-policy",(string token,NativeAgentHub hub)=>{try{return Results.File(System.Text.Encoding.UTF8.GetBytes(hub.Policy(token)),"application/octet-stream","MeshAllAgent.msh");}catch(InvalidOperationException){return Results.BadRequest("Enrollment key is invalid or expired.");}}).RequireAuthorization(Permissions.Enroll);
+app.MapGet("/api/agents/native-executable",(string token,string platform,NativeAgentHub hub)=>{try{return Results.File(hub.Executable(token,platform),"application/octet-stream",platform.StartsWith("win",StringComparison.Ordinal)?"MeshAllAgent.exe":"MeshAllAgent");}catch(InvalidOperationException ex){return Results.BadRequest(ex.Message);}}).RequireRateLimiting("auth");
+app.MapGet("/licenses/agent",(NativeAgentHub hub)=>Results.Text(hub.LicenseNotices(),"text/plain"));
+app.Map("/api/remote/{id}/desktop", (HttpContext context, string id, AgentGateway gateway) => gateway.ProxyDesktopAsync(context, id)).RequireAuthorization(Permissions.Desktop);
+app.Map("/api/network/{id}/{tool}", (HttpContext context, string id, string tool, NetworkGateway gateway) => gateway.ProxyAsync(context, id, tool)).RequireAuthorization();
 
 app.MapGet("/api/devices/{id}/file", async (string id, string path, HttpContext context, Store db, AgentGateway gateway) =>
 {
@@ -174,11 +204,13 @@ app.MapGet("/api/devices/{id}/file", async (string id, string path, HttpContext 
     }
     catch (Exception ex) when (ex is InvalidOperationException or IOException or TimeoutException)
     { return Results.BadRequest(new { error = ex.Message }); }
-}).RequireAuthorization("Manage");
+}).RequireAuthorization(Permissions.FilesRead);
 
 app.MapGet("/api/audit/export", (Store db) =>
     Results.File(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(db.AuditLog(10000), Wire.Json), "application/json", "meshall-audit.json"))
-    .RequireAuthorization("Admin");
+    .RequireAuthorization(Permissions.ExportAudit);
 app.MapStaticAssets();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 app.Run();
+
+public partial class Program { }

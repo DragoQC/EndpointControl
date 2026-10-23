@@ -36,7 +36,7 @@ public sealed class NativeTunnelHub
         {
             var message=new Dictionary<string,object?>{
                 ["action"]="msg",["type"]="tunnel",["value"]=$"*/native-relay.ashx?id={id}&ticket={secret}",
-                ["rights"]=uint.MaxValue,["consent"]=peer.Consent,["userid"]="user//"+Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(request.Actor)))[..24],
+                ["rights"]=protocol is 0 or 2 && request.Kind=="desktop"?(uint)(8|512|1024|2048|(request.ViewOnly?256:0)):uint.MaxValue,["consent"]=peer.Consent,["userid"]="user//"+Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(request.Actor)))[..24],
                 ["username"]=request.Actor,["realname"]=request.Actor,["sessionid"]=request.SessionId,["servertlshash"]=peer.WebCertificateHash,
                 ["soptions"]=new{consentTitle="MeshAll Agent",consentTimeout=30}
             };

@@ -1,5 +1,5 @@
 @page "/install"
-@attribute [Authorize(Roles = "Admin")]
+@attribute [Authorize(Policy = Permissions.Settings)]
 @inherits PageBase
 @inject IJSRuntime JS
 <PageTitle>Debian installation · MeshAll</PageTitle>
@@ -7,7 +7,7 @@
 <Notice Error="@Error" Success="@Success" />
 <div class="enroll-grid"><section class="panel editor-panel"><h2>Install MeshAll</h2><textarea class="code-input" readonly rows="4" value="@Command"></textarea><button class="button primary mt-4" @onclick="Copy">Copy command</button><p class="muted small-text mt-4">Builds the C# orchestrator and Blazor/Tailwind UI from your public repository. Node.js is used for UI asset preparation only. The native agent/core and viewer components are served by the C# orchestrator.</p></section><section class="panel editor-panel"><h2>Server layout</h2><dl class="details-grid"><dt>Web UI / agent endpoint</dt><dd>HTTPS 5188</dd><dt>Source</dt><dd><code>/opt/meshall/source</code></dd><dt>Configuration</dt><dd><code>/etc/meshall</code></dd><dt>SQLite/state</dt><dd><code>/var/lib/meshall/server</code></dd><dt>Update own edits</dt><dd><code>meshall-update --local</code></dd><dt>Update GitHub</dt><dd><code>meshall-update --pull</code></dd></dl></section></div>
 @code {
-    protected override bool AdminPage => true;
+    protected override string? ViewPermission => Permissions.Settings;
     private const string Command="curl -fsSL https://raw.githubusercontent.com/DragoQC/MeshAll/main/install.sh | bash";
-    private async Task Copy(){try{await Workspace.RequireAsync(admin:true);await JS.InvokeVoidAsync("navigator.clipboard.writeText",Command);Success="Installation command copied.";}catch(Exception ex){Error=ex.Message;}}
+    private async Task Copy(){try{await Workspace.RequireAsync(Permissions.Settings);await JS.InvokeVoidAsync("navigator.clipboard.writeText",Command);Success="Installation command copied.";}catch(Exception ex){Error=ex.Message;}}
 }

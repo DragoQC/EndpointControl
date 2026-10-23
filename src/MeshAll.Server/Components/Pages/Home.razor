@@ -3,7 +3,7 @@
 @inherits PageBase
 <PageTitle>Overview · MeshAll</PageTitle>
 <div class="page-heading"><div><div class="breadcrumb">Workspace / Overview</div><h1>A little clarity for your fleet.</h1><p class="muted">All your devices, connections, and activity. In one place.</p></div>
-    @if (IsAdmin) { <a class="button primary" href="/enroll"><Icon Name="plus" />Add device</a> }
+    @if (Can(Permissions.Enroll)) { <a class="button primary" href="/enroll"><Icon Name="plus" />Add device</a> }
 </div>
 <Notice Error="@Error" />
 <div class="stats-grid grid grid-cols-2 gap-4 xl:grid-cols-4">
@@ -14,7 +14,7 @@
 </div>
 <div class="health-strip"><span class="health-symbol"><Icon Name="@(devices.Count == 0 ? "shield" : "check")" /></span><div><strong>@(devices.Count == 0 ? "Your workspace is ready." : Gateway.OnlineCount == devices.Count ? "Your fleet is all connected." : $"{Gateway.OnlineCount} of {devices.Count} devices connected.")</strong><span> @(devices.Count == 0 ? "Add your first device to bring it all together." : "Connection status updates automatically every few seconds.")</span></div><span class="live-label"><span class="status-dot green-dot"></span> Live</span></div>
 <div class="dashboard-grid"><section class="panel fleet-panel"><div class="panel-header"><div><h2>Your devices <span class="count-badge">@devices.Count</span></h2><p>A quick view of your managed fleet.</p></div><a class="text-link" href="/devices">View all <Icon Name="arrow" /></a></div>
-@if (devices.Count == 0) { <EmptyState Title="A home for every device" Text="Connect a Windows or Linux device with the MeshAll agent. Its status and inventory will appear here automatically.">@if (IsAdmin) { <a href="/enroll" class="button primary"><Icon Name="plus" />Add your first device</a> }</EmptyState> }
+@if (devices.Count == 0) { <EmptyState Title="A home for every device" Text="Connect a Windows or Linux device with the MeshAll agent. Its status and inventory will appear here automatically.">@if (Can(Permissions.Enroll)) { <a href="/enroll" class="button primary"><Icon Name="plus" />Add your first device</a> }</EmptyState> }
 else { <FleetTable Items="devices.Take(6)" Groups="groups" /> }
 <div class="panel-foot"><span><span class="status-dot green-dot"></span> Encrypted agent connections supported</span><span>@devices.Count @(devices.Count == 1 ? "device" : "devices")</span></div>
 </section><section class="panel activity-panel"><div class="panel-header"><div><h2>Recent activity</h2><p>What’s happening in your workspace.</p></div><Icon Name="clock" /></div>
@@ -22,8 +22,8 @@ else { <FleetTable Items="devices.Take(6)" Groups="groups" /> }
 else { <ol class="activity-list">@foreach (var item in audit.Take(5)) { <li><span class="activity-symbol"><Icon Name="@(item.Action.Contains("connect", StringComparison.OrdinalIgnoreCase) ? "activity" : "shield")" /></span><div><strong>@item.Action</strong><p>@item.Target</p><small>@item.Actor <span>·</span> @Ago(item.Time)</small></div></li> }</ol> }
 <a class="activity-footer text-link" href="/audit">Open audit log <Icon Name="arrow" /></a></section></div>
 <div class="bottom-grid"><section class="panel"><div class="panel-header"><div><h2>Device groups</h2><p>A little organization goes a long way.</p></div><a class="text-link" href="/groups">Manage groups <Icon Name="arrow" /></a></div><div class="group-summary">@foreach (var group in groups.Take(4)) { <a href="@($"/devices?group={group.Id}")"><span class="group-icon"><Icon Name="layers" /></span><span><strong>@group.Name</strong><small>@devices.Count(d => d.GroupId == group.Id) devices</small></span><Icon Name="arrow" /></a> }</div></section>
-<section class="platform-panel"><span class="platform-icon"><Icon Name="windows" /></span><div><h2>Windows, meet MeshAll.</h2><p>A native agent, a C# control plane, and your devices—all from a clearer Blazor workspace.</p>@if (IsAdmin) { <a href="/enroll" class="text-link">Set up a Windows device <Icon Name="arrow" /></a> }</div></section></div>
+<section class="platform-panel"><span class="platform-icon"><Icon Name="windows" /></span><div><h2>Windows, meet MeshAll.</h2><p>A native agent, a C# control plane, and your devices—all from a clearer Blazor workspace.</p>@if (Can(Permissions.Enroll)) { <a href="/enroll" class="text-link">Set up a Windows device <Icon Name="arrow" /></a> }</div></section></div>
 @code {
     private List<DeviceInfo> devices = []; private List<GroupInfo> groups = []; private List<AuditInfo> audit = []; private List<SessionInfo> sessions = [];
-    protected override Task LoadAsync() { devices = Store.Devices(); groups = Store.Groups(); audit = Store.AuditLog(5); sessions = Store.Sessions(); return Task.CompletedTask; }
+    protected override Task LoadAsync() { devices = Store.Devices(); groups = Store.Groups(); audit = Can(Permissions.Audit)?Store.AuditLog(5):[]; sessions = Can(Permissions.Sessions)?Store.Sessions():[]; return Task.CompletedTask; }
 }

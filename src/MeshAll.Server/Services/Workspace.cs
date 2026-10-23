@@ -6,20 +6,20 @@ namespace MeshAll.Server.Services;
 
 public sealed class Workspace(Store store, AgentGateway gateway, AuthenticationStateProvider authentication)
 {
-    public async Task<UserInfo> RequireAsync(bool manage = false, bool admin = false)
+    public async Task<UserInfo> RequireAsync(string? permission = null)
     {
         var principal = (await authentication.GetAuthenticationStateAsync()).User;
-        var user = store.FindUser(principal.FindFirstValue(ClaimTypes.NameIdentifier) ?? "");
-        if (user is null || user.Disabled || user.Version.ToString() != principal.FindFirstValue("version"))
+        var user = store.SessionUser(principal);
+        if (user is null)
             throw new UnauthorizedAccessException("Your session expired. Sign in again.");
-        if ((manage && user.Role == "Viewer") || (admin && user.Role != "Admin"))
+        if (permission is not null && !store.HasPermission(user,permission))
             throw new UnauthorizedAccessException("Your account does not have permission for this action.");
         return user;
     }
 
     public async Task<T> RunAsync<T>(string id, string operation, object payload, bool record = true, CancellationToken ct = default)
     {
-        var user = await RequireAsync(manage: true);
+        var user = await RequireAsync(Permissions.ForOperation(operation));
         var device = store.FindDevice(id) ?? throw new InvalidOperationException("Device not found.");
         if (device.Disabled) throw new InvalidOperationException("Device access has been revoked.");
         string? session = record ? store.StartSession(device, user.Name, operation) : null;
@@ -42,7 +42,7 @@ public sealed class Workspace(Store store, AgentGateway gateway, AuthenticationS
 
     public async Task<string> BeginDesktopAsync(string id)
     {
-        var user = await RequireAsync(manage: true);
+        var user = await RequireAsync(Permissions.Desktop);
         var device = store.FindDevice(id) ?? throw new InvalidOperationException("Device not found.");
         if (device.Disabled || !gateway.Online(id)) throw new InvalidOperationException("Device is not available.");
         store.Audit(user.Name, "Desktop opened", device.Name);

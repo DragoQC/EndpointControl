@@ -53,7 +53,7 @@ public sealed class AgentGateway(Store store, ILogger<AgentGateway> logger)
                 {
                     var inventory = Wire.Read<Inventory>(message.Payload);
                     if (inventory.Hostname.Length > 255 || inventory.Disks.Length > 100 || inventory.Capabilities.Length > 30) throw new InvalidDataException("Invalid agent inventory.");
-                    store.UpdateInventory(id, inventory); connection.LastSeen = DateTimeOffset.UtcNow;
+                    store.UpdateInventory(id, inventory with{ReportedAt=DateTimeOffset.UtcNow,ConnectionAddress=context.Connection.RemoteIpAddress?.ToString()}); connection.LastSeen = DateTimeOffset.UtcNow;
                 }
                 else if (message.Kind == "result" && message.Id is not null && connection.Pending.TryRemove(message.Id, out var pending)) pending.TrySetResult(message);
                 else if (message.Kind == "stream")
@@ -143,6 +143,7 @@ public sealed class AgentGateway(Store store, ILogger<AgentGateway> logger)
     public static bool SameOrigin(HttpContext context) => Uri.TryCreate(context.Request.Headers.Origin, UriKind.Absolute, out var origin) && origin.Scheme == context.Request.Scheme && string.Equals(origin.Authority, context.Request.Host.Value, StringComparison.OrdinalIgnoreCase);
     public async Task ProxyDesktopAsync(HttpContext context, string id)
     {
+        if(!store.HasPermission(store.SessionUser(context.User),Permissions.Desktop)){context.Response.StatusCode=403;return;}
         if(native.TryGetValue(id,out var peer)){await ProxyNativeDesktop(context,id,peer);return;}
         if (!context.WebSockets.IsWebSocketRequest || !SameOrigin(context)) { context.Response.StatusCode = 403; return; }
         var device = store.FindDevice(id); if (device is not { Disabled: false } || !Online(id)) { context.Response.StatusCode = 409; return; }
@@ -158,7 +159,7 @@ public sealed class AgentGateway(Store store, ILogger<AgentGateway> logger)
             store.Audit(context.User.Identity!.Name!, "Desktop session opened", device.Name, consent ? "User consent granted" : "Unattended policy");
             await Send(new { type = "status", message = "Connected" });
             async Task Frames() { while (!stop.IsCancellationRequested) { var frame = await ExecuteAsync<ScreenFrame>(id, "desktop.frame", new SessionInput(session), stop.Token); await Send(new { type = "frame", frame.Base64, frame.Width, frame.Height }); await Task.Delay(180, stop.Token); } }
-            async Task Inputs() { while (socket.State == WebSocketState.Open) { var bytes = await ReceiveBrowserAsync(socket, stop.Token); if (bytes is null) return; var input = JsonSerializer.Deserialize<InputEvent>(bytes, Wire.Json); if (input is not null) await ExecuteAsync<string>(id, "desktop.input", new SessionInput(session, input), stop.Token); } }
+            async Task Inputs() { while (socket.State == WebSocketState.Open) { var bytes = await ReceiveBrowserAsync(socket, stop.Token); if (bytes is null) return; if(!store.HasPermission(store.SessionUser(context.User),Permissions.Control))throw new IOException("Desktop control is not permitted by your role.");var input = JsonSerializer.Deserialize<InputEvent>(bytes, Wire.Json); if (input is not null) await ExecuteAsync<string>(id, "desktop.input", new SessionInput(session, input), stop.Token); } }
             var frames = Frames(); var inputs = Inputs(); var validation = ValidateAsync(context.User, id, stop.Token);
             await Task.WhenAny(frames, inputs, validation); await stop.CancelAsync();
             try { await Task.WhenAll(frames, inputs, validation); } catch (OperationCanceledException) { }
@@ -178,18 +179,18 @@ public sealed class AgentGateway(Store store, ILogger<AgentGateway> logger)
         var session=store.StartSession(device,context.User.Identity!.Name!,"Desktop");
         try
         {
-            await using var tunnel=await peer.OpenTunnelAsync(0,new(session,context.User.Identity!.Name!,store.RequiresDesktopConsent(id)),stop.Token);
+            await using var tunnel=await peer.OpenTunnelAsync(0,new(session,context.User.Identity!.Name!,store.RequiresDesktopConsent(id),ViewOnly:!store.HasPermission(store.SessionUser(context.User),Permissions.Control)),stop.Token);
             await browser.SendAsync(Encoding.UTF8.GetBytes("c").AsMemory(),WebSocketMessageType.Text,true,stop.Token);
             async Task Output(){await foreach(var frame in tunnel.Reader.ReadAllAsync(stop.Token))await browser.SendAsync(frame.Bytes.AsMemory(),frame.Text?WebSocketMessageType.Text:WebSocketMessageType.Binary,true,stop.Token);}
-            async Task Input(){while(browser.State==WebSocketState.Open){var frame=await NativeAgentHub.ReadAsync(browser,stop.Token);if(frame is null)return;await tunnel.SendAsync(frame.Bytes,frame.Text,stop.Token);}}
+            async Task Input(){var negotiated=false;while(browser.State==WebSocketState.Open){var frame=await NativeAgentHub.ReadAsync(browser,stop.Token);if(frame is null)return;if(!negotiated){if(Encoding.ASCII.GetString(frame.Bytes)!="2")throw new IOException("Only the desktop protocol is allowed on this relay.");negotiated=true;}await tunnel.SendAsync(frame.Bytes,frame.Text,stop.Token);}}
             var output=Output();var input=Input();var validation=ValidateAsync(context.User,id,stop.Token);await Task.WhenAny(output,input,validation);await stop.CancelAsync();try{await Task.WhenAll(output,input,validation);}catch(OperationCanceledException){}
             store.EndSession(session,"Completed");
         }
         catch(Exception ex)when(ex is IOException or WebSocketException or OperationCanceledException){store.EndSession(session,"Failed");logger.LogInformation("Native desktop ended: {Reason}",ex.Message);}
     }
-    public async Task ValidateAsync(ClaimsPrincipal principal, string id, CancellationToken ct)
+    public async Task ValidateAsync(ClaimsPrincipal principal, string id, CancellationToken ct,string permission=Permissions.Desktop)
     {
-        while (true) { await Task.Delay(5000, ct); var user = store.FindUser(principal.FindFirstValue(ClaimTypes.NameIdentifier) ?? ""); if (user is null || user.Disabled || user.Role == "Viewer" || user.Version.ToString() != principal.FindFirstValue("version") || store.FindDevice(id) is not { Disabled: false }) return; }
+        while (true) { await Task.Delay(5000, ct);if (!store.HasPermission(store.SessionUser(principal),permission) || store.FindDevice(id) is not { Disabled: false }) return; }
     }
     public static async Task<byte[]?> ReceiveBrowserAsync(WebSocket socket, CancellationToken ct)
     {

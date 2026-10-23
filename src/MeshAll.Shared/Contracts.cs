@@ -10,7 +10,10 @@ public record AgentMessage(string Kind, string? Id = null, string? Operation = n
 public record DiskInfo(string Name, long Total, long Free);
 public record Inventory(string Hostname, string Platform, string Os, string Architecture,
     string Username, string Ip, string Mac, int Cores, long MemoryTotal, long MemoryUsed,
-    double Cpu, long Uptime, string Version, string[] Capabilities, DiskInfo[] Disks);
+    double Cpu, long Uptime, string Version, string[] Capabilities, DiskInfo[] Disks,
+    string? CpuModel = null, string? Manufacturer = null, string? Model = null,
+    NetworkInterfaceInfo[]? Interfaces = null, DateTimeOffset? ReportedAt = null, string? ConnectionAddress = null, int AgentArchitecture = 0,string? Diagnostic = null);
+public record NetworkInterfaceInfo(string Name,string Address,string Family,string Mac,bool Internal);
 public record CommandInput(string Command, string? Directory = null, int TimeoutSeconds = 30);
 public record CommandOutput(string Output, int ExitCode, string Directory, bool Truncated = false);
 public record FileInput(string Path, string? Content = null);
@@ -24,13 +27,13 @@ public record ProcessInfo(int Id, string Name, long Memory);
 public record PowerInput(string Action);
 public record WakeInput(string Mac);
 public record SessionRequest(string SessionId, string Actor, bool RequireConsent = true,
-    string Kind = "desktop", string? Host = null, int Port = 0, bool Notify = true, bool Toolbar = true);
+    string Kind = "desktop", string? Host = null, int Port = 0, bool Notify = true, bool Toolbar = true, bool ViewOnly = false);
 public record SessionInput(string SessionId, InputEvent? Input = null, string? Base64 = null, int Columns = 100, int Rows = 30);
 public record OpenedSession(string SessionId);
 
 public static class Wire
 {
-    public const string Version = "0.2.0";
+    public const string Version = "0.3.0";
     public const int MaxMessageBytes = 12 * 1024 * 1024;
     public const int MaxFileBytes = 5 * 1024 * 1024;
     public static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);

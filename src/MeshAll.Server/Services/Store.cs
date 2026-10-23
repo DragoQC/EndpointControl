@@ -4,10 +4,11 @@ using System.Text;
 using System.Text.Json;
 using MeshAll.Shared;
 using Microsoft.Data.Sqlite;
+using Microsoft.AspNetCore.DataProtection;
 
 namespace MeshAll.Server.Services;
 
-public record UserInfo(string Id, string Name, string Role, bool Disabled, int Version);
+public record UserInfo(string Id, string Name, string Role, bool Disabled, int Version, bool TwoFactorEnabled = false);
 public record DeviceInfo(string Id, string Name, string GroupId, string Tags, string Notes,
     bool Disabled, DateTimeOffset LastSeen, Inventory? Inventory);
 public record GroupInfo(string Id, string Name, string Description, int Consent = 0);
@@ -17,15 +18,17 @@ public record SessionInfo(string Id, string DeviceId, string DeviceName, string 
 public record TokenInfo(string Id, string Name, string GroupId, DateTimeOffset Expires, int Remaining);
 public record ScriptInfo(string Id, string Name, string Platform, string Code);
 
-public sealed class Store
+public sealed partial class Store
 {
     private readonly string connectionString;
     private readonly object gate = new();
+    private readonly IDataProtector securityProtector;
     public string DataDirectory { get; }
     public string BootstrapPath => Path.Combine(DataDirectory, "bootstrap.key");
 
-    public Store(IConfiguration config, IWebHostEnvironment environment)
+    public Store(IConfiguration config, IWebHostEnvironment environment, IDataProtectionProvider protection)
     {
+        securityProtector = protection.CreateProtector("MeshAll.AccountSecurity.v1");
         DataDirectory = Path.GetFullPath(config["MeshAll:DataDirectory"] ?? "Data", environment.ContentRootPath);
         Directory.CreateDirectory(DataDirectory);
         if (!OperatingSystem.IsWindows()) File.SetUnixFileMode(DataDirectory, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
@@ -55,9 +58,16 @@ public sealed class Store
             INSERT OR IGNORE INTO group_policies VALUES('default',0);
             CREATE TABLE IF NOT EXISTS native_enrollments(meshHash TEXT PRIMARY KEY,tokenId TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS native_identities(certificate TEXT PRIMARY KEY,deviceId TEXT NOT NULL UNIQUE,architecture INTEGER NOT NULL);
+            CREATE TABLE IF NOT EXISTS two_factor(userId TEXT PRIMARY KEY,secret TEXT NOT NULL,lastStep INTEGER NOT NULL DEFAULT -1);
+            CREATE TABLE IF NOT EXISTS two_factor_setup(userId TEXT PRIMARY KEY,secret TEXT NOT NULL,expires TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS recovery_codes(userId TEXT NOT NULL,hash TEXT NOT NULL,PRIMARY KEY(userId,hash));
+            CREATE TABLE IF NOT EXISTS login_challenges(id TEXT PRIMARY KEY,userId TEXT NOT NULL,version INTEGER NOT NULL,expires TEXT NOT NULL,attempts INTEGER NOT NULL DEFAULT 0);
+            CREATE TABLE IF NOT EXISTS security_receipts(id TEXT PRIMARY KEY,userId TEXT NOT NULL,payload TEXT NOT NULL,expires TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS roles(id TEXT PRIMARY KEY,name TEXT NOT NULL COLLATE NOCASE UNIQUE,permissions TEXT NOT NULL,builtIn INTEGER NOT NULL DEFAULT 0);
             CREATE INDEX IF NOT EXISTS audit_time ON audit(time);
             UPDATE sessions SET ended=strftime('%Y-%m-%dT%H:%M:%fZ','now'),status='Interrupted' WHERE ended IS NULL;
             """);
+        InitializeRoles();
         if (!HasUsers && !File.Exists(BootstrapPath))
         {
             File.WriteAllText(BootstrapPath, Secret());
@@ -66,9 +76,10 @@ public sealed class Store
     }
 
     public bool HasUsers => Scalar<long>("SELECT COUNT(*) FROM users") > 0;
-    public List<UserInfo> Users() => Query("SELECT id,name,role,disabled,version FROM users ORDER BY name", User);
-    public UserInfo? FindUser(string id) => Query("SELECT id,name,role,disabled,version FROM users WHERE id=$0", User, id).SingleOrDefault();
-    private static UserInfo User(SqliteDataReader r) => new(r.GetString(0), r.GetString(1), r.GetString(2), r.GetBoolean(3), r.GetInt32(4));
+    private const string UserColumns = "SELECT id,name,role,disabled,version,EXISTS(SELECT 1 FROM two_factor f WHERE f.userId=users.id) FROM users";
+    public List<UserInfo> Users() => Query(UserColumns+" ORDER BY name", User);
+    public UserInfo? FindUser(string id) => Query(UserColumns+" WHERE id=$0", User, id).SingleOrDefault();
+    private static UserInfo User(SqliteDataReader r) => new(r.GetString(0), r.GetString(1), r.GetString(2), r.GetBoolean(3), r.GetInt32(4),r.GetBoolean(5));
 
     public UserInfo? Authenticate(string name, string password)
     {
@@ -95,7 +106,7 @@ public sealed class Store
     {
         name = Required(name, 50);
         ValidatePassword(password);
-        if (role is not ("Admin" or "Operator" or "Viewer")) throw new InvalidOperationException("Choose a valid role.");
+        if (!Roles().Any(r=>r.Id==role)) throw new InvalidOperationException("Choose a valid role.");
         var id = Guid.NewGuid().ToString("N");
         Execute("INSERT INTO users(id,name,password,role) VALUES($0,$1,$2,$3)", id, name, HashPassword(password), role);
         return FindUser(id)!;
@@ -103,8 +114,12 @@ public sealed class Store
 
     public void SetUserDisabled(string id, bool disabled, string currentId)
     {
-        if (id == currentId) throw new InvalidOperationException("You cannot disable your own account.");
-        Execute("UPDATE users SET disabled=$1,version=version+1 WHERE id=$0", id, disabled);
+        lock(gate)
+        {
+            if (id == currentId) throw new InvalidOperationException("You cannot disable your own account.");
+            if(disabled && FindUser(id) is {Role:"Admin",Disabled:false} && Users().Count(u=>u.Role=="Admin"&&!u.Disabled)<=1)throw new InvalidOperationException("Keep at least one active Administrator.");
+            Execute("UPDATE users SET disabled=$1,version=version+1 WHERE id=$0", id, disabled);
+        }
     }
 
     public void ChangePassword(string id, string password)
@@ -153,6 +168,7 @@ public sealed class Store
 
     public void UpdateInventory(string id, Inventory inventory) => Execute(
         "UPDATE devices SET inventory=$1,lastSeen=$2 WHERE id=$0", id, JsonSerializer.Serialize(inventory, Wire.Json), Now());
+    public void TouchDevice(string id)=>Execute("UPDATE devices SET lastSeen=$1 WHERE id=$0",id,Now());
     public void DisableDevice(string id) => Execute("UPDATE devices SET disabled=1,secret='' WHERE id=$0", id);
     public void SetDeviceBlocked(string id, bool blocked) => Execute("UPDATE devices SET disabled=$1 WHERE id=$0", id, blocked);
     public bool ValidAgent(string id, string secret) => Scalar<long>(
@@ -219,7 +235,8 @@ public sealed class Store
             {
                 var device = FindDevice(existing) ?? throw new InvalidOperationException("Native identity has no device record.");
                 if (device.Disabled) throw new UnauthorizedAccessException("Device access is blocked.");
-                UpdateInventory(existing, inventory); return FindDevice(existing)!;
+                var saved=device.Inventory is null?inventory:device.Inventory with{ConnectionAddress=inventory.ConnectionAddress,AgentArchitecture=architecture,Version=inventory.Version,Capabilities=inventory.Capabilities};
+                UpdateInventory(existing, saved); return FindDevice(existing)!;
             }
             using var connection = Open(); using var transaction = connection.BeginTransaction();
             using var lookup = connection.CreateCommand(); lookup.Transaction = transaction;

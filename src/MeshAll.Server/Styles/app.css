@@ -18,6 +18,7 @@
 }
 @layer components {
     .table-scroll{position:relative}
+    .authenticator-qr{max-width:240px;background:#fff;padding:12px;margin:18px 0}.authenticator-qr svg{display:block;width:100%;height:auto}.recovery-codes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;padding:18px;list-style:none}
     h1:focus{outline:none}
     .remote-frame{width:100%;height:720px;border:0;display:block;background:var(--canvas)}
     .remote-surface{background:#12232d;min-height:440px;border-radius:8px;overflow:auto}

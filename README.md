@@ -58,23 +58,29 @@ The installer creates:
 The installer creates only the initial `admin` account with a unique random
 password saved in `/opt/creds.txt` (mode 0600). Existing accounts are preserved
 during updates. Direct development runs retain `/setup` with the one-time key in
-the data directory. No shared default password is shipped. Enroll PCs from **Devices → Add device**; the native
-package contains `MeshAllAgent` and its `.msh` policy. Windows uses the
-`MeshAllAgent` service identity and **MeshAll Agent** display name.
+the data directory. No shared default password is shipped.
 
-For an unattended service installation, extract the package first and run this
-from **Administrator PowerShell** in the extracted directory:
+## Install an agent: one executable
 
-```powershell
-.\MeshAllAgent.exe -fullinstall --copy-msh=1
-```
+Open **Devices → Add device**, create an enrollment key, and download the
+executable for the target platform. The server address, group and enrollment
+policy are embedded in that file using the native agent's embedded-policy format.
 
-The policy flag copies the separate `.msh` configuration into the
-installed service. Install the service before trying an interactive connection
-with a one-device key: the interactive process and system service can use
-different certificate identities.
+- **Windows:** run `MeshAllAgent.exe` and use the native **Install / Update**
+  action. It installs/starts the service and connects automatically, using the
+  same native installation path as MeshCentral. The service identity is
+  `MeshAllAgent` and its display name is **MeshAll Agent**.
+- **Linux/macOS:** download the platform's single `MeshAllAgent` executable,
+  then run `chmod +x MeshAllAgent; sudo ./MeshAllAgent -fullinstall`.
 
-Updates:
+No ZIP extraction, companion policy file or manually entered server settings are
+needed. The installed agent creates its own local state normally. Native notices
+are embedded in the executable and available at `/licenses/agent`.
+
+Install the background service before using an interactive agent with a
+one-device key: system-service and interactive certificate identities can differ.
+
+Server updates:
 
 ```bash
 meshall-update --pull    # Fast-forward a clean checkout from your GitHub
@@ -109,6 +115,46 @@ has MeshAll modifications for fresh per-session approval, no remembered five-
 minute approval when strict mode applies, and denial on timeout. RDP/VNC/AMT
 screen transports request agent approval before opening when the group policy
 requires it.
+
+## Account security and roles
+
+**Security** in each user's profile enables optional authenticator-app 2FA.
+The server verifies TOTP codes, issues single-use recovery codes, protects stored
+authenticator keys with ASP.NET Core Data Protection, and rejects reused codes.
+A valid password does not create a full sign-in session before the second factor.
+
+In **Settings**, an administrator may enable **Require two-factor authentication
+for all users**. This applies at the **next sign-in**: users without 2FA are limited
+to enrollment until setup is complete. Existing signed-in sessions continue.
+
+**Roles** provides custom capability sets, and **Users** assigns those roles.
+Capabilities cover inventory/editing/enrollment, desktop viewing and control,
+terminals, commands, files, network tools, power, scripts, audit, users and settings.
+Permissions are checked on the C# server as well as in Blazor. Role changes revoke
+affected sessions. The built-in Administrator retains full access, and at least
+one active Administrator must remain.
+
+For lost-authenticator recovery when no recovery code remains, a local server
+administrator can run the server binary with the instance's configuration:
+
+```bash
+MESHALL_CONNECTION_FILE=/etc/meshall/appsettings.json \
+  /opt/meshall/current/MeshAll.Server --reset-two-factor USERNAME
+```
+
+This resets only that account's factor and revokes its sessions. If instance
+enforcement is enabled, its next sign-in requires enrollment again. Preserve the
+instance data directory and its `keys` directory together when backing up.
+
+## Device inventory
+
+The native agent core reports OS/architecture, logical CPU cores/model, memory,
+uptime, local interfaces/MACs and disks, with automatic refresh every 30 seconds
+and a **Refresh inventory** action. The device's connection address is recorded
+separately from its primary interface address. Missing data is displayed as
+unreported; heartbeat messages no longer replace collected inventory with zeros.
+Agent-core changes are delivered automatically by the C# server without requiring
+a native executable rebuild for each inventory improvement.
 
 ## Parity and verification
 

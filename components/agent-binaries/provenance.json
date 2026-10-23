@@ -36,5 +36,25 @@
     "origin": "Ylianst/MeshAgent legacy-1.2.6",
     "sourceFile": "meshagent_aarch64",
     "license": "Apache-2.0"
+  },
+  {
+    "platform": "osx-x64",
+    "file": "MeshAllAgent",
+    "size": 4243736,
+    "sha384": "90f804675a8cbf209cce803f02f98f1c4202291fb8ebe302d003538ea958b4eb1a8607f79ef5ee19d2886194a2039118",
+    "origin": "Ylianst/MeshAgent legacy-1.2.6",
+    "sourceFile": "meshagent_osx-x86-64",
+    "license": "Apache-2.0",
+    "downloadUrl": "https://github.com/Ylianst/MeshAgent/releases/download/legacy-1.2.6/meshagent_osx-x86-64"
+  },
+  {
+    "platform": "osx-arm64",
+    "file": "MeshAllAgent",
+    "size": 3670136,
+    "sha384": "6e3fcfed24b6c28671e39445fdb8cd219040939da1488cbd6c167ae1eb7e2e37382f6e34c8a22961f3e1bc8ef4171673",
+    "origin": "Ylianst/MeshAgent legacy-1.2.6",
+    "sourceFile": "meshagent_osx-arm-64",
+    "license": "Apache-2.0",
+    "downloadUrl": "https://github.com/Ylianst/MeshAgent/releases/download/legacy-1.2.6/meshagent_osx-arm-64"
   }
 ]

@@ -9,6 +9,7 @@ public sealed class NetworkGateway(Store store, AgentGateway agents, ProtocolWor
     public async Task ProxyAsync(HttpContext context, string id, string tool)
     {
         if (!context.WebSockets.IsWebSocketRequest || !AgentGateway.SameOrigin(context) || tool is not ("terminal" or "powershell" or "vnc" or "rdp" or "ssh" or "amt")) { context.Response.StatusCode = 403; return; }
+        if(!store.HasPermission(store.SessionUser(context.User),Permissions.ForTool(tool))){context.Response.StatusCode=403;return;}
         var direct=context.Request.Query["direct"]=="1"&&tool is "rdp" or "vnc" or "ssh" or "amt";
         var device = store.FindDevice(id); if (device is not { Disabled: false } || !direct&&!agents.Online(id)) { context.Response.StatusCode = 409; return; }
         if(direct&&(!System.Net.IPAddress.TryParse(device.Inventory?.Ip,out _)||tool is "rdp" or "vnc" or "amt"&&store.RequiresDesktopConsent(id))){context.Response.StatusCode=403;return;}
@@ -47,7 +48,7 @@ public sealed class NetworkGateway(Store store, AgentGateway agents, ProtocolWor
                     if (protocol is not null) await protocol.Stream.WriteAsync(bytes, stop.Token); else await remote.WriteAsync(bytes, stop.Token);
                 }
             }
-            var output = Output(); var input = Input(); var validation = agents.ValidateAsync(context.User, id, stop.Token);
+            var output = Output(); var input = Input(); var validation = agents.ValidateAsync(context.User, id, stop.Token,Permissions.ForTool(tool));
             await Task.WhenAny(output, input, validation); await stop.CancelAsync();
             try { await Task.WhenAll(output, input, validation); } catch (OperationCanceledException) { }
             store.EndSession(session, "Completed");

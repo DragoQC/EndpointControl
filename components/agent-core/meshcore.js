@@ -2101,6 +2101,7 @@ function handleServerCommand(data) {
                 break;
             }
             case 'ping': { mesh.SendCommand('{"action":"pong"}'); break; }
+            case 'meshall-inventory': { try { require('meshall-inventory').refresh(); } catch(ex) { } break; }
             case 'pong': { break; }
             case 'plugin': {
                 try { require(data.plugin).consoleaction(data, data.rights, data.sessionid, this); } catch (ex) { throw ex; }
@@ -7244,11 +7245,13 @@ function agentUpdate_Start(updateurl, updateoptions) {
 function handleServerConnection(state) {
     meshServerConnectionState = state;
     if (meshServerConnectionState == 0) {
+        try { require('meshall-inventory').stop(); } catch(ex) { }
         // Server disconnected
         if (selfInfoUpdateTimer != null) { clearInterval(selfInfoUpdateTimer); selfInfoUpdateTimer = null; }
         lastSelfInfo = null;
     } else {
         // Server connected, send mesh core information
+        try { require('meshall-inventory').start(function(report){mesh.SendCommand(report);},function(){return meshCoreObj.users||[];}); } catch(ex) { }
         if (require('MeshAgent').ServerInfo == null || require('MeshAgent').ServerInfo.ControlChannelCertificate == null) {
             // Outdated Agent, will have insecure tunnels
             sendAgentMessage("This agent has an outdated certificate validation mechanism, consider updating.", 3, 118);

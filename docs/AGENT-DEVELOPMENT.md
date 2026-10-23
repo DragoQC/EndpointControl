@@ -49,6 +49,25 @@ computes their SHA384 hashes. The C# server delivers them through the native
 core-update protocol. Changes to your local core/modules therefore reach your
 enrolled agents through MeshAll, without editing a separate server installation.
 
+`modules_meshcore/meshall-inventory.js` collects device hardware, interfaces,
+memory/CPU, disks and uptime. `NativeInventory.cs` validates/merges its reports;
+`ReportedAt` is distinct from the last control-channel contact. The collector
+uses read-only OS interfaces and does not change adapters, VPNs or routes.
+
+## Single-file distribution
+
+`NativeAgentExecutable.cs` appends an embedded policy to the original platform
+binary using the native trailer: UTF-8 policy, four-byte big-endian policy length,
+then the 16-byte `exeMeshPolicyGuid` from `agentcore.c`. License/notice text is
+embedded ahead of that policy. Do not replace this with a ZIP or a launcher that
+requires a second downloaded configuration file.
+
+The Windows native GUI's Install / Update action installs that executable. Its
+embedded policy remains with the installed service, so the first service start
+can connect directly to the selected instance. Linux/macOS use the same policy
+trailer with their native install command. `tools/import-native-agents.py`
+reproduces the SHA384-pinned macOS baseline imports.
+
 The strict-consent flag disables remembered approval. Network-screen transports
 use the nonce-bound `meshall-consent` agent request before their TCP session.
 Actual Windows approval/denial, locked-session behavior, and native executable

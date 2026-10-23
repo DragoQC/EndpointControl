@@ -8,7 +8,7 @@ not automatically a successful test against this new C# server.
 | Workflow | Implementation | New C# orchestrator acceptance |
 |---|---|---|
 | Native agent authentication | C# certificate/nonce proof, TLS channel binding | Passed on Debian 13 and a Windows 11 system service |
-| Enrollment and native packages | C# one-use/expiring keys, native policy/ZIP | Live enrollment passed; Windows service installed from the separate-policy package |
+| Enrollment and native executables | C# one-use/expiring keys and embedded-policy executables | Single-file Linux enrollment passed; Windows native installer verification in progress; macOS artifacts packaged/hash-verified |
 | Agent core delivery | C# platform core packer and SHA384 update protocol | Linux and Windows core delivery and execution passed |
 | Desktop and optional approval | Retained native agent/core/viewer + C# relay | Windows frames, keyboard/mouse input and reconnect passed; opt-in approval acceptance pending |
 | Terminal / PowerShell | Native PTY + xterm.js + C# transport | Interactive agent terminal execution passed on Linux and Windows; separate PowerShell PTY acceptance pending |
@@ -21,8 +21,11 @@ not automatically a successful test against this new C# server.
 | WebRTC | Native negotiation technology retained | Direct-path orchestration acceptance pending |
 | TCP/UDP forwarding | Native routing technology retained | Redesigned workflow acceptance pending |
 | Users, groups, scripts, sessions, audit | C# / Blazor / SQLite | UI tests passed; native integration checks ongoing |
+| Profile 2FA / instance enforcement | Server-side TOTP, protected secrets, recovery codes and enrollment-only sessions | RFC 6238 and HTTP security tests passed; browser enrollment/recovery/next-login enforcement passed |
+| Custom roles / capabilities | C# authorization policies and Blazor capability controls | Role creation/assignment/revocation and denied HTTP capabilities passed |
+| Device inventory | Native core collector and C# validated snapshots | Live Linux CPU/memory/disks/interfaces/uptime verified; Windows comparison in progress |
 | Recording/playback | Orchestration/UI integration in progress | Acceptance pending |
-| SSO/MFA / tenants / mobile agents | Orchestration/UI integration in progress | Provider/platform acceptance pending |
+| SSO / tenants / mobile agents | Orchestration/UI integration in progress | Provider/platform acceptance pending |
 
 The matrix deliberately distinguishes retained technology, a ported control
 path, and end-to-end verification. No feature is declared fully verified merely
@@ -60,3 +63,16 @@ platform. Locale-specific input, clipboard, multi-monitor/session selection,
 negative exit-status semantics, dedicated PowerShell PTY, opt-in consent policy,
 and the advanced workflows above still need their own acceptance coverage.
 See `tests/README.md` for repeatable live checks.
+
+## Account security, roles and inventory — 0.3.0
+
+`tests/MeshAll.Tests` covers RFC 6238 vectors, second-factor enforcement before
+issuing a full session, recovery/receipt replay, challenge attempt limits,
+account-version revocation, protected secrets, CSRF, custom capabilities and
+native policy-trailer framing. Browser acceptance on an isolated HTTPS instance
+verified custom role creation/assignment, authenticator QR enrollment, recovery
+sign-in, next-login instance enforcement and role-change session revocation.
+
+A single downloaded Linux executable enrolled against that instance without an
+external policy file. Its native collector reported actual hardware and network
+data; commands, processes, binary files and interactive terminal checks passed.

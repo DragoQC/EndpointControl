@@ -1,6 +1,6 @@
 @page "/remote/{Id}/{Tool}"
 @layout ToolLayout
-@attribute [Authorize(Roles = "Admin,Operator")]
+@attribute [Authorize]
 @implements IAsyncDisposable
 @inject Workspace Workspace
 @inject Store Store
@@ -17,19 +17,19 @@
     <p class="muted small-text mt-4">MeshAll uses its own agent connection. The target service must be enabled for RDP, VNC, or SSH. Screen-access policy is enforced before opening a screen transport.</p>
 </fieldset></form>
 }
-@if (Tool is "desktop" or "amt" && running) { <div class="tool-controls"><label class="checkbox-label"><input type="checkbox" @bind="control" @bind:after="SetControl" />Enable keyboard &amp; mouse</label><button class="button small" @onclick="SendCad">Ctrl+Alt+Delete</button></div> }
+@if (Tool is "desktop" or "amt" && running) { <div class="tool-controls"><label class="checkbox-label"><input type="checkbox" @bind="control" @bind:after="SetControl" disabled="@(!canControl)" />Enable keyboard &amp; mouse</label><button class="button small" @onclick="SendCad" disabled="@(!canControl)">Ctrl+Alt+Delete</button></div> }
 <div class="remote-surface" style="@(running ? "" : "display:none")"><canvas id="remote-canvas" @ref="canvas" tabindex="0" aria-label="Remote display"></canvas><div id="remote-terminal" @ref="terminal"></div><div id="remote-vnc" @ref="vnc"></div></div>
 @code {
     [Parameter] public string Id { get; set; } = "";
     [Parameter] public string Tool { get; set; } = "desktop";
     private DeviceInfo? device; private ElementReference canvas, terminal, vnc;
     private string username = "", password = "", domain = "", privateKey = "", status = "Disconnected"; private string? error;
-    private int port; private bool busy, running, control, ready, direct;
+    private int port; private bool busy, running, control, ready, direct, canControl;
     private DotNetObjectReference<Remote>? reference;
     private string Label => Tool switch { "desktop" => "Agent desktop", "terminal" => "Agent terminal", "powershell" => "PowerShell terminal", "rdp" => "Remote Desktop (RDP)", "vnc" => "VNC", "ssh" => "SSH", "amt" => "Intel AMT KVM", _ => "Remote tool" };
     protected override async Task OnInitializedAsync()
     {
-        try { await Workspace.RequireAsync(manage: true); device = Store.FindDevice(Id); port = Tool switch { "rdp" => 3389, "vnc" => 5900, "ssh" => 22, _ => 0 }; direct=Tool is "rdp" or "vnc" or "ssh"&&!Agents.Online(Id); if (Tool is not ("desktop" or "terminal" or "powershell" or "rdp" or "vnc" or "ssh" or "amt") || device is null) error = "Remote tool or device not found."; }
+        try { var user=await Workspace.RequireAsync(Permissions.ForTool(Tool));canControl=Store.HasPermission(user,Permissions.Control); device = Store.FindDevice(Id); port = Tool switch { "rdp" => 3389, "vnc" => 5900, "ssh" => 22, _ => 0 }; direct=Tool is "rdp" or "vnc" or "ssh"&&!Agents.Online(Id); if (Tool is not ("desktop" or "terminal" or "powershell" or "rdp" or "vnc" or "ssh" or "amt") || device is null) error = "Remote tool or device not found."; }
         catch (Exception ex) { error = ex.Message; }
     }
     protected override void OnAfterRender(bool firstRender) { if (firstRender) { ready = true; StateHasChanged(); } }
@@ -37,7 +37,7 @@
     {
         if (busy || running || device is null) return; busy = true; error = null;
         try {
-            await Workspace.RequireAsync(manage: true);
+            await Workspace.RequireAsync(Permissions.ForTool(Tool));
             if (Store.FindDevice(Id) is not { Disabled: false }) throw new InvalidOperationException("Device access is blocked in MeshAll.");
             reference ??= DotNetObjectReference.Create(this);
             running = true; status = Tool is "rdp" or "vnc" or "amt" && Store.RequiresDesktopConsent(Id) ? "Waiting for the person at the PC to approve screen access…" : "Connecting…"; await InvokeAsync(StateHasChanged); await Task.Yield();
@@ -48,7 +48,7 @@
     }
     [JSInvokable] public async Task StateAsync(string next, bool connected) { status = next; if (!connected && next != "Connecting…") running = false; await InvokeAsync(StateHasChanged); }
     private async Task Disconnect() { await JS.InvokeVoidAsync("meshAll.remote.disconnect"); running = control = false; status = "Disconnected"; }
-    private async Task SetControl() => await JS.InvokeVoidAsync("meshAll.remote.control", control);
+    private async Task SetControl() { var user=await Workspace.RequireAsync(Permissions.Control);canControl=Store.HasPermission(user,Permissions.Control);await JS.InvokeVoidAsync("meshAll.remote.control",control&&canControl); }
     private async Task SendCad() { if (control) await JS.InvokeVoidAsync("meshAll.remote.cad"); }
     public async ValueTask DisposeAsync() { if(ready)try { await JS.InvokeVoidAsync("meshAll.remote.disconnect"); } catch (Exception ex) when(ex is JSDisconnectedException or TaskCanceledException or ObjectDisposedException) { } reference?.Dispose(); }
 }

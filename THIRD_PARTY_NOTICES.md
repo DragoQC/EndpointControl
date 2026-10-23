@@ -7,6 +7,7 @@ MIT-licensed. This does not replace the licenses of its dependencies.
 |---|---|---|
 | .NET / ASP.NET Core / Blazor | MIT and included runtime notices | Application framework |
 | Microsoft.Data.Sqlite / SQLitePCLRaw | MIT / Apache-2.0 and bundled SQLite notices | Persistence |
+| QRCoder | MIT | Locally generated authenticator enrollment QR codes |
 | System.Drawing.Common | MIT and framework notices | Windows GDI+ screen capture |
 | Tailwind CSS | MIT | Compiled UI styling |
 | Native MeshAgent-derived C/C++ technology | Apache-2.0 and component notices | Native PC agent maintained under `components/agent-native` |
@@ -23,3 +24,6 @@ The product does not include or launch the original MeshCentral JavaScript
 server/orchestrator. Native agent/viewer technology is intentionally retained,
 attributed, and maintained in this repository. Baseline binary provenance is in
 `components/agent-binaries/provenance.json`; retained source keeps its own notices.
+Single-file agent downloads embed the native Apache-2.0 license, MeshAll MIT
+license and these notices ahead of the native embedded-policy trailer. The same
+notices are available from the instance's `/licenses/agent` endpoint.

@@ -1,5 +1,4 @@
 using System.Buffers.Binary;
-using System.IO.Compression;
 using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Security.Cryptography.Pkcs;
@@ -39,22 +38,17 @@ public sealed class NativeAgentHub
         var group=store.NativeEnrollmentGroup(token);var url=store.Setting("publicUrl",configuration["MeshAll:PublicUrl"]??"https://localhost:5188").TrimEnd('/');
         return "MeshName="+group.Name.Replace('\r',' ').Replace('\n',' ')+"\r\nMeshType=2\r\nMeshID=0x"+Store.NativeMeshKey(token)+"\r\nServerID="+ServerId+"\r\nMeshServer="+url.Replace("https://","wss://",StringComparison.Ordinal).Replace("http://","ws://",StringComparison.Ordinal)+"/agent.ashx\r\ndisplayName=MeshAll Agent\r\ndescription=MeshAll remote-management agent\r\ncompanyName=MeshAll\r\nmeshServiceName=MeshAllAgent\r\nfileName=MeshAllAgent\r\n";
     }
-    public byte[] Package(string token,string platform)
+    public static readonly string[] Platforms=["win-x64","win-arm64","linux-x64","linux-arm64","osx-x64","osx-arm64"];
+    public string[] AvailablePlatforms=>Platforms.Where(p=>File.Exists(BinaryPath(p))).ToArray();
+    private static string BinaryPath(string platform)=>Path.Combine(AppContext.BaseDirectory,"NativeBinaries",platform,platform.StartsWith("win",StringComparison.Ordinal)?"MeshAllAgent.exe":"MeshAllAgent");
+    public string LicenseNotices()=>"MeshAll native agent\nCopyright Intel Corporation and contributors. MeshAll modifications: DragoQC and contributors.\nSource: https://github.com/DragoQC/MeshAll/tree/main/components/agent-native\n\n"+
+        string.Join("\n\n",new[]{"LICENSE","MeshAll-MIT-LICENSE","NOTICES.md"}.Select(name=>File.ReadAllText(Path.Combine(AppContext.BaseDirectory,"NativeBinaries",name))));
+    public byte[] Executable(string token,string platform)
     {
-        if(platform is not("win-x64" or "win-arm64" or "linux-x64" or "linux-arm64"))throw new InvalidOperationException("Unsupported native agent platform.");
-        var policy=Policy(token);var name=platform.StartsWith("win",StringComparison.Ordinal)?"MeshAllAgent.exe":"MeshAllAgent";
-        var path=Path.Combine(AppContext.BaseDirectory,"NativeBinaries",platform,name);
-        if(!File.Exists(path))throw new InvalidOperationException("The native agent package is not available in this build.");
-        using var buffer=new MemoryStream();
-        using(var zip=new ZipArchive(buffer,ZipArchiveMode.Create,true))
-        {
-            using(var output=zip.CreateEntry(name,CompressionLevel.Fastest).Open())using(var input=File.OpenRead(path))input.CopyTo(output);
-            using(var writer=new StreamWriter(zip.CreateEntry("MeshAllAgent.msh").Open(),new UTF8Encoding(false)))writer.Write(policy);
-            using(var writer=new StreamWriter(zip.CreateEntry("README.txt").Open()))writer.Write("MeshAll Agent\n\nKeep the executable and MeshAllAgent.msh together.\nWindows: run MeshAllAgent.exe and choose Install / Update, or run in an Administrator PowerShell:\n.\\MeshAllAgent.exe -fullinstall --copy-msh=1\nLinux: chmod +x MeshAllAgent; sudo ./MeshAllAgent -fullinstall --copy-msh=1\n\nThe policy flag is required for a service installation from this separate-policy package. An interactive run and an installed service may have different certificate identities; enroll the service before using the package interactively with a one-device key.\n\nThe C/C++ agent technology retains its upstream Apache-2.0 license.\nMeshAll orchestration and UI are MIT licensed.\n");
-            using(var writer=new StreamWriter(zip.CreateEntry("LICENSE.txt").Open()))writer.Write(File.ReadAllText(Path.Combine(AppContext.BaseDirectory,"NativeBinaries","LICENSE")));
-            using(var writer=new StreamWriter(zip.CreateEntry("NOTICE.txt").Open()))writer.Write("Native agent technology: Intel Corporation and contributors, Apache-2.0, with retained dependency notices. MeshAll modifications: DragoQC and contributors.\nComplete source and component notices: https://github.com/DragoQC/MeshAll/tree/main/components/agent-native\n");
-        }
-        return buffer.ToArray();
+        if(!Platforms.Contains(platform,StringComparer.Ordinal))throw new InvalidOperationException("Unsupported native agent platform.");
+        var policy=Policy(token)+"InstallFlags=2\r\n";var path=BinaryPath(platform);
+        if(!File.Exists(path))throw new InvalidOperationException("The native executable is unavailable in this build.");
+        return NativeAgentExecutable.Build(File.ReadAllBytes(path),policy,LicenseNotices());
     }
     public async Task AcceptAsync(HttpContext context)
     {
@@ -108,10 +102,11 @@ public sealed class NativeAgentHub
                 // Native platformType is a device/icon category, not the OS.
                 // Architecture IDs identify the executable's actual platform.
                 var windows=architecture is 1 or 2 or 3 or 4 or 21 or 22 or 34 or 42 or 43;
-                var inventory=new Inventory(name,windows?"Windows":architecture is 16 or 29?"macOS":"Linux",windows?"Windows":"Unix","Native "+architecture,"Agent service",context.Connection.RemoteIpAddress?.ToString()??"","",0,0,0,0,0,version.ToString(),["desktop","desktop-native","terminal","files","command","tcp","power"],[]);
+                var address=context.Connection.RemoteIpAddress?.ToString()??"";
+                var inventory=new Inventory(name,windows?"Windows":architecture is 16 or 29?"macOS":"Linux",windows?"Windows":"Unix",NativeInventory.Architecture(architecture),"Not reported",address,"",0,0,0,-1,0,version.ToString(),["desktop","desktop-native","terminal","files","command","tcp","power"],[],ConnectionAddress:address,AgentArchitecture:architecture);
                 var fingerprint=Convert.ToHexStringLower(SHA384.HashData(publicKey.ExportRSAPublicKey()));
                 var device=store.RegisterNative(fingerprint,Convert.ToHexStringLower(info[18..66]),name,architecture,inventory);
-                peer=new NativeAgentPeer(device.Id,socket,sendLock,store,cores,tunnels,configuration,windows,architecture,inventory);
+                peer=new NativeAgentPeer(device.Id,socket,sendLock,store,cores,tunnels,configuration,windows,architecture,device.Inventory??inventory);
                 gateway.RegisterNative(peer);authenticated=true;
                 await Send(Packet(4));await Send(Packet(11,[0,0]));
             }

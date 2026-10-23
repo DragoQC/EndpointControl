@@ -1,5 +1,15 @@
 # Live native-agent acceptance
 
+Server-side security and protocol unit/integration checks run without test VMs:
+
+```bash
+dotnet test tests/MeshAll.Tests/MeshAll.Tests.csproj
+```
+
+They exercise TOTP interoperability, full-session gating, enforcement at the next
+login, recovery/replay protection, CSRF, capability policies, role revocation,
+inventory merging and the native executable policy trailer. GitHub CI runs them.
+
 These opt-in checks drive the actual Blazor UI, C# orchestrator, enrolled native
 agent and target services. They require a disposable/test device and a workspace
 account with remote-management access.
@@ -19,6 +29,8 @@ read -rsp 'MeshAll password: ' MESHALL_PASSWORD; export MESHALL_PASSWORD
 Use `--allow-self-signed` only for a test server with a self-signed certificate.
 Alternatively, `--auth-state /private/session.json` loads an existing Playwright
 session. Do not put credentials, session state or screenshots in Git.
+For a 2FA-enabled test account, use a private storage state from a completed
+two-factor sign-in. The basic username/password automation does not bypass 2FA.
 
 - Commands verify actual output and reported success, not only echoed input.
 - Files create a uniquely named temporary folder, upload/download a 133 KB binary

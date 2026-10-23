@@ -9,6 +9,13 @@ namespace MeshAll.Tests;
 
 public class InventoryAndPackagingTests
 {
+    [Theory]
+    [InlineData("{\"ctrlChannel\":102938,\"type\":\"rtt\",\"time\":123456}",true)]
+    [InlineData("{\"ctrlChannel\":\"102938\",\"type\":\"pong\"}",true)]
+    [InlineData("1",false)][InlineData("5",false)]
+    [InlineData("{\"ctrlChannel\":102938,\"type\":\"options\",\"protocol\":5}",false)]
+    [InlineData("{\"ctrlChannel\":102938,\"type\":\"rtt\",\"protocol\":1}",false)]
+    public void DesktopHandshakeAllowsLatencyButNotOtherProtocols(string message,bool allowed)=>Assert.Equal(allowed,NativeDesktopProtocol.IsHandshakeControl(Encoding.UTF8.GetBytes(message)));
     [Fact]
     public void ExecutableUsesTheNativeEmbeddedPolicyTrailerAndContainsNotices()
     {

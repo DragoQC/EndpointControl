@@ -182,7 +182,20 @@ public sealed class AgentGateway(Store store, ILogger<AgentGateway> logger)
             await using var tunnel=await peer.OpenTunnelAsync(0,new(session,context.User.Identity!.Name!,store.RequiresDesktopConsent(id),ViewOnly:!store.HasPermission(store.SessionUser(context.User),Permissions.Control)),stop.Token);
             await browser.SendAsync(Encoding.UTF8.GetBytes("c").AsMemory(),WebSocketMessageType.Text,true,stop.Token);
             async Task Output(){await foreach(var frame in tunnel.Reader.ReadAllAsync(stop.Token))await browser.SendAsync(frame.Bytes.AsMemory(),frame.Text?WebSocketMessageType.Text:WebSocketMessageType.Binary,true,stop.Token);}
-            async Task Input(){var negotiated=false;while(browser.State==WebSocketState.Open){var frame=await NativeAgentHub.ReadAsync(browser,stop.Token);if(frame is null)return;if(!negotiated){if(Encoding.ASCII.GetString(frame.Bytes)!="2")throw new IOException("Only the desktop protocol is allowed on this relay.");negotiated=true;}await tunnel.SendAsync(frame.Bytes,frame.Text,stop.Token);}}
+            async Task Input()
+            {
+                var negotiated=false;var controls=0;
+                while(browser.State==WebSocketState.Open)
+                {
+                    var frame=await NativeAgentHub.ReadAsync(browser,stop.Token);if(frame is null)return;
+                    if(!negotiated)
+                    {
+                        if(Encoding.ASCII.GetString(frame.Bytes)=="2")negotiated=true;
+                        else if(++controls>16 || !NativeDesktopProtocol.IsHandshakeControl(frame.Bytes))throw new IOException("Only the desktop protocol is allowed on this relay.");
+                    }
+                    await tunnel.SendAsync(frame.Bytes,frame.Text,stop.Token);
+                }
+            }
             var output=Output();var input=Input();var validation=ValidateAsync(context.User,id,stop.Token);await Task.WhenAny(output,input,validation);await stop.CancelAsync();try{await Task.WhenAll(output,input,validation);}catch(OperationCanceledException){}
             store.EndSession(session,"Completed");
         }

@@ -796,8 +796,19 @@ var meshCoreObj = { action: 'coreinfo', value: (require('MeshAgent').coreHash ? 
 // Get the operating system description string
 try { require('os').name().then(function (v) { meshCoreObj.osdesc = v; meshCoreObjChanged(); }); } catch (ex) { }
 
+var meshallDesktopSwitchTimer=null;
+var meshallUserSignature=null;
+function meshallDesktopSwitched() {
+    if(process.platform!='win32')return;
+    if(meshallDesktopSwitchTimer)clearTimeout(meshallDesktopSwitchTimer);
+    meshallDesktopSwitchTimer=setTimeout(function(){
+        meshallDesktopSwitchTimer=null;
+        for(var id in tunnels){try{if(tunnels[id].protocol==2 && tunnels[id].s)tunnels[id].s.write(JSON.stringify({ctrlChannel:'102938',type:'meshall-desktop-changed'}));}catch(ex){}}
+    },500);
+}
 // Setup logged in user monitoring (THIS IS BROKEN IN WIN7)
 function onUserSessionChanged(user, locked) {
+    if(user!=null)meshallDesktopSwitched();
     userSession.enumerateUsers().then(function (users) {
         if (process.platform == 'linux') {
             if (userSession._startTime == null) {
@@ -851,6 +862,9 @@ function onUserSessionChanged(user, locked) {
         }
         meshCoreObj.lusers = meshCoreObj.lusers;
         meshCoreObj.users = u;
+        var meshallSignature=JSON.stringify({users:u,locked:meshCoreObj.lusers});
+        if(meshallUserSignature!=null && meshallUserSignature!=meshallSignature)meshallDesktopSwitched();
+        meshallUserSignature=meshallSignature;
         meshCoreObjChanged();
     });
 }

@@ -104,6 +104,11 @@ export class DesktopSession {
         }
     }
     remoteEnded(reason) { this.end(reason === 'local-user' ? 'The person at the computer ended desktop sharing.' : 'Desktop sharing ended.'); }
+    desktopChanged() {
+        if (!this.valid()) return;
+        this.closeTransport();
+        this.queue('Windows changed desktop. Restoring the view automatically…');
+    }
     stop() {
         this.stopped = true;
         if (this.timer) this.cancelDelay(this.timer);

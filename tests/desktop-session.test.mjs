@@ -28,6 +28,10 @@ test('an explicitly chosen view-only mode survives transport recovery',async()=>
     const f=fixture();await f.driver.attempt();f.transports[0].frame();f.driver.setControl(false);f.transports[0].drop();await f.retry();f.transports[1].frame();
     assert.equal(f.driver.desktop.stopInput,true);assert.deepEqual(f.inputs.at(-1),[true,true,false]);
 });
+test('an explicit Windows desktop transition refreshes the transport and keeps control requested',async()=>{
+    const f=fixture();await f.driver.attempt();f.transports[0].frame();f.driver.desktopChanged();assert.equal(f.reports.at(-1)[1],true);
+    await f.retry();f.transports[1].frame();assert.equal(f.driver.desktop.keys,true);assert.equal(f.driver.requested,true);
+});
 test('the current server capability can remove input permission on reconnect',async()=>{
     const f=fixture();await f.driver.attempt();f.transports[0].frame();f.transports[0].drop();f.setAccess({controlAllowed:false});await f.retry();f.transports[1].frame();
     assert.equal(f.driver.desktop.mouse,false);assert.equal(f.driver.desktop.keys,false);assert.deepEqual(f.inputs.at(-1),[false,false,false]);

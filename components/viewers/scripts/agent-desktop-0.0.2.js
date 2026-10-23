@@ -201,7 +201,12 @@ var CreateAgentRemoteDesktop = function (canvasid, scrolldiv) {
 
     obj.ProcessScreenMsg = function (width, height) {
         if (obj.debugmode > 0) { console.log('ScreenSize: ' + width + ' x ' + height); }
-        if ((obj.ScreenWidth == width) && (obj.ScreenHeight == height)) return; // Ignore change if screen is same size.
+        if ((obj.ScreenWidth == width) && (obj.ScreenHeight == height)) {
+            // A new Windows capture helper may start paused at the same resolution.
+            obj.SendCompressionLevel(obj.ImageType);obj.SendUnPause();obj.SendRemoteInputLock(2);
+            if(obj.onScreenSizeChange)obj.onScreenSizeChange(obj,width,height,obj.CanvasId);
+            return;
+        }
         obj.Canvas.setTransform(1, 0, 0, 1, 0, 0);
         obj.rotation = 0;
         obj.FirstDraw = true;

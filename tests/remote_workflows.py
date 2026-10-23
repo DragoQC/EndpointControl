@@ -104,6 +104,14 @@ async def main(args):
         packets.clear(); await np.locator("#remote-canvas").click(position={"x": 100, "y": 80})
         await np.wait_for_timeout(200)
         assert any(len(packet) > 2 and int.from_bytes(packet[:2], "big") == 2 for packet in packets)
+        before_switch=len(sockets)
+        sockets[-1].send(json.dumps({"ctrlChannel":"102938","type":"meshall-desktop-changed"}))
+        for _ in range(100):
+            if len(sockets)>before_switch:break
+            await asyncio.sleep(.1)
+        await expect(np.get_by_role("status")).to_have_text("Connected",timeout=15000)
+        assert len(sockets)>before_switch
+        await expect(control).to_be_checked();await expect(control).to_be_enabled()
         sockets[-1].send(json.dumps({"ctrlChannel": "102938", "type": "meshall-desktop-ended", "reason": "local-user"}))
         await expect(np.get_by_role("status")).to_contain_text("person at the computer ended")
         before = len(sockets); await np.wait_for_timeout(1200); assert len(sockets) == before

@@ -54,7 +54,7 @@
                             createRedirect:desktop=>{
                                 const redirect=CreateAgentRedirect(null,desktop,null,null,null,'/');
                                 redirect.Start=()=>{redirect.socket=new WebSocket(url(`/api/remote/${options.id}/desktop`));redirect.socket.binaryType='arraybuffer';redirect.socket.onopen=redirect.xxOnSocketConnected;
-                                    redirect.socket.onmessage=event=>{if(typeof event.data==='string'&&event.data.startsWith('{')){try{const message=JSON.parse(event.data);if(message.type==='meshall-desktop-ended'){driver.remoteEnded(message.reason);return;}}catch{}}redirect.xxOnMessage(event);};
+                                    redirect.socket.onmessage=event=>{if(typeof event.data==='string'&&event.data.startsWith('{')){try{const message=JSON.parse(event.data);if(message.type==='meshall-desktop-ended'){driver.remoteEnded(message.reason);return;}if(message.type==='meshall-desktop-changed'){driver.desktopChanged();return;}}catch{}}redirect.xxOnMessage(event);};
                                     redirect.socket.onclose=redirect.xxOnSocketClosed;redirect.xxStateChange(1);};return redirect;
                             }
                         });session.nativeSession=driver;await driver.attempt();

@@ -40,8 +40,9 @@ public sealed class AgentGateway(Store store, ILogger<AgentGateway> logger)
         var id = context.Request.Headers["X-Device-Id"].ToString(); var authorization = context.Request.Headers.Authorization.ToString();
         if (!context.WebSockets.IsWebSocketRequest || !authorization.StartsWith("Bearer ", StringComparison.Ordinal) || !store.ValidAgent(id, authorization[7..])) { context.Response.StatusCode = 401; return; }
         using var socket = await context.WebSockets.AcceptWebSocketAsync(); var connection = new Connection(socket);
+        store.RestoreConnectedDevice(id);
         connections.AddOrUpdate(id, connection, (_, old) => { old.Socket.Abort(); return connection; });
-        var device = store.FindDevice(id)!; store.Audit("Agent", "Device connected", device.Name);
+        var device = store.FindDevice(id);if(device is not {Disabled:false}){socket.Abort();return;}store.Audit("Agent", "Device connected", device.Name);
         using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted);
         var monitor = MonitorAsync(connection, lifetime.Token);
         try

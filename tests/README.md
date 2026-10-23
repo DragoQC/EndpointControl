@@ -10,6 +10,24 @@ They exercise TOTP interoperability, full-session gating, enforcement at the nex
 login, recovery/replay protection, CSRF, capability policies, role revocation,
 inventory merging and the native executable policy trailer. GitHub CI runs them.
 
+## Layout, navigation and removal regressions
+
+On a **disposable instance** with an authenticated administrator browser state:
+
+```bash
+.venv/bin/python tests/ui_regressions.py \
+  --base-url https://your-disposable-instance:5188 \
+  --auth-state /private/administrator-session.json --allow-self-signed
+```
+
+This enrolls a uniquely named simulated agent and uses generated landscape and
+portrait frames. It checks auto-connect, no nested desktop iframe or scrollbars,
+window resizing, fullscreen, pointer scaling, theme/navigation across Settings
+and Security, device removal, heartbeat behavior and return on reconnect. It
+removes the test device from the list and revokes its enrollment key afterward.
+
+## Live native-agent checks
+
 These opt-in checks drive the actual Blazor UI, C# orchestrator, enrolled native
 agent and target services. They require a disposable/test device and a workspace
 account with remote-management access.

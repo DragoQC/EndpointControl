@@ -33,7 +33,7 @@ public record OpenedSession(string SessionId);
 
 public static class Wire
 {
-    public const string Version = "0.3.0";
+    public const string Version = "0.3.1";
     public const int MaxMessageBytes = 12 * 1024 * 1024;
     public const int MaxFileBytes = 5 * 1024 * 1024;
     public static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);

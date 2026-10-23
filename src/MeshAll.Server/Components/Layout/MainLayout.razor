@@ -1,7 +1,6 @@
 @inherits LayoutComponentBase
 @inject Store Store
 @inject IConfiguration Config
-@inject IJSRuntime JS
 <a class="skip-link" href="#main-content">Skip to content</a>
 <span class="sr-only" data-meshall-ready="@ready.ToString().ToLowerInvariant()" aria-hidden="true"></span>
 <header class="topbar text-white">
@@ -9,7 +8,7 @@
         <a href="/" class="brand"><span class="brand-mark">m</span>MeshAll<span class="brand-dot">.</span></a>
         <span class="workspace-label">@Store.Setting("siteName", Config["MeshAll:SiteName"] ?? "My workspace")</span>
         <div class="topbar-actions">
-            <button class="theme-button" @onclick="ToggleTheme" aria-label="Toggle light or dark theme"><Icon Name="sun" /></button>
+            <button class="theme-button" type="button" data-theme-toggle aria-label="Toggle light or dark theme"><Icon Name="sun" /></button>
             <AuthorizeView><Authorized Context="auth"><span class="avatar">@auth.User.Identity?.Name?[..1].ToUpperInvariant()</span><a class="account-name" href="/account/security" data-enhance-nav="false">@auth.User.Identity?.Name</a></Authorized></AuthorizeView>
             <form method="post" action="/auth/logout" data-enhance="false"><AntiforgeryToken /><button class="signout" type="submit">Sign out</button></form>
         </div>
@@ -30,5 +29,4 @@
 @code {
     private bool ready;
     protected override void OnAfterRender(bool firstRender) { if (firstRender) { ready = true; StateHasChanged(); } }
-    private async Task ToggleTheme() => await JS.InvokeVoidAsync("meshAll.toggleTheme");
 }

@@ -156,6 +156,19 @@ unreported; heartbeat messages no longer replace collected inventory with zeros.
 Agent-core changes are delivered automatically by the C# server without requiring
 a native executable rebuild for each inventory improvement.
 
+## Desktop viewing and device removal
+
+The device's **Desktop** action opens and connects the full-window viewer. Its
+image fits the available space while preserving aspect ratio, including when the
+browser or remote resolution changes. **Fullscreen** provides a larger view;
+**Back to device** returns to inventory. There is no nested desktop iframe.
+
+**Remove device** removes a device from the website without revoking its agent's
+registration. Heartbeats do not bring a removed device back; its next authenticated
+agent connection does. Its group policy and identity are retained, and an existing
+access block remains enforced. This uses the `devices.remove` capability, granted
+to the built-in Administrator and configurable for custom roles.
+
 ## Parity and verification
 
 **100% functionality is the acceptance target.** Retaining working low-level

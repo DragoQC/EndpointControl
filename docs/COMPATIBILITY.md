@@ -89,3 +89,17 @@ OS/build, LAN address and MAC were populated. Commands, process inventory, binar
 files, interactive terminal and desktop/reconnect passed after deployment. The
 capability-restricted desktop relay also preserves the retained viewer's initial
 latency message; regression tests reject switching it to terminal/file protocols.
+
+## Viewer, navigation and removal — 0.3.1
+
+The desktop opens as a full-window, auto-connecting viewer with proportional
+fit and fullscreen. `tests/ui_regressions.py` exercises landscape/portrait remote
+screens, browser resizing, no page/viewer scrollbars, fullscreen and scaled pointer
+coordinates using an isolated simulated agent. It also covers light/dark navigation
+through Settings and static Security, including the Security page's theme button.
+
+Device removal hides the website entry until an authenticated reconnect, without
+discarding registration or group policy. Browser tests verify that heartbeats do
+not restore it. Server tests cover native return with a revoked enrollment key,
+retained blocks, managed-agent return, legacy schema migration, and adding the new
+Administrator capability without changing account records.

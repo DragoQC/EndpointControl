@@ -4,12 +4,12 @@ namespace MeshAll.Server.Services;
 
 public static class Permissions
 {
-    public const string Inventory="devices.view",EditDevices="devices.edit",BlockDevices="devices.block",Enroll="devices.enroll",Groups="groups.manage";
+    public const string Inventory="devices.view",EditDevices="devices.edit",BlockDevices="devices.block",RemoveDevices="devices.remove",Enroll="devices.enroll",Groups="groups.manage";
     public const string Desktop="desktop.view",Control="desktop.control",Terminal="terminal.use",Commands="commands.run",Processes="processes.view";
     public const string FilesRead="files.read",FilesWrite="files.write",Rdp="network.rdp",Vnc="network.vnc",Ssh="network.ssh",Amt="network.amt",Power="power.manage";
     public const string Scripts="scripts.manage",Sessions="sessions.view",Audit="audit.view",ExportAudit="audit.export",Users="users.manage",Roles="roles.manage",Settings="settings.manage";
     public static readonly (string Id,string Label)[] All=[
-        (Inventory,"View device inventory"),(EditDevices,"Edit devices"),(BlockDevices,"Block / restore device access"),(Enroll,"Enroll agents"),(Groups,"Manage device groups"),
+        (Inventory,"View device inventory"),(EditDevices,"Edit devices"),(BlockDevices,"Block / restore device access"),(RemoveDevices,"Remove devices from the website"),(Enroll,"Enroll agents"),(Groups,"Manage device groups"),
         (Desktop,"View native desktop"),(Control,"Control native desktop keyboard / mouse"),(Terminal,"Use interactive terminals"),(Commands,"Run commands"),(Processes,"View processes"),
         (FilesRead,"Browse / download files"),(FilesWrite,"Upload / change / delete files"),(Rdp,"Use RDP"),(Vnc,"Use VNC"),(Ssh,"Use SSH"),(Amt,"Use Intel AMT"),(Power,"Manage device power"),
         (Scripts,"Manage saved scripts"),(Sessions,"View sessions"),(Audit,"View audit log"),(ExportAudit,"Export audit log"),(Users,"Manage users"),(Roles,"Manage roles"),(Settings,"Manage instance settings")

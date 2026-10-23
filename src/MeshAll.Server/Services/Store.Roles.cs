@@ -8,9 +8,11 @@ public sealed partial class Store
     private void InitializeRoles()
     {
         var all=Permissions.All.Select(p=>p.Id).ToArray();
-        var adminOnly=new[]{Permissions.Enroll,Permissions.BlockDevices,Permissions.Groups,Permissions.ExportAudit,Permissions.Users,Permissions.Roles,Permissions.Settings};
+        var adminOnly=new[]{Permissions.Enroll,Permissions.BlockDevices,Permissions.RemoveDevices,Permissions.Groups,Permissions.ExportAudit,Permissions.Users,Permissions.Roles,Permissions.Settings};
         foreach(var role in new[]{new RoleInfo("Admin","Administrator",all,true),new RoleInfo("Operator","Operator",all.Except(adminOnly).ToArray(),true),new RoleInfo("Viewer","Viewer",[Permissions.Inventory,Permissions.Sessions,Permissions.Audit],true)})
             Execute("INSERT OR IGNORE INTO roles VALUES($0,$1,$2,1)",role.Id,role.Name,JsonSerializer.Serialize(role.Permissions));
+        // Administrator is immutable and must include capabilities added by upgrades.
+        Execute("UPDATE roles SET permissions=$0 WHERE id='Admin'",JsonSerializer.Serialize(all));
     }
     public List<RoleInfo> Roles()=>Query("SELECT id,name,permissions,builtIn FROM roles ORDER BY name",r=>new RoleInfo(r.GetString(0),r.GetString(1),JsonSerializer.Deserialize<string[]>(r.GetString(2))??[],r.GetBoolean(3)));
     public bool HasPermission(UserInfo? user,string permission)=>user is {Disabled:false}&&Roles().Any(r=>r.Id==user.Role&&r.Permissions.Contains(permission,StringComparer.Ordinal));
@@ -26,7 +28,7 @@ public sealed partial class Store
             if(list.Contains(Permissions.Control)&&!list.Contains(Permissions.Desktop))list.Add(Permissions.Desktop);
             if(list.Contains(Permissions.FilesWrite)&&!list.Contains(Permissions.FilesRead))list.Add(Permissions.FilesRead);
             if(list.Contains(Permissions.ExportAudit)&&!list.Contains(Permissions.Audit))list.Add(Permissions.Audit);
-            if(list.Any(p=>p.StartsWith("desktop.",StringComparison.Ordinal)||p.StartsWith("files.",StringComparison.Ordinal)||p.StartsWith("network.",StringComparison.Ordinal)||p is Permissions.Commands or Permissions.Terminal or Permissions.Processes or Permissions.Power or Permissions.Groups or Permissions.EditDevices or Permissions.BlockDevices)&&!list.Contains(Permissions.Inventory))list.Add(Permissions.Inventory);
+            if(list.Any(p=>p.StartsWith("desktop.",StringComparison.Ordinal)||p.StartsWith("files.",StringComparison.Ordinal)||p.StartsWith("network.",StringComparison.Ordinal)||p is Permissions.Commands or Permissions.Terminal or Permissions.Processes or Permissions.Power or Permissions.Groups or Permissions.EditDevices or Permissions.BlockDevices or Permissions.RemoveDevices)&&!list.Contains(Permissions.Inventory))list.Add(Permissions.Inventory);
             var key=id??Guid.NewGuid().ToString("N");
             Execute("INSERT INTO roles VALUES($0,$1,$2,0) ON CONFLICT(id) DO UPDATE SET name=$1,permissions=$2; UPDATE users SET version=version+1 WHERE role=$0",key,Required(name,70),JsonSerializer.Serialize(list.Order(StringComparer.Ordinal)));
         }

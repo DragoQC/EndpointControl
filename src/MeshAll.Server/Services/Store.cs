@@ -44,7 +44,7 @@ public sealed partial class Store
             INSERT OR IGNORE INTO groups VALUES('default','Unassigned','Devices awaiting a home');
             CREATE TABLE IF NOT EXISTS devices(id TEXT PRIMARY KEY,name TEXT NOT NULL,groupId TEXT NOT NULL,
               tags TEXT NOT NULL DEFAULT '',notes TEXT NOT NULL DEFAULT '',secret TEXT NOT NULL,
-              disabled INTEGER NOT NULL DEFAULT 0,lastSeen TEXT NOT NULL,inventory TEXT);
+              disabled INTEGER NOT NULL DEFAULT 0,lastSeen TEXT NOT NULL,inventory TEXT,removed INTEGER NOT NULL DEFAULT 0);
             CREATE TABLE IF NOT EXISTS tokens(id TEXT PRIMARY KEY,name TEXT NOT NULL,hash TEXT NOT NULL UNIQUE,
               groupId TEXT NOT NULL,expires TEXT NOT NULL,remaining INTEGER NOT NULL);
             CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY AUTOINCREMENT,time TEXT NOT NULL,
@@ -67,6 +67,8 @@ public sealed partial class Store
             CREATE INDEX IF NOT EXISTS audit_time ON audit(time);
             UPDATE sessions SET ended=strftime('%Y-%m-%dT%H:%M:%fZ','now'),status='Interrupted' WHERE ended IS NULL;
             """);
+        if(!Query("PRAGMA table_info(devices)",r=>r.GetString(1)).Contains("removed",StringComparer.Ordinal))
+            Execute("ALTER TABLE devices ADD COLUMN removed INTEGER NOT NULL DEFAULT 0");
         InitializeRoles();
         if (!HasUsers && !File.Exists(BootstrapPath))
         {
@@ -149,8 +151,8 @@ public sealed partial class Store
         }
     }
 
-    public List<DeviceInfo> Devices() => Query("SELECT id,name,groupId,tags,notes,disabled,lastSeen,inventory FROM devices ORDER BY name", Device);
-    public DeviceInfo? FindDevice(string id) => Query("SELECT id,name,groupId,tags,notes,disabled,lastSeen,inventory FROM devices WHERE id=$0", Device, id).SingleOrDefault();
+    public List<DeviceInfo> Devices() => Query("SELECT id,name,groupId,tags,notes,disabled,lastSeen,inventory FROM devices WHERE removed=0 ORDER BY name", Device);
+    public DeviceInfo? FindDevice(string id,bool includeRemoved=false) => Query("SELECT id,name,groupId,tags,notes,disabled,lastSeen,inventory FROM devices WHERE id=$0 AND (removed=0 OR $1=1)", Device, id,includeRemoved).SingleOrDefault();
     private static DeviceInfo Device(SqliteDataReader r) => new(r.GetString(0), r.GetString(1), r.GetString(2),
         r.GetString(3), r.GetString(4), r.GetBoolean(5), Date(r.GetString(6)),
         r.IsDBNull(7) ? null : JsonSerializer.Deserialize<Inventory>(r.GetString(7), Wire.Json));
@@ -169,6 +171,8 @@ public sealed partial class Store
     public void UpdateInventory(string id, Inventory inventory) => Execute(
         "UPDATE devices SET inventory=$1,lastSeen=$2 WHERE id=$0", id, JsonSerializer.Serialize(inventory, Wire.Json), Now());
     public void TouchDevice(string id)=>Execute("UPDATE devices SET lastSeen=$1 WHERE id=$0",id,Now());
+    public void RemoveDevice(string id){lock(gate)Execute("UPDATE devices SET removed=1 WHERE id=$0",id);}
+    public void RestoreConnectedDevice(string id){lock(gate)Execute("UPDATE devices SET removed=0 WHERE id=$0 AND disabled=0",id);}
     public void DisableDevice(string id) => Execute("UPDATE devices SET disabled=1,secret='' WHERE id=$0", id);
     public void SetDeviceBlocked(string id, bool blocked) => Execute("UPDATE devices SET disabled=$1 WHERE id=$0", id, blocked);
     public bool ValidAgent(string id, string secret) => Scalar<long>(
@@ -233,8 +237,9 @@ public sealed partial class Store
             var existing = Query("SELECT deviceId FROM native_identities WHERE certificate=$0", r => r.GetString(0), certificate).SingleOrDefault();
             if (existing is not null)
             {
-                var device = FindDevice(existing) ?? throw new InvalidOperationException("Native identity has no device record.");
+                var device = FindDevice(existing,includeRemoved:true) ?? throw new InvalidOperationException("Native identity has no device record.");
                 if (device.Disabled) throw new UnauthorizedAccessException("Device access is blocked.");
+                RestoreConnectedDevice(existing);
                 var saved=device.Inventory is null?inventory:device.Inventory with{ConnectionAddress=inventory.ConnectionAddress,AgentArchitecture=architecture,Version=inventory.Version,Capabilities=inventory.Capabilities};
                 UpdateInventory(existing, saved); return FindDevice(existing)!;
             }

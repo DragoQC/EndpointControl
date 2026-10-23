@@ -21,9 +21,16 @@
     .authenticator-qr{max-width:240px;background:#fff;padding:12px;margin:18px 0}.authenticator-qr svg{display:block;width:100%;height:auto}.recovery-codes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;padding:18px;list-style:none}
     h1:focus{outline:none}
     .remote-frame{width:100%;height:720px;border:0;display:block;background:var(--canvas)}
-    .remote-surface{background:#12232d;min-height:440px;border-radius:8px;overflow:auto}
-    .remote-surface>canvas{width:100%;height:auto;display:block;outline:none}
-    #remote-terminal,#remote-vnc{width:100%;min-height:480px;height:calc(100vh - 160px);padding:12px}
+    .tool-shell{height:100dvh;min-height:0;min-width:0;overflow:hidden;background:var(--canvas);padding:12px;display:flex}
+    .remote-workspace{width:100%;height:100%;min-height:0;min-width:0;display:flex;flex-direction:column;gap:10px;background:var(--canvas)}
+    .remote-workspace:fullscreen{padding:10px;width:100vw;height:100dvh}
+    .remote-toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0}
+    .remote-title{min-width:0}.remote-title h2{overflow-wrap:anywhere}.remote-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px}.remote-actions label{margin:0;white-space:nowrap}
+    .remote-setup{overflow:auto;flex-shrink:1}.remote-workspace>.notice{flex-shrink:0}
+    .remote-surface{background:#12232d;min-height:0;min-width:0;flex:1;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+    .remote-surface>canvas{display:block;outline:none;max-width:100%;max-height:100%;flex:none}
+    #remote-terminal,#remote-vnc{width:100%;height:100%;min-height:0;min-width:0;overflow:hidden}
+    #remote-terminal{padding:8px}#remote-vnc{display:flex;align-items:center;justify-content:center}
     .tool-controls{@apply mb-3 flex items-center justify-between gap-3 rounded-md border border-[var(--border)] bg-[var(--surface)] p-3}
     .tool-shell>.panel{margin-bottom:16px}
     .button{@apply inline-flex items-center justify-center gap-2 rounded-md font-semibold}

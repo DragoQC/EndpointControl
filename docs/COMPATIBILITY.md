@@ -8,7 +8,7 @@ not automatically a successful test against this new C# server.
 | Workflow | Implementation | New C# orchestrator acceptance |
 |---|---|---|
 | Native agent authentication | C# certificate/nonce proof, TLS channel binding | Passed on Debian 13 and a Windows 11 system service |
-| Enrollment and native executables | C# one-use/expiring keys and embedded-policy executables | Single-file Linux enrollment passed; Windows native installer verification in progress; macOS artifacts packaged/hash-verified |
+| Enrollment and native executables | C# one-use/expiring keys and embedded-policy executables | Single-file Linux enrollment and Windows native GUI update/automatic reconnect passed; macOS artifacts packaged/hash-verified, OS installation acceptance pending |
 | Agent core delivery | C# platform core packer and SHA384 update protocol | Linux and Windows core delivery and execution passed |
 | Desktop and optional approval | Retained native agent/core/viewer + C# relay | Windows frames, keyboard/mouse input and reconnect passed; opt-in approval acceptance pending |
 | Terminal / PowerShell | Native PTY + xterm.js + C# transport | Interactive agent terminal execution passed on Linux and Windows; separate PowerShell PTY acceptance pending |
@@ -23,7 +23,7 @@ not automatically a successful test against this new C# server.
 | Users, groups, scripts, sessions, audit | C# / Blazor / SQLite | UI tests passed; native integration checks ongoing |
 | Profile 2FA / instance enforcement | Server-side TOTP, protected secrets, recovery codes and enrollment-only sessions | RFC 6238 and HTTP security tests passed; browser enrollment/recovery/next-login enforcement passed |
 | Custom roles / capabilities | C# authorization policies and Blazor capability controls | Role creation/assignment/revocation and denied HTTP capabilities passed |
-| Device inventory | Native core collector and C# validated snapshots | Live Linux CPU/memory/disks/interfaces/uptime verified; Windows comparison in progress |
+| Device inventory | Native core collector and C# validated snapshots | Live Linux and Windows reports passed; Windows logical CPU count and memory matched independent CIM queries |
 | Recording/playback | Orchestration/UI integration in progress | Acceptance pending |
 | SSO / tenants / mobile agents | Orchestration/UI integration in progress | Provider/platform acceptance pending |
 
@@ -76,3 +76,16 @@ sign-in, next-login instance enforcement and role-change session revocation.
 A single downloaded Linux executable enrolled against that instance without an
 external policy file. Its native collector reported actual hardware and network
 data; commands, processes, binary files and interactive terminal checks passed.
+
+On the Windows test target, the single downloaded `MeshAllAgent.exe` opened the
+native installer with the instance and group already populated. Its **Update**
+action elevated normally, installed/restarted the service and automatically
+reconnected. The installed service executable retained the native policy trailer;
+no extracted ZIP or manually placed policy participated in that workflow.
+
+Windows reported six logical CPUs and 25,747,271,680 bytes of visible memory,
+matching independent `Win32_ComputerSystem` / `Win32_OperatingSystem` CIM queries.
+OS/build, LAN address and MAC were populated. Commands, process inventory, binary
+files, interactive terminal and desktop/reconnect passed after deployment. The
+capability-restricted desktop relay also preserves the retained viewer's initial
+latency message; regression tests reject switching it to terminal/file protocols.

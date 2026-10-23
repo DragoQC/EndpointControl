@@ -8,7 +8,7 @@ function notify(title, tsid, options) {
         return original(title, tsid, options);
     }
     var result = { _closed: false, _timer: null, child: null };
-    require('events').EventEmitter.call(result, true).createEvent('close');
+    var emitter=require('events').EventEmitter.call(result, true).createEvent('close');
     var sessions = require('user-sessions');
     var marker = 'MESHALL_USER_CLOSED_' + Date.now() + '_' + String(Math.random()).split('.').join('');
     var script = "var n=require('notifybar-desktop');n.MaxWidth=" + JSON.stringify(notify.MaxWidth || 0) + ";n.DefaultPinned=" + JSON.stringify(notify.DefaultPinned || false) + ";" +
@@ -17,13 +17,13 @@ function notify(title, tsid, options) {
         "bar.on('close',function(){setTimeout(function(){process._exit();},30);});" +
         "require('DescriptorEvents').addDescriptor(require('util-descriptors').getProcessHandle(" + process.pid + ")).on('signaled',function(){process._exit();});";
     var encoded = Buffer.from(script).toString('base64');
-    result.close = function () {
+    emitter.addMethod('close', function () {
         if (this._closed) return;
         this._closed = true;
         if (this._timer) clearTimeout(this._timer);
         sessions.removeListener('changed', this._changed);
         if (this.child) { this.child.removeAllListeners('exit'); try { this.child.kill(); } catch (e) { } this.child = null; }
-    };
+    });
     result._userClose = function () { if (!this._closed) { this.close(); this.emit('close'); } };
     result._spawn = function () {
         this._timer = null; if (this._closed) return;

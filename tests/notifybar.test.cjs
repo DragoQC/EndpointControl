@@ -2,7 +2,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),vm=require(
 const source=fs.readFileSync(require('node:path').join(__dirname,'../components/agent-core/modules_meshcore/meshall-notifybar.js'),'utf8');
 function fixture(){
     const sessions=new EventEmitter();sessions.getProcessOwnerName=()=>({tsid:0});const children=[],timers=[];
-    function NativeEmitter(){EventEmitter.call(this);for(const key of ['on','emit','removeListener'])this[key]=EventEmitter.prototype[key];this.createEvent=()=>this;return this;}
+    function NativeEmitter(){EventEmitter.call(this);for(const key of ['on','emit','removeListener'])this[key]=EventEmitter.prototype[key];this.createEvent=()=>this;this.addMethod=(key,method)=>{this[key]=method;return this;};return this;}
     const original=()=>{};original.MaxWidth=0;original.DefaultPinned=false;
     const context={module:{exports:{}},process:{platform:'win32',pid:1,execPath:'C:\\MeshAllAgent.exe'},Buffer,Date,Math,
         setTimeout:callback=>{const timer={callback};timers.push(timer);return timer;},clearTimeout:timer=>{timer.cancelled=true;},

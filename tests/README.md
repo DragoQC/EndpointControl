@@ -10,6 +10,18 @@ They exercise TOTP interoperability, full-session gating, enforcement at the nex
 login, recovery/replay protection, CSRF, capability policies, role revocation,
 inventory merging and the native executable policy trailer. GitHub CI runs them.
 
+Desktop/sharing-bar lifecycle checks also run in Node:
+
+```bash
+node --test tests/desktop-session.test.mjs tests/notifybar.test.cjs
+```
+
+`tests/remote_workflows.py --base-url URL --auth-state /private/state.json` runs on
+a disposable instance. It drives the actual native viewer against a simulated KVM
+transport, forces a disconnect, verifies automatic recovery/input and local-user
+stop, tests `.cmd`/`.ps1` library-to-device routing, and negotiates VNC None/password
+authentication against isolated loopback fixtures.
+
 ## Layout, navigation and removal regressions
 
 On a **disposable instance** with an authenticated administrator browser state:

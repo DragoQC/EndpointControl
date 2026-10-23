@@ -14,7 +14,7 @@ public record Inventory(string Hostname, string Platform, string Os, string Arch
     string? CpuModel = null, string? Manufacturer = null, string? Model = null,
     NetworkInterfaceInfo[]? Interfaces = null, DateTimeOffset? ReportedAt = null, string? ConnectionAddress = null, int AgentArchitecture = 0,string? Diagnostic = null);
 public record NetworkInterfaceInfo(string Name,string Address,string Family,string Mac,bool Internal);
-public record CommandInput(string Command, string? Directory = null, int TimeoutSeconds = 30);
+public record CommandInput(string Command, string? Directory = null, int TimeoutSeconds = 30,string Shell = "auto");
 public record CommandOutput(string Output, int ExitCode, string Directory, bool Truncated = false);
 public record FileInput(string Path, string? Content = null);
 public record RemoteFile(string Name, string Path, bool Directory, long Size, DateTimeOffset Modified);
@@ -33,7 +33,7 @@ public record OpenedSession(string SessionId);
 
 public static class Wire
 {
-    public const string Version = "0.3.1";
+    public const string Version = "0.4.0";
     public const int MaxMessageBytes = 12 * 1024 * 1024;
     public const int MaxFileBytes = 5 * 1024 * 1024;
     public static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);

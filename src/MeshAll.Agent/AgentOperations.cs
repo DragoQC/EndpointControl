@@ -140,7 +140,18 @@ public sealed class AgentOperations(AgentSettings settings, Func<AgentMessage, T
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct); timeout.CancelAfter(TimeSpan.FromSeconds(Math.Clamp(input.TimeoutSeconds, 1, 60)));
         var info = new ProcessStartInfo(OperatingSystem.IsWindows() ? "powershell.exe" : "/bin/sh") { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true, StandardOutputEncoding = Encoding.UTF8, StandardErrorEncoding = Encoding.UTF8,
             WorkingDirectory = string.IsNullOrWhiteSpace(input.Directory) ? Environment.CurrentDirectory : Path.GetFullPath(input.Directory) };
-        if (OperatingSystem.IsWindows()) { info.ArgumentList.Add("-NoLogo"); info.ArgumentList.Add("-NoProfile"); info.ArgumentList.Add("-NonInteractive"); info.ArgumentList.Add("-EncodedCommand"); info.ArgumentList.Add(Convert.ToBase64String(Encoding.Unicode.GetBytes("[Console]::OutputEncoding=[Text.UTF8Encoding]::new(); " + input.Command))); }
+        var kind=ScriptTypes.Resolve(input.Shell,OperatingSystem.IsWindows());string? temporary=null;
+        try {
+        if(input.Shell!="auto")
+        {
+            temporary=Directory.CreateTempSubdirectory("MeshAllScript_").FullName;var file=Path.Combine(temporary,"script"+kind);
+            var encoding=new UTF8Encoding(kind==".ps1");var text=kind==".cmd"?"@echo off\r\nchcp 65001 >nul\r\n"+input.Command:input.Command;
+            await File.WriteAllBytesAsync(file,encoding.GetPreamble().Concat(encoding.GetBytes(text)).ToArray(),ct);
+            if(kind==".cmd"){info.FileName=Environment.GetEnvironmentVariable("ComSpec")??"cmd.exe";info.Arguments="/d /s /c \"\""+file+"\"\"";}
+            else if(kind==".ps1"){foreach(var arg in new[]{"-NoLogo","-NoProfile","-NonInteractive","-ExecutionPolicy","Bypass","-EncodedCommand",Convert.ToBase64String(Encoding.Unicode.GetBytes(ScriptTypes.PowerShellFileInvocation("'"+file.Replace("'","''")+"'")))})info.ArgumentList.Add(arg);}
+            else info.ArgumentList.Add(file);
+        }
+        else if (OperatingSystem.IsWindows()) { info.ArgumentList.Add("-NoLogo"); info.ArgumentList.Add("-NoProfile"); info.ArgumentList.Add("-NonInteractive"); info.ArgumentList.Add("-EncodedCommand"); info.ArgumentList.Add(Convert.ToBase64String(Encoding.Unicode.GetBytes("[Console]::OutputEncoding=[Text.UTF8Encoding]::new(); " + input.Command))); }
         else { info.ArgumentList.Add("-c"); info.ArgumentList.Add(input.Command); }
         using var process = Process.Start(info) ?? throw new IOException("The command could not be started.");
         var output = new StringBuilder(); var truncated = false; var gate = new object();
@@ -149,6 +160,7 @@ public sealed class AgentOperations(AgentSettings settings, Func<AgentMessage, T
         try { await process.WaitForExitAsync(timeout.Token); }
         catch (OperationCanceledException) { try { process.Kill(entireProcessTree: true); } catch (InvalidOperationException) { } await reads; throw new IOException("Command canceled or timed out."); }
         await reads; return new(output.ToString(), process.ExitCode, info.WorkingDirectory, truncated);
+        } finally { if(temporary is not null)try{Directory.Delete(temporary,true);}catch(IOException){} }
     }
     public async ValueTask DisposeAsync()
     {

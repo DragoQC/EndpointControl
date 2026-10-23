@@ -97,7 +97,7 @@ var CreateAgentRemoteDesktop = function (canvasid, scrolldiv) {
         obj.UnGrabMouseInput();
         obj.touchenabled = 0;
         if (obj.onScreenSizeChange != null) { obj.onScreenSizeChange(obj, obj.ScreenWidth, obj.ScreenHeight, obj.CanvasId); }
-        obj.Canvas.clearRect(0, 0, obj.CanvasId.width, obj.CanvasId.height);
+        if (!obj.preserveFrameOnStop) obj.Canvas.clearRect(0, 0, obj.CanvasId.width, obj.CanvasId.height);
     }
 
     obj.xxStateChange = function (newstate) {

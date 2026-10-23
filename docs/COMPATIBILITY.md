@@ -103,3 +103,22 @@ discarding registration or group policy. Browser tests verify that heartbeats do
 not restore it. Server tests cover native return with a revoked enrollment key,
 retained blocks, managed-agent return, legacy schema migration, and adding the new
 Administrator capability without changing account records.
+
+## Desktop recovery, Web-VNC and typed scripts — 0.4.0
+
+Native viewer transport recovery preserves the view and requested control mode.
+Input availability follows current server permissions and receipt of a real desktop
+frame. Windows sharing-bar helper termination/session changes are distinct from an
+explicit local close. Node and real native-viewer browser-protocol tests cover
+recovery, input rebinding, permission loss, consent/local-user stop and cancellation.
+
+Web-VNC now uses the configured/default port and prompts only when RFB requests
+authentication, like MeshCentral's `p10rfb` / noVNC credential negotiation. Native
+desktop requires no external VNC setup; Web-VNC still requires an existing service.
+Browser fixtures verify both RFB None and password authentication.
+
+Saved-script types choose PowerShell, Command Prompt or Unix shell. Browser tests
+verify editor/selection/request routing. Live Windows probes verified real `.cmd`
+batch labels and extension, PowerShell `param(...)`/`.ps1`, Unicode output and
+explicit exit statuses 7 and 9. Unix file execution/exit and legacy-schema tests run
+in the server test suite.

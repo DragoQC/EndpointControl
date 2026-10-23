@@ -18,6 +18,7 @@ class DesktopAgent:
     def __init__(self, base, identity, secret, hostname):
         self.base, self.identity, self.secret, self.hostname = base, identity, secret, hostname
         self.inputs = []
+        self.commands = []
         self.image(1280, 800)
 
     def image(self, width, height):
@@ -60,6 +61,9 @@ class DesktopAgent:
                 elif operation == "desktop.input":
                     self.inputs.append(payload["input"])
                     result = "Received"
+                elif operation == "command":
+                    self.commands.append(payload)
+                    result = {"output": "Executed by disposable fixture", "exitCode": 0, "directory": "/fixture", "truncated": False}
                 else:
                     result = "Completed"
                 await self.socket.send(json.dumps({"kind": "result", "id": message["id"], "payload": result, "success": True}))

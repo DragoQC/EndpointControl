@@ -72,3 +72,10 @@ The strict-consent flag disables remembered approval. Network-screen transports
 use the nonce-bound `meshall-consent` agent request before their TCP session.
 Actual Windows approval/denial, locked-session behavior, and native executable
 updates require the corresponding device acceptance tests.
+
+`meshall-notifybar.js` wraps the retained Windows sharing bar's process lifecycle.
+It respawns the helper after session changes and reports only its explicit close
+button as a local user stop. `meshall-desktop-ended` control messages prevent the
+browser recovery loop from reopening a deliberately ended session. The browser's
+`desktop-session.mjs` reprobes permissions, waits for actual frames, and reapplies
+requested input when restoring a transport.

@@ -163,11 +163,37 @@ image fits the available space while preserving aspect ratio, including when the
 browser or remote resolution changes. **Fullscreen** provides a larger view;
 **Back to device** returns to inventory. There is no nested desktop iframe.
 
+Native desktop transport interruptions (including Windows sign-in/desktop changes)
+recover in the same viewer with backoff and a retained last frame. Keyboard/mouse
+control starts automatically when the role allows it and a real frame is available;
+an explicitly selected view-only mode survives reconnects. Local sharing-bar close,
+declined consent and revoked access stop recovery. The Windows sharing-bar helper
+is recreated after a session change rather than treating its exit as a user stop.
+
 **Remove device** removes a device from the website without revoking its agent's
 registration. Heartbeats do not bring a removed device back; its next authenticated
 agent connection does. Its group policy and identity are retained, and an existing
 access block remains enforced. This uses the `devices.remove` capability, granted
 to the built-in Administrator and configurable for custom roles.
+
+## Remote tools and typed scripts
+
+**Agent desktop** is the built-in, setup-free screen transport. **VNC** connects to
+an already installed VNC service through the agent, using the device's remembered
+port (default 5900). It opens without an up-front username/password form and asks
+for only the credentials requested by that VNC service. Advanced connection settings
+remain available; device editors can remember a nonstandard VNC port.
+
+This matches MeshCentral's distinction between native desktop and Web-VNC:
+the agent authenticates the management tunnel; it does not silently install a VNC
+server or bypass its password.
+
+Saved scripts have an explicit type: **PowerShell (.ps1)**, **Command Prompt
+(.cmd)** or **Shell (.sh)**. Selecting a saved script sets the device's execution
+shell automatically. Explicitly typed scripts run as real temporary files, including
+batch labels/`exit /b` and PowerShell `param(...)`, with output and process exit status
+returned to MeshAll. Temporary files are cleaned up afterward. Existing scripts
+retain platform-default execution unless their filename already identifies a type.
 
 ## Parity and verification
 

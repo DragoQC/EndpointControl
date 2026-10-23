@@ -14,7 +14,7 @@ public sealed class NetworkGateway(Store store, AgentGateway agents, ProtocolWor
         var device = store.FindDevice(id); if (device is not { Disabled: false } || !direct&&!agents.Online(id)) { context.Response.StatusCode = 409; return; }
         if(direct&&(!System.Net.IPAddress.TryParse(device.Inventory?.Ip,out _)||tool is "rdp" or "vnc" or "amt"&&store.RequiresDesktopConsent(id))){context.Response.StatusCode=403;return;}
         var terminal=tool is "terminal" or "powershell";
-        var port = terminal?0:int.TryParse(context.Request.Query["port"], out var requested) ? requested : tool switch { "vnc" => 5900, "rdp" => 3389, "ssh" => 22, _ => 16994 };
+        var port = terminal?0:int.TryParse(context.Request.Query["port"], out var requested) ? requested : tool switch { "vnc" => store.VncPort(id), "rdp" => 3389, "ssh" => 22, _ => 16994 };
         if (!terminal&&port is < 1 or > 65535) { context.Response.StatusCode = 400; return; }
         using var socket = await context.WebSockets.AcceptWebSocketAsync();
         using var stop = CancellationTokenSource.CreateLinkedTokenSource(context.RequestAborted); stop.CancelAfter(TimeSpan.FromHours(2));

@@ -191,6 +191,11 @@ app.MapGet("/api/agents/native-policy",(string token,NativeAgentHub hub)=>{try{r
 app.MapGet("/api/agents/native-executable",(string token,string platform,NativeAgentHub hub)=>{try{return Results.File(hub.Executable(token,platform),"application/octet-stream",platform.StartsWith("win",StringComparison.Ordinal)?"MeshAllAgent.exe":"MeshAllAgent");}catch(InvalidOperationException ex){return Results.BadRequest(ex.Message);}}).RequireRateLimiting("auth");
 app.MapGet("/licenses/agent",(NativeAgentHub hub)=>Results.Text(hub.LicenseNotices(),"text/plain"));
 app.Map("/api/remote/{id}/desktop", (HttpContext context, string id, AgentGateway gateway) => gateway.ProxyDesktopAsync(context, id)).RequireAuthorization(Permissions.Desktop);
+app.MapGet("/api/remote/{id}/desktop/access",(string id,HttpContext context,Store db,AgentGateway gateway)=>
+{
+    if(db.FindDevice(id) is not {Disabled:false})return Results.NotFound();
+    return Results.Ok(new{online=gateway.Online(id),controlAllowed=db.HasPermission(db.SessionUser(context.User),Permissions.Control)});
+}).RequireAuthorization(Permissions.Desktop);
 app.Map("/api/network/{id}/{tool}", (HttpContext context, string id, string tool, NetworkGateway gateway) => gateway.ProxyAsync(context, id, tool)).RequireAuthorization();
 
 app.MapGet("/api/devices/{id}/file", async (string id, string path, HttpContext context, Store db, AgentGateway gateway) =>

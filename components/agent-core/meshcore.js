@@ -3088,12 +3088,13 @@ function tunnel_kvm_end()
                 this.httprequest.desktop.kvm.users.splice(i, 1);
                 this.httprequest.desktop.kvm.connectionBar.removeAllListeners('close');
                 this.httprequest.desktop.kvm.connectionBar.close();
-                if (require('notifybar-desktop').MaxWidth != null) { require('notifybar-desktop').MaxWidth = this.httprequest.privacybarmaxwidth; }
-                this.httprequest.desktop.kvm.connectionBar = require('notifybar-desktop')(this.httprequest.privacybartext.replace(/\{0\}/g, this.httprequest.desktop.kvm.rusers.join(', ')).replace(/\{1\}/g, this.httprequest.desktop.kvm.users.join(', ')).replace(/'/g, "\\'\\"), require('MeshAgent')._tsid, color_options);
+                if (require('meshall-notifybar').MaxWidth != null) { require('meshall-notifybar').MaxWidth = this.httprequest.privacybarmaxwidth; }
+                this.httprequest.desktop.kvm.connectionBar = require('meshall-notifybar')(this.httprequest.privacybartext.replace(/\{0\}/g, this.httprequest.desktop.kvm.rusers.join(', ')).replace(/\{1\}/g, this.httprequest.desktop.kvm.users.join(', ')).replace(/'/g, "\\'\\"), require('MeshAgent')._tsid, color_options);
                 this.httprequest.desktop.kvm.connectionBar.httprequest = this.httprequest;
                 this.httprequest.desktop.kvm.connectionBar.on('close', function ()
                 {
                     MeshServerLogEx(29, null, "Remote Desktop Connection forcefully closed by local user (" + this.httprequest.remoteaddr + ")", this.httprequest);
+                    meshallDesktopLocalClose(this.httprequest.desktop.kvm);
                     for (var i in this.httprequest.desktop.kvm._pipedStreams)
                     {
                         this.httprequest.desktop.kvm._pipedStreams[i].end();
@@ -3120,6 +3121,10 @@ function kvm_tunnel_consentpromise_closehandler()
     if (this._consentpromise && this._consentpromise.close) { this._consentpromise.close(); }
 }
 
+function meshallDesktopLocalClose(kvm) {
+    if (!kvm || !kvm.tunnels) return;
+    for (var i = 0; i < kvm.tunnels.length; i++) { try { kvm.tunnels[i].write(JSON.stringify({ ctrlChannel: '102938', type: 'meshall-desktop-ended', reason: 'local-user' })); } catch (ex) { } }
+}
 function kvm_consent_ok(ws) {
     // User Consent Prompt is not required because no user is present
     if (ws.httprequest.consent && (ws.httprequest.consent & 1)){
@@ -3142,8 +3147,8 @@ function kvm_consent_ok(ws) {
             ws.httprequest.desktop.kvm.connectionBar.close();
         }
         try {
-            if (require('notifybar-desktop').MaxWidth != null) { require('notifybar-desktop').MaxWidth = ws.httprequest.privacybarmaxwidth; }
-            ws.httprequest.desktop.kvm.connectionBar = require('notifybar-desktop')(ws.httprequest.privacybartext.replace(/\{0\}/g, ws.httprequest.desktop.kvm.rusers.join(', ')).replace(/\{1\}/g, ws.httprequest.desktop.kvm.users.join(', ')).replace(/'/g, "\\'\\"), require('MeshAgent')._tsid, color_options);
+            if (require('meshall-notifybar').MaxWidth != null) { require('meshall-notifybar').MaxWidth = ws.httprequest.privacybarmaxwidth; }
+            ws.httprequest.desktop.kvm.connectionBar = require('meshall-notifybar')(ws.httprequest.privacybartext.replace(/\{0\}/g, ws.httprequest.desktop.kvm.rusers.join(', ')).replace(/\{1\}/g, ws.httprequest.desktop.kvm.users.join(', ')).replace(/'/g, "\\'\\"), require('MeshAgent')._tsid, color_options);
             MeshServerLogEx(31, null, "Remote Desktop Connection Bar Activated/Updated (" + ws.httprequest.remoteaddr + ")", ws.httprequest);
         } catch (ex) {
             MeshServerLogEx(32, null, "Remote Desktop Connection Bar Failed or not Supported (" + ws.httprequest.remoteaddr + ")", ws.httprequest);
@@ -3160,6 +3165,7 @@ function kvm_consent_ok(ws) {
             };
             ws.httprequest.desktop.kvm.connectionBar.on('close', function () {
                 console.info1('Connection Bar Forcefully closed');
+                meshallDesktopLocalClose(this.state.desktop.kvm);
                 MeshServerLogEx(29, null, "Remote Desktop Connection forcefully closed by local user (" + this.state.remoteaddr + ")", this.state);
                 for (var i in this.state.desktop.kvm._pipedStreams) {
                     this.state.desktop.kvm._pipedStreams[i].end();
@@ -3262,8 +3268,8 @@ function kvm_consentpromise_resolved(always)
         }
         try
         {
-            if (require('notifybar-desktop').MaxWidth != null) { require('notifybar-desktop').MaxWidth = this.ws.httprequest.privacybarmaxwidth; }
-            this.ws.httprequest.desktop.kvm.connectionBar = require('notifybar-desktop')(this.ws.httprequest.privacybartext.replace(/\{0\}/g, this.ws.httprequest.desktop.kvm.rusers.join(', ')).replace(/\{1\}/g, this.ws.httprequest.desktop.kvm.users.join(', ')).replace(/'/g, "\\'\\"), require('MeshAgent')._tsid, color_options);
+            if (require('meshall-notifybar').MaxWidth != null) { require('meshall-notifybar').MaxWidth = this.ws.httprequest.privacybarmaxwidth; }
+            this.ws.httprequest.desktop.kvm.connectionBar = require('meshall-notifybar')(this.ws.httprequest.privacybartext.replace(/\{0\}/g, this.ws.httprequest.desktop.kvm.rusers.join(', ')).replace(/\{1\}/g, this.ws.httprequest.desktop.kvm.users.join(', ')).replace(/'/g, "\\'\\"), require('MeshAgent')._tsid, color_options);
             MeshServerLogEx(31, null, "Remote Desktop Connection Bar Activated/Updated (" + this.ws.httprequest.remoteaddr + ")", this.ws.httprequest);
         } catch (ex)
         {
@@ -3277,6 +3283,7 @@ function kvm_consentpromise_resolved(always)
 				this.ws.httprequest.desktop.kvm.connectionBar.httprequest = this.ws.httprequest;
 				this.ws.httprequest.desktop.kvm.connectionBar.on('close', function () {
 					MeshServerLogEx(29, null, "Remote Desktop Connection forcefully closed by local user (" + this.httprequest.remoteaddr + ")", this.httprequest);
+					meshallDesktopLocalClose(this.httprequest.desktop.kvm);
 					for (var i in this.httprequest.desktop.kvm._pipedStreams) {
 						this.httprequest.desktop.kvm._pipedStreams[i].end();
 					}

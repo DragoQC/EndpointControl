@@ -95,7 +95,7 @@ public sealed class NativeAgentPeer : IAsyncDisposable
     {
         if(string.IsNullOrWhiteSpace(input.Command)||input.Command.Length>16000)throw new IOException("Enter a command up to 16000 characters.");
         var marker="__MESHALL_"+Guid.NewGuid().ToString("N")+"__";var directory=input.Directory??"";
-        var script=windows?(directory.Length>0?$"Set-Location -LiteralPath '{directory.Replace("'","''")}' -ErrorAction Stop\n":"")+input.Command+$"\n$meshall=$?; Write-Output ('{marker}' + [int](!$meshall)); (Get-Location).Path\n":(directory.Length>0?$"cd '{directory.Replace("'","'\\''")}' || exit 1\n":"")+input.Command+$"\nmeshall=$?; printf '\\n{marker}%s\\n' \"$meshall\"; pwd\n";
+        var script=NativeCommandBuilder.Build(input,windows,marker);
         var reply=await RequestAsync(new{action="runcommands",type=windows?2:3,cmds=script,reply=true,runAsUser=0},ct);
         var output=Text(reply,"result");var at=output.LastIndexOf(marker,StringComparison.Ordinal);var code=-1;
         if(at>=0){var lines=output[(at+marker.Length)..].Trim().Split('\n',StringSplitOptions.TrimEntries);if(int.TryParse(lines[0],out var parsed))code=parsed;if(lines.Length>1)directory=lines[1];output=output[..at].TrimEnd();}

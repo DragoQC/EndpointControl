@@ -16,7 +16,7 @@ public record AuditInfo(long Id, DateTimeOffset Time, string Actor, string Actio
 public record SessionInfo(string Id, string DeviceId, string DeviceName, string Actor, string Kind,
     DateTimeOffset Started, DateTimeOffset? Ended, string Status);
 public record TokenInfo(string Id, string Name, string GroupId, DateTimeOffset Expires, int Remaining);
-public record ScriptInfo(string Id, string Name, string Platform, string Code);
+public record ScriptInfo(string Id, string Name, string Platform, string Code,string Kind="auto");
 
 public sealed partial class Store
 {
@@ -51,7 +51,7 @@ public sealed partial class Store
               actor TEXT NOT NULL,action TEXT NOT NULL,target TEXT NOT NULL,detail TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS sessions(id TEXT PRIMARY KEY,deviceId TEXT NOT NULL,deviceName TEXT NOT NULL,
               actor TEXT NOT NULL,kind TEXT NOT NULL,started TEXT NOT NULL,ended TEXT,status TEXT NOT NULL);
-            CREATE TABLE IF NOT EXISTS scripts(id TEXT PRIMARY KEY,name TEXT NOT NULL,platform TEXT NOT NULL,code TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS scripts(id TEXT PRIMARY KEY,name TEXT NOT NULL,platform TEXT NOT NULL,code TEXT NOT NULL,kind TEXT NOT NULL DEFAULT 'auto');
             CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY,value TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS upstream(localId TEXT PRIMARY KEY,remoteId TEXT NOT NULL UNIQUE);
             CREATE TABLE IF NOT EXISTS group_policies(id TEXT PRIMARY KEY,consent INTEGER NOT NULL DEFAULT 0);
@@ -64,11 +64,14 @@ public sealed partial class Store
             CREATE TABLE IF NOT EXISTS login_challenges(id TEXT PRIMARY KEY,userId TEXT NOT NULL,version INTEGER NOT NULL,expires TEXT NOT NULL,attempts INTEGER NOT NULL DEFAULT 0);
             CREATE TABLE IF NOT EXISTS security_receipts(id TEXT PRIMARY KEY,userId TEXT NOT NULL,payload TEXT NOT NULL,expires TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS roles(id TEXT PRIMARY KEY,name TEXT NOT NULL COLLATE NOCASE UNIQUE,permissions TEXT NOT NULL,builtIn INTEGER NOT NULL DEFAULT 0);
+            CREATE TABLE IF NOT EXISTS remote_ports(deviceId TEXT NOT NULL,tool TEXT NOT NULL,port INTEGER NOT NULL,PRIMARY KEY(deviceId,tool));
             CREATE INDEX IF NOT EXISTS audit_time ON audit(time);
             UPDATE sessions SET ended=strftime('%Y-%m-%dT%H:%M:%fZ','now'),status='Interrupted' WHERE ended IS NULL;
             """);
         if(!Query("PRAGMA table_info(devices)",r=>r.GetString(1)).Contains("removed",StringComparer.Ordinal))
             Execute("ALTER TABLE devices ADD COLUMN removed INTEGER NOT NULL DEFAULT 0");
+        if(!Query("PRAGMA table_info(scripts)",r=>r.GetString(1)).Contains("kind",StringComparer.Ordinal))
+            Execute("ALTER TABLE scripts ADD COLUMN kind TEXT NOT NULL DEFAULT 'auto'");
         InitializeRoles();
         if (!HasUsers && !File.Exists(BootstrapPath))
         {
@@ -261,6 +264,13 @@ public sealed partial class Store
         }
     }
     public bool IsNative(string id) => Scalar<long>("SELECT COUNT(*) FROM native_identities WHERE deviceId=$0",id)>0;
+    public int VncPort(string id)=>Query("SELECT port FROM remote_ports WHERE deviceId=$0 AND tool='vnc'",r=>r.GetInt32(0),id).SingleOrDefault() is >0 and var port?port:5900;
+    public void SaveVncPort(string id,int port)
+    {
+        if(port is <1 or >65535)throw new InvalidOperationException("Choose a port between 1 and 65535.");
+        if(FindDevice(id) is null)throw new InvalidOperationException("Device not found.");
+        Execute("INSERT INTO remote_ports VALUES($0,'vnc',$1) ON CONFLICT(deviceId,tool) DO UPDATE SET port=$1",id,port);
+    }
 
     public List<AuditInfo> AuditLog(int limit = 250) => Query(
         "SELECT id,time,actor,action,target,detail FROM audit ORDER BY id DESC LIMIT $0",
@@ -279,13 +289,16 @@ public sealed partial class Store
         r => new SessionInfo(r.GetString(0), r.GetString(1), r.GetString(2), r.GetString(3), r.GetString(4), Date(r.GetString(5)),
             r.IsDBNull(6) ? null : Date(r.GetString(6)), r.GetString(7)));
 
-    public List<ScriptInfo> Scripts() => Query("SELECT id,name,platform,code FROM scripts ORDER BY name",
-        r => new ScriptInfo(r.GetString(0), r.GetString(1), r.GetString(2), r.GetString(3)));
-    public void SaveScript(string? id, string name, string platform, string code)
+    public List<ScriptInfo> Scripts() => Query("SELECT id,name,platform,code,kind FROM scripts ORDER BY name",
+        r => {var kind=ScriptTypes.Infer(r.GetString(1),r.GetString(4));return new ScriptInfo(r.GetString(0),r.GetString(1),kind is ".ps1" or ".cmd"?"Windows":r.GetString(2),r.GetString(3),kind);});
+    public void SaveScript(string? id, string name, string platform, string code,string kind="auto")
     {
-        if (platform is not ("Windows" or "Linux" or "Any")) throw new InvalidOperationException("Invalid platform.");
-        Execute("INSERT INTO scripts VALUES($0,$1,$2,$3) ON CONFLICT(id) DO UPDATE SET name=$1,platform=$2,code=$3",
-            id ?? Guid.NewGuid().ToString("N"), Required(name, 80), platform, Required(code, 16000));
+        if (platform is not ("Windows" or "Linux" or "macOS" or "Any")) throw new InvalidOperationException("Invalid platform.");
+        kind=ScriptTypes.Infer(name,kind);
+        if(!ScriptTypes.All.Contains(kind,StringComparer.Ordinal))throw new InvalidOperationException("Choose a script type.");
+        if(kind is ".ps1" or ".cmd" && platform!="Windows" || kind==".sh" && platform=="Windows")throw new InvalidOperationException("Choose a compatible script type and platform.");
+        Execute("INSERT INTO scripts(id,name,platform,code,kind) VALUES($0,$1,$2,$3,$4) ON CONFLICT(id) DO UPDATE SET name=$1,platform=$2,code=$3,kind=$4",
+            id ?? Guid.NewGuid().ToString("N"), Required(ScriptTypes.FileName(name.Trim(),kind), 80), platform, Required(code, 16000),kind);
     }
     public void DeleteScript(string id) => Execute("DELETE FROM scripts WHERE id=$0", id);
     public string Setting(string key, string fallback) => Query("SELECT value FROM settings WHERE key=$0", r => r.GetString(0), key).SingleOrDefault() ?? fallback;

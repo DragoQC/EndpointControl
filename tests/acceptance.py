@@ -66,7 +66,15 @@ async def main(args):
             await page.get_by_text("Item deleted.", exact=True).wait_for()
 
         async def remote(tool):
-            await page.goto(f"{base}/remote/{args.device}/{tool}")
+            suffix=f"?direct={'true' if args.direct else 'false'}"+(f"&port={args.port}" if args.port else "") if tool=="vnc" else ""
+            await page.goto(f"{base}/remote/{args.device}/{tool}"+suffix)
+            if tool=="vnc":
+                await page.wait_for_function("document.querySelector('[role=status]')?.textContent.includes('Connected')||document.querySelector('form h2')?.textContent==='VNC authentication'")
+                if await page.get_by_role('heading',name='VNC authentication',exact=True).count():
+                    if await page.get_by_label('VNC username',exact=True).count():await page.get_by_label('VNC username',exact=True).fill(os.environ.get('MESHALL_REMOTE_USERNAME',''))
+                    if await page.get_by_label('VNC password',exact=True).count():await page.get_by_label('VNC password',exact=True).fill(os.environ.get('MESHALL_REMOTE_PASSWORD',''))
+                    await page.get_by_role('button',name='Continue',exact=True).click()
+                await expect(page.get_by_role('status')).to_have_text('Connected',timeout=90000);return
             await expect(page.get_by_role("button", name="Connect", exact=True)).to_be_enabled()
             if tool in ("rdp", "vnc", "ssh"):
                 if args.port:

@@ -48,5 +48,5 @@
     private async Task Disconnect() { await JS.InvokeVoidAsync("meshAll.remote.disconnect"); running = control = false; status = "Disconnected"; }
     private async Task SetControl() => await JS.InvokeVoidAsync("meshAll.remote.control", control);
     private async Task SendCad() { if (control) await JS.InvokeVoidAsync("meshAll.remote.cad"); }
-    public async ValueTask DisposeAsync() { try { await JS.InvokeVoidAsync("meshAll.remote.disconnect"); } catch (JSDisconnectedException) { } reference?.Dispose(); }
+    public async ValueTask DisposeAsync() { if(ready)try { await JS.InvokeVoidAsync("meshAll.remote.disconnect"); } catch (Exception ex) when(ex is JSDisconnectedException or TaskCanceledException or ObjectDisposedException) { } reference?.Dispose(); }
 }

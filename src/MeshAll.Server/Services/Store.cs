@@ -52,7 +52,7 @@ public sealed class Store
             CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY,value TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS upstream(localId TEXT PRIMARY KEY,remoteId TEXT NOT NULL UNIQUE);
             CREATE TABLE IF NOT EXISTS group_policies(id TEXT PRIMARY KEY,consent INTEGER NOT NULL DEFAULT 0);
-            INSERT OR IGNORE INTO group_policies VALUES('default',73);
+            INSERT OR IGNORE INTO group_policies VALUES('default',0);
             CREATE TABLE IF NOT EXISTS native_enrollments(meshHash TEXT PRIMARY KEY,tokenId TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS native_identities(certificate TEXT PRIMARY KEY,deviceId TEXT NOT NULL UNIQUE,architecture INTEGER NOT NULL);
             CREATE INDEX IF NOT EXISTS audit_time ON audit(time);
@@ -117,7 +117,7 @@ public sealed class Store
         r => new GroupInfo(r.GetString(0), r.GetString(1), r.GetString(2), r.GetInt32(3)));
     public bool RequiresDesktopConsent(string deviceId) => Query("SELECT COALESCE(p.consent,0) FROM devices d LEFT JOIN group_policies p ON d.groupId=p.id WHERE d.id=$0", r => r.GetInt32(0), deviceId).Any(c => (c & 8) != 0);
 
-    public void SaveGroup(string? id, string name, string description, int consent = 73)
+    public void SaveGroup(string? id, string name, string description, int consent = 0)
     {
         name = Required(name, 70); description = description.Trim();
         if (description.Length > 500) throw new InvalidOperationException("Description is too long.");

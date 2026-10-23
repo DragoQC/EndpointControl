@@ -91,7 +91,8 @@ running a custom HTTPS development host.
 ## User privacy
 
 Groups expose **Ask the user before showing their screen**, notification, and a
-connection toolbar. New groups default to prompting. The retained agent core
+connection toolbar. New groups use the original unattended default; prompting
+is optional and enabled explicitly. The retained agent core
 has MeshAll modifications for fresh per-session approval, no remembered five-
 minute approval when strict mode applies, and denial on timeout. RDP/VNC/AMT
 screen transports request agent approval before opening when the group policy

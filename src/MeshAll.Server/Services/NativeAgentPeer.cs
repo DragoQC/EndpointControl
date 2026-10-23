@@ -18,7 +18,7 @@ public sealed class NativeAgentPeer : IAsyncDisposable
     public string Id { get; }
     public string WebCertificateHash { get; }
     public bool Online=>socket.State==WebSocketState.Open&&!stop.IsCancellationRequested;
-    public int Consent=>store.Groups().FirstOrDefault(g=>g.Id==store.FindDevice(Id)?.GroupId)?.Consent??73;
+    public int Consent=>store.Groups().FirstOrDefault(g=>g.Id==store.FindDevice(Id)?.GroupId)?.Consent??0;
     public NativeAgentPeer(string id,WebSocket socket,SemaphoreSlim sendLock,Store store,NativeCoreBuilder cores,NativeTunnelHub tunnels,IConfiguration config,bool windows,int architecture,Inventory inventory)
     {
         Id=id;this.socket=socket;this.sendLock=sendLock;this.store=store;this.cores=cores;this.tunnels=tunnels;this.windows=windows;intel=architecture is 1 or 2 or 3 or 4 or 5 or 6 or 16 or 18 or 19 or 20;this.inventory=inventory;

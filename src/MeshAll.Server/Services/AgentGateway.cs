@@ -29,7 +29,7 @@ public sealed class AgentGateway(Store store, ILogger<AgentGateway> logger)
     public bool Online(string id) => store.FindDevice(id) is { Disabled: false } && (native.TryGetValue(id,out var peer)&&peer.Online||connections.TryGetValue(id, out var c) && c.Socket.State == WebSocketState.Open && DateTimeOffset.UtcNow - c.LastSeen < TimeSpan.FromSeconds(50));
     public int OnlineCount => connections.Keys.Concat(native.Keys).Distinct().Count(Online);
     public bool RemoteGroup(string id) => store.Groups().Any(g => g.Id == id);
-    public Task SaveGroupAsync(string? id, string name, string description, int consent = 73) { store.SaveGroup(id, name, description, consent); return Task.CompletedTask; }
+    public Task SaveGroupAsync(string? id, string name, string description, int consent = 0) { store.SaveGroup(id, name, description, consent); return Task.CompletedTask; }
     public Task DeleteGroupAsync(string id) { store.DeleteGroup(id); return Task.CompletedTask; }
     public Task SaveDeviceAsync(string id, string name, string group, string tags, string notes) { store.SaveDevice(id, name, group, tags, notes); return Task.CompletedTask; }
     public void Disconnect(string id) { if (connections.TryGetValue(id, out var c)) c.Socket.Abort();if(native.TryGetValue(id,out var peer))peer.Disconnect(); }

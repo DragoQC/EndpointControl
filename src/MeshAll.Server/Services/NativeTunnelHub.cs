@@ -38,7 +38,7 @@ public sealed class NativeTunnelHub
                 ["action"]="msg",["type"]="tunnel",["value"]=$"*/native-relay.ashx?id={id}&ticket={secret}",
                 ["rights"]=uint.MaxValue,["consent"]=peer.Consent,["userid"]="user//"+Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(request.Actor)))[..24],
                 ["username"]=request.Actor,["realname"]=request.Actor,["sessionid"]=request.SessionId,["servertlshash"]=peer.WebCertificateHash,
-                ["soptions"]=new{meshallStrictConsent=true,consentTitle="MeshAll Agent - access request",consentMsgDesktop="{0} is requesting permission to view your screen. Allow this session?",consentTimeout=30,consentAutoAccept=false,consentAutoAcceptIfNoUser=false,consentAutoAcceptIfLocked=false}
+                ["soptions"]=new{consentTitle="MeshAll Agent",consentTimeout=30}
             };
             if(request.Port>0){message["tcpport"]=request.Port;message["tcpaddr"]=request.Host??"127.0.0.1";}
             await peer.SendJsonAsync(message,ct);

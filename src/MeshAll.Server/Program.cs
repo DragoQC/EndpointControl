@@ -57,6 +57,13 @@ builder.Services.AddRateLimiter(options =>
 builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = Wire.MaxMessageBytes);
 var app = builder.Build();
 var store = app.Services.GetRequiredService<Store>();
+if(Array.IndexOf(args,"--bootstrap-admin")>=0)
+{
+    if(store.HasUsers){Console.WriteLine("{\"created\":false}");return;}
+    var password=Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(24)).TrimEnd('=').Replace('+','-').Replace('/','_');
+    var admin=store.Setup(File.ReadAllText(store.BootstrapPath),"admin",password);
+    Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new{created=true,username=admin.Name,password},Wire.Json));return;
+}
 if(Array.IndexOf(args,"--create-enrollment") is var enrollmentIndex && enrollmentIndex>=0)
 {
     var name=enrollmentIndex+1<args.Length?args[enrollmentIndex+1]:"Installation";

@@ -53,10 +53,12 @@ The installer creates:
 - `/opt/meshall/source`: editable source checkout.
 - `/etc/meshall`: private configuration/HTTPS identity.
 - `/var/lib/meshall/server`: SQLite, native-agent identity and persistent state.
-- `/var/lib/meshall/server/bootstrap.key`: one-time first-administrator setup key.
+- `/opt/creds.txt`: root-only initial `admin` account and randomly generated password.
 
-Open `/setup` and enter the setup key to create your administrator. No shared
-default password is shipped. Enroll PCs from **Devices → Add device**; the native
+The installer creates only the initial `admin` account with a unique random
+password saved in `/opt/creds.txt` (mode 0600). Existing accounts are preserved
+during updates. Direct development runs retain `/setup` with the one-time key in
+the data directory. No shared default password is shipped. Enroll PCs from **Devices → Add device**; the native
 package contains `MeshAllAgent` and its `.msh` policy. Windows uses the
 `MeshAllAgent` service identity and **MeshAll Agent** display name.
 

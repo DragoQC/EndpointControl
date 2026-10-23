@@ -83,6 +83,8 @@ retry npm --prefix "$SOURCE/src/MeshAll.Server" ci --no-audit --no-fund
 npm --prefix "$SOURCE/src/MeshAll.Server" run build
 RELEASE="$PREFIX/releases/$(date -u +%Y%m%dT%H%M%SZ)-$$"; install -d "$RELEASE"
 dotnet publish "$SOURCE/src/MeshAll.Server" -c Release -r "$RID" --self-contained true -o "$RELEASE" --nologo -m:1 /p:UseSharedCompilation=false
+chown -R root:meshall "$RELEASE"
+chmod -R g+rX "$RELEASE"
 if ((PROTOCOL_WORKER)) && [[ ! -x "$PREFIX/protocol-worker/sbin/guacd" ]]; then
   info 'Building the standard RDP/SSH protocol dependency (Apache Guacamole/FreeRDP)'
   apt-get install -y autoconf automake libtool-bin libcairo2-dev libjpeg62-turbo-dev libpng-dev libossp-uuid-dev libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libpango1.0-dev libssh2-1-dev libtelnet-dev libvncserver-dev libssl-dev libwebp-dev freerdp3-dev
@@ -107,6 +109,8 @@ PY
   [[ -f "$PREFIX/protocol-worker/lib/libguac-client-rdp.so" ]] || die 'The RDP protocol library was not built.'
 fi
 if [[ -x "$PREFIX/protocol-worker/sbin/guacd" ]]; then
+  chown -R root:meshall "$PREFIX/protocol-worker"
+  chmod -R g+rX "$PREFIX/protocol-worker"
   cat > /etc/systemd/system/meshall-rdp.service <<EOF
 [Unit]
 Description=MeshAll standard RDP/SSH protocol worker
@@ -115,7 +119,8 @@ After=network-online.target
 User=meshall
 Group=meshall
 Environment=LD_LIBRARY_PATH=$PREFIX/protocol-worker/lib
-ExecStart=$PREFIX/protocol-worker/sbin/guacd -f -b 127.0.0.1 -l 4822
+RuntimeDirectory=meshall-rdp
+ExecStart=$PREFIX/protocol-worker/sbin/guacd -f -b 127.0.0.1 -l 4822 -p /run/meshall-rdp/guacd.pid
 Restart=on-failure
 TasksMax=256
 MemoryMax=1G
@@ -175,6 +180,14 @@ if [[ -f /etc/systemd/system/meshall-rdp.service ]]; then systemctl enable --now
 systemctl enable meshall.service; systemctl restart meshall.service
 for attempt in {1..90}; do if curl -kfsS --pinnedpubkey "$PIN" "https://127.0.0.1:$PORT/health" >/dev/null 2>&1; then break; fi; sleep 1; done
 curl -kfsS --pinnedpubkey "$PIN" "https://127.0.0.1:$PORT/health" >/dev/null || die 'MeshAll did not start. Check journalctl -u meshall.'
+INITIAL_ACCOUNT=$(runuser -u meshall -- env --chdir="$PREFIX/current" MESHALL_CONNECTION_FILE="$CONFIG/appsettings.json" "$PREFIX/current/MeshAll.Server" --bootstrap-admin true)
+if [[ "$(printf '%s' "$INITIAL_ACCOUNT" | jq -r '.created')" == true ]]; then
+  # Root-only credentials stay on the machine, never in Git or a shared default.
+  printf '\nMeshAll\nURL: https://%s:%s\nUsername: %s\nPassword: %s\n' "$URL_HOST" "$PORT" "$(printf '%s' "$INITIAL_ACCOUNT" | jq -r '.username')" "$(printf '%s' "$INITIAL_ACCOUNT" | jq -r '.password')" >> /opt/creds.txt
+  chown root:root /opt/creds.txt; chmod 600 /opt/creds.txt
+  info 'Initial admin account created. Machine credentials: /opt/creds.txt'
+fi
+unset INITIAL_ACCOUNT
 if ((REMOVE_LEGACY)); then
   info 'Retiring the old JavaScript MeshCentral server after MeshAll health verification'
   systemctl disable --now meshcentral.service 2>/dev/null || true
@@ -185,4 +198,4 @@ if ((REMOVE_LEGACY)); then
   systemctl daemon-reload
 fi
 info 'MeshAll is running.'
-printf '\nDashboard: https://%s:%s\nFirst-run setup key: %s/server/bootstrap.key\nSource: %s\nUpdate local edits: meshall-update --local\nUpdate from GitHub: meshall-update --pull\n' "$URL_HOST" "$PORT" "$DATA" "$SOURCE"
+printf '\nDashboard: https://%s:%s\nInitial credentials (fresh installs): /opt/creds.txt\nData: %s/server\nSource: %s\nUpdate local edits: meshall-update --local\nUpdate from GitHub: meshall-update --pull\n' "$URL_HOST" "$PORT" "$DATA" "$SOURCE"

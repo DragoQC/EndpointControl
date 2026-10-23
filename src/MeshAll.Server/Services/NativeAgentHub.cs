@@ -102,10 +102,13 @@ public sealed class NativeAgentHub
                 if(raw.Length!=publicKey.KeySize/8){var cms=new SignedCms();cms.Decode(raw);if(cms.SignerInfos.Count!=1)throw new IOException("Invalid agent signature envelope.");raw=cms.SignerInfos[0].GetSignature();}
                 byte[] challenge=[..seenHash,..nonce,..agentNonce];
                 if(!publicKey.VerifyData(challenge,raw,HashAlgorithmName.SHA384,RSASignaturePadding.Pkcs1))throw new IOException("Agent identity proof was invalid.");
-                var architecture=checked((int)BinaryPrimitives.ReadUInt32BigEndian(info.AsSpan(6)));var version=BinaryPrimitives.ReadUInt32BigEndian(info.AsSpan(10));var platform=BinaryPrimitives.ReadUInt32BigEndian(info.AsSpan(14));
+                var architecture=checked((int)BinaryPrimitives.ReadUInt32BigEndian(info.AsSpan(6)));var version=BinaryPrimitives.ReadUInt32BigEndian(info.AsSpan(10));
                 var name=info.Length>=72?Encoding.UTF8.GetString(info,72,Math.Min(BinaryPrimitives.ReadUInt16BigEndian(info.AsSpan(70)),info.Length-72)):"New device";
                 if(string.IsNullOrWhiteSpace(name))name="New device";
-                var windows=platform==1;var inventory=new Inventory(name,windows?"Windows":platform==3?"macOS":"Linux",windows?"Windows":"Unix","Native "+architecture,"Agent service",context.Connection.RemoteIpAddress?.ToString()??"","",0,0,0,0,0,version.ToString(),["desktop","desktop-native","terminal","files","command","tcp","power"],[]);
+                // Native platformType is a device/icon category, not the OS.
+                // Architecture IDs identify the executable's actual platform.
+                var windows=architecture is 1 or 2 or 3 or 4 or 21 or 22 or 34 or 42 or 43;
+                var inventory=new Inventory(name,windows?"Windows":architecture is 16 or 29?"macOS":"Linux",windows?"Windows":"Unix","Native "+architecture,"Agent service",context.Connection.RemoteIpAddress?.ToString()??"","",0,0,0,0,0,version.ToString(),["desktop","desktop-native","terminal","files","command","tcp","power"],[]);
                 var fingerprint=Convert.ToHexStringLower(SHA384.HashData(publicKey.ExportRSAPublicKey()));
                 var device=store.RegisterNative(fingerprint,Convert.ToHexStringLower(info[18..66]),name,architecture,inventory);
                 peer=new NativeAgentPeer(device.Id,socket,sendLock,store,cores,tunnels,configuration,windows,architecture,inventory);

@@ -36,6 +36,10 @@ public sealed class NativeAgentPeer : IAsyncDisposable
         if(bytes[0]=='{')
         {
             var data=JsonSerializer.Deserialize<JsonElement>(bytes);var action=Text(data,"action");
+            if(action=="msg"&&Text(data,"type")=="console"&&Text(data,"value").StartsWith("uncaughtException",StringComparison.Ordinal))
+            {
+                var issue=Text(data,"value");store.Audit("Agent","Agent core diagnostic",inventory.Hostname,issue.Length>2000?issue[..2000]:issue);
+            }
             if(action=="ping"){await SendJsonAsync(new{action="pong"},ct);return;}
             if(action=="coreinfo")
             {

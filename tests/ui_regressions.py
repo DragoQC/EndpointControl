@@ -147,6 +147,8 @@ async def main(args):
                 await page.screenshot(path=str(args.screenshots / "fitted-desktop.png"))
             await page.get_by_role("button", name="Disconnect", exact=True).click()
             await page.get_by_role("link", name="Back to device", exact=True).click()
+            await page.wait_for_url(base + "/devices/" + agent.identity)
+            await page.locator("[data-meshall-ready=true]").wait_for(state="attached")
             await page.set_viewport_size({"width": 1440, "height": 1000})
             print("PASS full-window desktop, auto-connect, landscape/portrait/window resize, fullscreen and scaled pointer coordinates", flush=True)
 

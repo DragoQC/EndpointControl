@@ -1,0 +1,2357 @@
+<?xml version='1.0' encoding='utf-8'?>
+<root>
+  <data name="Denied" xml:space="preserve"><value>Refusé</value></data>
+  <data name="Screen approval granted" xml:space="preserve"><value>Partage d’écran approuvé</value></data>
+  <data name="Screen approval declined" xml:space="preserve"><value>Partage d’écran refusé</value></data>
+  <data name="Screen approval timed out" xml:space="preserve"><value>Délai d’approbation de l’écran dépassé</value></data>
+  <data name="Screen approval unavailable" xml:space="preserve"><value>Approbation de l’écran indisponible</value></data>
+  <data name="Screen access was declined at the computer." xml:space="preserve"><value>L’accès à l’écran a été refusé sur l’ordinateur.</value></data>
+  <data name="Screen approval timed out. No screen was shared." xml:space="preserve"><value>Le délai d’approbation a expiré. Aucun écran n’a été partagé.</value></data>
+  <data name="Screen approval could not be shown. No screen was shared." xml:space="preserve"><value>La demande d’approbation n’a pas pu être affichée. Aucun écran n’a été partagé.</value></data>
+  <data name="You cannot manage or grant permissions beyond your own role." xml:space="preserve"><value>Vous ne pouvez pas gérer ou accorder des permissions supérieures à celles de votre rôle.</value></data>
+  <data name="Security request rejected" xml:space="preserve"><value>Requête de sécurité refusée</value></data>
+  <data name="Request rate limit" xml:space="preserve"><value>Limite de requêtes</value></data>
+  <data name="Management access" xml:space="preserve"><value>Accès à la gestion</value></data>
+  <data name="WebSocket origin" xml:space="preserve"><value>Origine WebSocket</value></data>
+  <data name="Agent authentication" xml:space="preserve"><value>Authentification de l’agent</value></data>
+  <data name="Signed out" xml:space="preserve"><value>Déconnexion</value></data>
+  <data name="Local connection" xml:space="preserve"><value>Connexion locale</value></data>
+  <data name="Manage the server's own enrolled device" xml:space="preserve"><value>Gérer l’appareil qui héberge le serveur</value></data>
+  <data name="This device hosts the management server and requires the controller-management capability." xml:space="preserve"><value>Cet appareil héberge le serveur de gestion et nécessite la permission de gérer cet appareil protégé.</value></data>
+  <data name="Invalid remote connection options." xml:space="preserve"><value>Paramètres de connexion distante invalides.</value></data>
+  <data name="Remote setup or session authorization expired." xml:space="preserve"><value>La connexion ou l’autorisation de la session distante a expiré.</value></data>
+  <data name="Remote session failed." xml:space="preserve"><value>Échec de la session distante.</value></data>
+  <data name="The remote host identity could not be verified through the agent." xml:space="preserve"><value>L’identité de l’hôte distant n’a pas pu être vérifiée par l’agent.</value></data>
+  <data name="Connect the agent once to verify the remote host identity, or configure a trusted host identity." xml:space="preserve"><value>Connectez l’agent une fois pour vérifier l’hôte distant ou configurez une identité de confiance.</value></data>
+  <data name="Invalid enrollment request." xml:space="preserve"><value>Demande d’inscription invalide.</value></data>
+  <data name="Logs" xml:space="preserve"><value>Journaux</value></data>
+  <data name="Log views" xml:space="preserve"><value>Vues des journaux</value></data>
+  <data name="Bash (.sh)" xml:space="preserve"><value>Bash (.sh)</value></data>
+  <data name="Native tools" xml:space="preserve"><value>Outils natifs</value></data>
+  <data name="Network services" xml:space="preserve"><value>Services réseau</value></data>
+  <data name="Remote connection failed." xml:space="preserve">
+    <value>Échec de la connexion distante.</value>
+  </data>
+  <data name="Exit fullscreen" xml:space="preserve">
+    <value>Quitter le plein écran</value>
+  </data>
+  <data name="Fullscreen could not be changed. Try again or press Escape to exit fullscreen." xml:space="preserve">
+    <value>Impossible de changer le mode plein écran. Réessayez ou appuyez sur Échap pour quitter le plein écran.</value>
+  </data>
+  <data name="Your RDP credentials" xml:space="preserve"><value>Vos identifiants RDP</value></data>
+  <data name="Used to prefill RDP connections for your account." xml:space="preserve"><value>Préremplissent les connexions RDP de votre compte.</value></data>
+  <data name="Clear saved credentials" xml:space="preserve"><value>Effacer les identifiants enregistrés</value></data>
+  <data name="Save RDP credentials" xml:space="preserve"><value>Enregistrer les identifiants RDP</value></data>
+  <data name="Connection preferences" xml:space="preserve"><value>Préférences de connexion</value></data>
+  <data name="Manage your RDP credentials" xml:space="preserve"><value>Gérer vos identifiants RDP</value></data>
+  <data name="Server settings" xml:space="preserve"><value>Paramètres du serveur</value></data>
+  <data name="RDP credentials saved." xml:space="preserve"><value>Identifiants RDP enregistrés.</value></data>
+  <data name="Saved RDP credentials cleared." xml:space="preserve"><value>Identifiants RDP enregistrés effacés.</value></data>
+  <data name="RDP defaults saved" xml:space="preserve"><value>Identifiants RDP enregistrés</value></data>
+  <data name="RDP defaults cleared" xml:space="preserve"><value>Identifiants RDP effacés</value></data>
+  <data name="The saved RDP password could not be read. Save your RDP credentials again." xml:space="preserve"><value>Le mot de passe RDP enregistré n’a pas pu être lu. Enregistrez à nouveau vos identifiants RDP.</value></data>
+  <data name="Enter an RDP username and keep each credential field within its size limit." xml:space="preserve"><value>Saisissez un nom d’utilisateur RDP et respectez la longueur maximale de chaque champ.</value></data>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <data name=".NET" xml:space="preserve">
+    <value>.NET</value>
+  </data>
+  <data name="85% or higher" xml:space="preserve">
+    <value>85 % ou plus</value>
+  </data>
+  <data name="90% or higher" xml:space="preserve">
+    <value>90 % ou plus</value>
+  </data>
+  <data name="A filesystem root cannot be changed." xml:space="preserve">
+    <value>La racine d’un système de fichiers ne peut pas être modifiée.</value>
+  </data>
+  <data name="About" xml:space="preserve">
+    <value>À propos</value>
+  </data>
+  <data name="About MeshAll" xml:space="preserve">
+    <value>À propos de MeshAll</value>
+  </data>
+  <data name="About this server" xml:space="preserve">
+    <value>À propos du serveur</value>
+  </data>
+  <data name="Account is unavailable or two-factor authentication is already enabled." xml:space="preserve">
+    <value>Le compte est indisponible ou l’authentification à deux facteurs est déjà activée.</value>
+  </data>
+  <data name="Account not found." xml:space="preserve">
+    <value>Compte introuvable.</value>
+  </data>
+  <data name="Account security" xml:space="preserve">
+    <value>Sécurité du compte</value>
+  </data>
+  <data name="Active" xml:space="preserve">
+    <value>Actif</value>
+  </data>
+  <data name="Active sessions" xml:space="preserve">
+    <value>Sessions actives</value>
+  </data>
+  <data name="Add a device" xml:space="preserve">
+    <value>Ajouter un appareil</value>
+  </data>
+  <data name="Add a workspace user" xml:space="preserve">
+    <value>Ajouter un utilisateur</value>
+  </data>
+  <data name="Add device" xml:space="preserve">
+    <value>Ajouter un appareil</value>
+  </data>
+  <data name="Add user" xml:space="preserve">
+    <value>Ajouter un utilisateur</value>
+  </data>
+  <data name="Address" xml:space="preserve">
+    <value>Adresse</value>
+  </data>
+  <data name="Administrator" xml:space="preserve">
+    <value>Administrateur</value>
+  </data>
+  <data name="Agent PowerShell terminal." xml:space="preserve">
+    <value>Terminal PowerShell de l’agent.</value>
+  </data>
+  <data name="Agent TLS channel binding did not match this server." xml:space="preserve">
+    <value>La liaison du canal TLS de l’agent ne correspond pas au serveur.</value>
+  </data>
+  <data name="Agent core diagnostic" xml:space="preserve">
+    <value>Diagnostic du module de l’agent</value>
+  </data>
+  <data name="Agent desktop" xml:space="preserve">
+    <value>Bureau via l’agent</value>
+  </data>
+  <data name="Agent file root" xml:space="preserve">
+    <value>Racine des fichiers de l’agent</value>
+  </data>
+  <data name="Agent home directory" xml:space="preserve">
+    <value>Répertoire de l’agent</value>
+  </data>
+  <data name="Agent identity is not RSA." xml:space="preserve">
+    <value>L’identité de l’agent n’utilise pas RSA.</value>
+  </data>
+  <data name="Agent identity proof was invalid." xml:space="preserve">
+    <value>La preuve d’identité de l’agent n’est pas valide.</value>
+  </data>
+  <data name="Agent installation" xml:space="preserve">
+    <value>Installation de l’agent</value>
+  </data>
+  <data name="Agent licenses" xml:space="preserve">
+    <value>Licences de l’agent</value>
+  </data>
+  <data name="Agent operation failed." xml:space="preserve">
+    <value>L’opération de l’agent a échoué.</value>
+  </data>
+  <data name="Agent platform ID" xml:space="preserve">
+    <value>Identifiant de plateforme de l’agent</value>
+  </data>
+  <data name="Agent terminal" xml:space="preserve">
+    <value>Terminal de l’agent</value>
+  </data>
+  <data name="Agent terminal." xml:space="preserve">
+    <value>Terminal de l’agent.</value>
+  </data>
+  <data name="Agent transport" xml:space="preserve">
+    <value>Transport de l’agent</value>
+  </data>
+  <data name="Agent-assisted VNC" xml:space="preserve">
+    <value>VNC via l’agent</value>
+  </data>
+  <data name="All connected devices" xml:space="preserve">
+    <value>Tous les appareils connectés</value>
+  </data>
+  <data name="All groups" xml:space="preserve">
+    <value>Tous les groupes</value>
+  </data>
+  <data name="All statuses" xml:space="preserve">
+    <value>Tous les états</value>
+  </data>
+  <data name="Always full access" xml:space="preserve">
+    <value>Accès complet permanent</value>
+  </data>
+  <data name="An empty folder" xml:space="preserve">
+    <value>Dossier vide</value>
+  </data>
+  <data name="Any" xml:space="preserve">
+    <value>Tous</value>
+  </data>
+  <data name="Applies at next sign-in" xml:space="preserve">
+    <value>À la prochaine connexion</value>
+  </data>
+  <data name="Applies at the next sign-in. Current sessions remain active." xml:space="preserve">
+    <value>S’applique à la prochaine connexion. Les sessions en cours restent actives.</value>
+  </data>
+  <data name="Apply language" xml:space="preserve">
+    <value>Appliquer la langue</value>
+  </data>
+  <data name="Architecture" xml:space="preserve">
+    <value>Architecture</value>
+  </data>
+  <data name="Architecture components" xml:space="preserve">
+    <value>Composants de l’architecture</value>
+  </data>
+  <data name="Ask the user before showing their screen" xml:space="preserve">
+    <value>Demander l’autorisation avant d’afficher l’écran</value>
+  </data>
+  <data name="Assign users to another role before deleting this role." xml:space="preserve">
+    <value>Attribuez un autre rôle aux utilisateurs avant de supprimer celui-ci.</value>
+  </data>
+  <data name="At least 12 characters." xml:space="preserve">
+    <value>Au moins 12 caractères.</value>
+  </data>
+  <data name="At least one disk is 90% used or more" xml:space="preserve">
+    <value>Au moins un disque est utilisé à 90 % ou plus</value>
+  </data>
+  <data name="Attention first" xml:space="preserve">
+    <value>Priorité aux alertes</value>
+  </data>
+  <data name="Audit log" xml:space="preserve">
+    <value>Journal d’audit</value>
+  </data>
+  <data name="Authenticated WebSocket" xml:space="preserve">
+    <value>WebSocket authentifié</value>
+  </data>
+  <data name="Authenticator or recovery code" xml:space="preserve">
+    <value>Code d’authentification ou de récupération</value>
+  </data>
+  <data name="Authenticator setup QR code" xml:space="preserve">
+    <value>Code QR de configuration de l’authentification</value>
+  </data>
+  <data name="Automatic (platform default)" xml:space="preserve">
+    <value>Automatique (plateforme)</value>
+  </data>
+  <data name="Average CPU used per device" xml:space="preserve">
+    <value>Utilisation CPU moyenne par appareil</value>
+  </data>
+  <data name="Average memory used per device" xml:space="preserve">
+    <value>Mémoire moyenne utilisée par appareil</value>
+  </data>
+  <data name="Average resource usage across connected devices." xml:space="preserve">
+    <value>Utilisation moyenne des ressources des appareils connectés.</value>
+  </data>
+  <data name="Average storage used per device" xml:space="preserve">
+    <value>Stockage moyen utilisé par appareil</value>
+  </data>
+  <data name="Awaiting inventory" xml:space="preserve">
+    <value>Inventaire en attente</value>
+  </data>
+  <data name="B" xml:space="preserve">
+    <value>o</value>
+  </data>
+  <data name="Back to device" xml:space="preserve">
+    <value>Retour à l’appareil</value>
+  </data>
+  <data name="Back to devices" xml:space="preserve">
+    <value>Retour aux appareils</value>
+  </data>
+  <data name="Back to sign in" xml:space="preserve">
+    <value>Retour à la connexion</value>
+  </data>
+  <data name="Back up the entire data directory while the server is stopped. It includes the database, protected authenticator keys and session encryption keys." xml:space="preserve">
+    <value>Sauvegardez tout le répertoire de données lorsque le serveur est arrêté. Il contient la base de données et les clés de sécurité.</value>
+  </data>
+  <data name="Block / restore device access" xml:space="preserve">
+    <value>Bloquer ou rétablir l’accès aux appareils</value>
+  </data>
+  <data name="Block MeshAll access" xml:space="preserve">
+    <value>Bloquer l’accès MeshAll</value>
+  </data>
+  <data name="Block MeshAll access for {0}?" xml:space="preserve">
+    <value>Bloquer l’accès MeshAll pour {0} ?</value>
+  </data>
+  <data name="Blocked" xml:space="preserve">
+    <value>Bloqué</value>
+  </data>
+  <data name="Browse / download files" xml:space="preserve">
+    <value>Parcourir et télécharger les fichiers</value>
+  </data>
+  <data name="Browse files" xml:space="preserve">
+    <value>Parcourir les fichiers</value>
+  </data>
+  <data name="Browser message is too large." xml:space="preserve">
+    <value>Le message du navigateur est trop volumineux.</value>
+  </data>
+  <data name="Built-in" xml:space="preserve">
+    <value>Prédéfini</value>
+  </data>
+  <data name="Built-in roles cannot be deleted." xml:space="preserve">
+    <value>Les rôles prédéfinis ne peuvent pas être supprimés.</value>
+  </data>
+  <data name="C/C++ and agent-side JavaScript" xml:space="preserve">
+    <value>C/C++ et JavaScript côté agent</value>
+  </data>
+  <data name="CPU" xml:space="preserve">
+    <value>CPU</value>
+  </data>
+  <data name="CPU model" xml:space="preserve">
+    <value>Modèle du processeur</value>
+  </data>
+  <data name="CPU usage" xml:space="preserve">
+    <value>Utilisation CPU</value>
+  </data>
+  <data name="CPU ≥85% · memory ≥90% · disks ≥90%" xml:space="preserve">
+    <value>CPU ≥85 % · mémoire ≥90 % · disques ≥90 %</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Annuler</value>
+  </data>
+  <data name="Capabilities" xml:space="preserve">
+    <value>Autorisations</value>
+  </data>
+  <data name="Capability not granted" xml:space="preserve">
+    <value>Autorisation non accordée</value>
+  </data>
+  <data name="Capacity" xml:space="preserve">
+    <value>Capacité</value>
+  </data>
+  <data name="Choose Open path to browse the agent’s configured file root." xml:space="preserve">
+    <value>Sélectionnez Ouvrir le chemin pour parcourir les fichiers de l’agent.</value>
+  </data>
+  <data name="Choose a compatible script type and platform." xml:space="preserve">
+    <value>Choisissez un type de script compatible avec la plateforme.</value>
+  </data>
+  <data name="Choose a port between 1 and 65535." xml:space="preserve">
+    <value>Choisissez un port compris entre 1 et 65535.</value>
+  </data>
+  <data name="Choose a script type." xml:space="preserve">
+    <value>Choisissez un type de script.</value>
+  </data>
+  <data name="Choose a script…" xml:space="preserve">
+    <value>Choisir un script…</value>
+  </data>
+  <data name="Choose a valid group." xml:space="preserve">
+    <value>Choisissez un groupe valide.</value>
+  </data>
+  <data name="Choose a valid role." xml:space="preserve">
+    <value>Choisissez un rôle valide.</value>
+  </data>
+  <data name="Clear output" xml:space="preserve">
+    <value>Effacer la sortie</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Fermer</value>
+  </data>
+  <data name="Command" xml:space="preserve">
+    <value>Commande</value>
+  </data>
+  <data name="Command Prompt (.cmd)" xml:space="preserve">
+    <value>Invite de commandes (.cmd)</value>
+  </data>
+  <data name="Command output" xml:space="preserve">
+    <value>Sortie de la commande</value>
+  </data>
+  <data name="Commands" xml:space="preserve">
+    <value>Commandes</value>
+  </data>
+  <data name="Completed" xml:space="preserve">
+    <value>Terminé</value>
+  </data>
+  <data name="Component" xml:space="preserve">
+    <value>Composant</value>
+  </data>
+  <data name="Components" xml:space="preserve">
+    <value>Composants</value>
+  </data>
+  <data name="Configuration" xml:space="preserve">
+    <value>Configuration</value>
+  </data>
+  <data name="Connect" xml:space="preserve">
+    <value>Connecter</value>
+  </data>
+  <data name="Connect directly from the orchestrator" xml:space="preserve">
+    <value>Connexion directe depuis le serveur</value>
+  </data>
+  <data name="Connect directly to {0}" xml:space="preserve">
+    <value>Connexion directe à {0}</value>
+  </data>
+  <data name="Connected" xml:space="preserve">
+    <value>Connecté</value>
+  </data>
+  <data name="Connected agents will appear here automatically." xml:space="preserve">
+    <value>Les agents connectés s’affichent ici automatiquement.</value>
+  </data>
+  <data name="Connected devices" xml:space="preserve">
+    <value>Appareils connectés</value>
+  </data>
+  <data name="Connected devices with resource pressure" xml:space="preserve">
+    <value>Appareils connectés à surveiller</value>
+  </data>
+  <data name="Connected now" xml:space="preserve">
+    <value>Connecté</value>
+  </data>
+  <data name="Connected platforms" xml:space="preserve">
+    <value>Plateformes connectées</value>
+  </data>
+  <data name="Connecting…" xml:space="preserve">
+    <value>Connexion…</value>
+  </data>
+  <data name="Connection address" xml:space="preserve">
+    <value>Adresse de connexion</value>
+  </data>
+  <data name="Connection interrupted." xml:space="preserve">
+    <value>Connexion interrompue.</value>
+  </data>
+  <data name="Connection interrupted. Reconnecting automatically…" xml:space="preserve">
+    <value>Connexion interrompue. Reconnexion automatique…</value>
+  </data>
+  <data name="Connection settings" xml:space="preserve">
+    <value>Paramètres de connexion</value>
+  </data>
+  <data name="Connection status" xml:space="preserve">
+    <value>État de la connexion</value>
+  </data>
+  <data name="Continue" xml:space="preserve">
+    <value>Continuer</value>
+  </data>
+  <data name="Control native desktop keyboard / mouse" xml:space="preserve">
+    <value>Contrôler le clavier et la souris du bureau natif</value>
+  </data>
+  <data name="Copy command" xml:space="preserve">
+    <value>Copier la commande</value>
+  </data>
+  <data name="Create a key to connect a device." xml:space="preserve">
+    <value>Créez une clé pour connecter un appareil.</value>
+  </data>
+  <data name="Create a key to download the agent." xml:space="preserve">
+    <value>Créez une clé pour télécharger l’agent.</value>
+  </data>
+  <data name="Create a script to use it on compatible devices." xml:space="preserve">
+    <value>Créez un script pour l’utiliser sur les appareils compatibles.</value>
+  </data>
+  <data name="Create an enrollment key" xml:space="preserve">
+    <value>Créer une clé d’inscription</value>
+  </data>
+  <data name="Create an enrollment key, then download the agent." xml:space="preserve">
+    <value>Créez une clé d’inscription, puis téléchargez l’agent.</value>
+  </data>
+  <data name="Create enrollment key" xml:space="preserve">
+    <value>Créer la clé d’inscription</value>
+  </data>
+  <data name="Create folder" xml:space="preserve">
+    <value>Créer le dossier</value>
+  </data>
+  <data name="Create role" xml:space="preserve">
+    <value>Créer un rôle</value>
+  </data>
+  <data name="Create the first administrator for this workspace." xml:space="preserve">
+    <value>Créez le premier compte administrateur de cet espace de travail.</value>
+  </data>
+  <data name="Create user" xml:space="preserve">
+    <value>Créer l’utilisateur</value>
+  </data>
+  <data name="Create workspace" xml:space="preserve">
+    <value>Créer l’espace de travail</value>
+  </data>
+  <data name="Critical storage" xml:space="preserve">
+    <value>Stockage critique</value>
+  </data>
+  <data name="Ctrl+Alt+Delete" xml:space="preserve">
+    <value>Ctrl+Alt+Suppr</value>
+  </data>
+  <data name="Current password" xml:space="preserve">
+    <value>Mot de passe actuel</value>
+  </data>
+  <data name="Dashboard" xml:space="preserve">
+    <value>Tableau de bord</value>
+  </data>
+  <data name="Data directory" xml:space="preserve">
+    <value>Répertoire de données</value>
+  </data>
+  <data name="Debian installation" xml:space="preserve">
+    <value>Installation Debian</value>
+  </data>
+  <data name="Declared, licensed rendering dependencies" xml:space="preserve">
+    <value>Dépendances d’affichage sous licence</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Supprimer</value>
+  </data>
+  <data name="Delete file" xml:space="preserve">
+    <value>Supprimer un fichier</value>
+  </data>
+  <data name="Delete {0}?" xml:space="preserve">
+    <value>Supprimer {0} ?</value>
+  </data>
+  <data name="Delete {0}? Devices will move to Unassigned." xml:space="preserve">
+    <value>Supprimer {0} ? Les appareils seront déplacés vers Non attribué.</value>
+  </data>
+  <data name="Delete {0}? Folders must be empty." xml:space="preserve">
+    <value>Supprimer {0} ? Les dossiers doivent être vides.</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="Description is too long." xml:space="preserve">
+    <value>La description est trop longue.</value>
+  </data>
+  <data name="Desktop" xml:space="preserve">
+    <value>Bureau</value>
+  </data>
+  <data name="Desktop access is no longer available." xml:space="preserve">
+    <value>L’accès au bureau n’est plus disponible.</value>
+  </data>
+  <data name="Desktop access was declined." xml:space="preserve">
+    <value>L’accès au bureau a été refusé.</value>
+  </data>
+  <data name="Desktop and AMT viewers" xml:space="preserve">
+    <value>Visionneuses de bureau et AMT</value>
+  </data>
+  <data name="Desktop changed or connection interrupted. Reconnecting automatically…" xml:space="preserve">
+    <value>Bureau modifié ou connexion interrompue. Reconnexion automatique…</value>
+  </data>
+  <data name="Desktop connection failed." xml:space="preserve">
+    <value>Échec de la connexion au bureau.</value>
+  </data>
+  <data name="Desktop consent not required" xml:space="preserve">
+    <value>Autorisation d’écran non requise</value>
+  </data>
+  <data name="Desktop control is not permitted by your role." xml:space="preserve">
+    <value>Votre rôle n’autorise pas le contrôle du bureau.</value>
+  </data>
+  <data name="Desktop opened" xml:space="preserve">
+    <value>Bureau ouvert</value>
+  </data>
+  <data name="Desktop requires user consent" xml:space="preserve">
+    <value>Autorisation d’écran requise</value>
+  </data>
+  <data name="Desktop session opened" xml:space="preserve">
+    <value>Session de bureau ouverte</value>
+  </data>
+  <data name="Desktop sharing ended." xml:space="preserve">
+    <value>Le partage du bureau est terminé.</value>
+  </data>
+  <data name="Details" xml:space="preserve">
+    <value>Détails</value>
+  </data>
+  <data name="Device" xml:space="preserve">
+    <value>Appareil</value>
+  </data>
+  <data name="Device access blocked" xml:space="preserve">
+    <value>Accès à l’appareil bloqué</value>
+  </data>
+  <data name="Device access has been revoked." xml:space="preserve">
+    <value>L’accès à l’appareil a été révoqué.</value>
+  </data>
+  <data name="Device access in MeshAll" xml:space="preserve">
+    <value>Accès à l’appareil dans MeshAll</value>
+  </data>
+  <data name="Device access is blocked in MeshAll." xml:space="preserve">
+    <value>L’accès à l’appareil est bloqué dans MeshAll.</value>
+  </data>
+  <data name="Device access is blocked." xml:space="preserve">
+    <value>L’accès à l’appareil est bloqué.</value>
+  </data>
+  <data name="Device access restored" xml:space="preserve">
+    <value>Accès à l’appareil rétabli</value>
+  </data>
+  <data name="Device connected" xml:space="preserve">
+    <value>Appareil connecté</value>
+  </data>
+  <data name="Device disconnected" xml:space="preserve">
+    <value>Appareil déconnecté</value>
+  </data>
+  <data name="Device disconnected." xml:space="preserve">
+    <value>Appareil déconnecté.</value>
+  </data>
+  <data name="Device disk capacity" xml:space="preserve">
+    <value>Capacité des disques de l’appareil</value>
+  </data>
+  <data name="Device enrolled" xml:space="preserve">
+    <value>Appareil inscrit</value>
+  </data>
+  <data name="Device group" xml:space="preserve">
+    <value>Groupe d’appareils</value>
+  </data>
+  <data name="Device group pages" xml:space="preserve">
+    <value>Pages des groupes d’appareils</value>
+  </data>
+  <data name="Device groups" xml:space="preserve">
+    <value>Groupes d’appareils</value>
+  </data>
+  <data name="Device information" xml:space="preserve">
+    <value>Informations sur l’appareil</value>
+  </data>
+  <data name="Device is busy. Try again shortly." xml:space="preserve">
+    <value>L’appareil est occupé. Réessayez dans un instant.</value>
+  </data>
+  <data name="Device is not available." xml:space="preserve">
+    <value>L’appareil est indisponible.</value>
+  </data>
+  <data name="Device is offline or blocked." xml:space="preserve">
+    <value>L’appareil est hors ligne ou bloqué.</value>
+  </data>
+  <data name="Device is offline." xml:space="preserve">
+    <value>L’appareil est hors ligne.</value>
+  </data>
+  <data name="Device name" xml:space="preserve">
+    <value>Nom de l’appareil</value>
+  </data>
+  <data name="Device not found" xml:space="preserve">
+    <value>Appareil introuvable</value>
+  </data>
+  <data name="Device not found." xml:space="preserve">
+    <value>Appareil introuvable.</value>
+  </data>
+  <data name="Device offline" xml:space="preserve">
+    <value>Appareil hors ligne</value>
+  </data>
+  <data name="Device offline. Waiting for new readings." xml:space="preserve">
+    <value>Appareil hors ligne. En attente de nouvelles mesures.</value>
+  </data>
+  <data name="Device pages" xml:space="preserve">
+    <value>Pages des appareils</value>
+  </data>
+  <data name="Device removed from website" xml:space="preserve">
+    <value>Appareil retiré de la liste</value>
+  </data>
+  <data name="Device saved." xml:space="preserve">
+    <value>Appareil enregistré.</value>
+  </data>
+  <data name="Device settings" xml:space="preserve">
+    <value>Paramètres de l’appareil</value>
+  </data>
+  <data name="Device updated" xml:space="preserve">
+    <value>Appareil mis à jour</value>
+  </data>
+  <data name="Device views" xml:space="preserve">
+    <value>Vues de l’appareil</value>
+  </data>
+  <data name="Devices" xml:space="preserve">
+    <value>Appareils</value>
+  </data>
+  <data name="Devices connected" xml:space="preserve">
+    <value>Appareils connectés</value>
+  </data>
+  <data name="Direct access requires the service to be reachable from the server." xml:space="preserve">
+    <value>L’accès direct nécessite que le service soit accessible depuis le serveur.</value>
+  </data>
+  <data name="Disable" xml:space="preserve">
+    <value>Désactiver</value>
+  </data>
+  <data name="Disable two-factor authentication" xml:space="preserve">
+    <value>Désactiver l’authentification à deux facteurs</value>
+  </data>
+  <data name="Disable {0}?" xml:space="preserve">
+    <value>Désactiver {0} ?</value>
+  </data>
+  <data name="Disabled" xml:space="preserve">
+    <value>Désactivé</value>
+  </data>
+  <data name="Disconnect" xml:space="preserve">
+    <value>Déconnecter</value>
+  </data>
+  <data name="Disconnected" xml:space="preserve">
+    <value>Déconnecté</value>
+  </data>
+  <data name="Disk" xml:space="preserve">
+    <value>Disque</value>
+  </data>
+  <data name="Disk capacity" xml:space="preserve">
+    <value>Capacité des disques</value>
+  </data>
+  <data name="Disk pages" xml:space="preserve">
+    <value>Pages des disques</value>
+  </data>
+  <data name="Dismiss" xml:space="preserve">
+    <value>Fermer</value>
+  </data>
+  <data name="Display name" xml:space="preserve">
+    <value>Nom affiché</value>
+  </data>
+  <data name="Domain" xml:space="preserve">
+    <value>Domaine</value>
+  </data>
+  <data name="Download" xml:space="preserve">
+    <value>Télécharger</value>
+  </data>
+  <data name="Download file" xml:space="preserve">
+    <value>Télécharger un fichier</value>
+  </data>
+  <data name="Duplicate native authentication command." xml:space="preserve">
+    <value>Commande d’authentification native reçue en double.</value>
+  </data>
+  <data name="Duplicate stream." xml:space="preserve">
+    <value>Flux en double.</value>
+  </data>
+  <data name="Duration" xml:space="preserve">
+    <value>Durée</value>
+  </data>
+  <data name="Each code can be used once if you lose access to your authenticator. These codes are shown only once." xml:space="preserve">
+    <value>Chaque code est utilisable une fois en cas de perte de l’authentificateur. Ces codes ne sont affichés qu’une fois.</value>
+  </data>
+  <data name="Each device counts equally. Updated every 5 seconds; samples older than 2 minutes are excluded." xml:space="preserve">
+    <value>Chaque appareil a le même poids. Actualisation toutes les 5 secondes ; les mesures de plus de 2 minutes sont exclues.</value>
+  </data>
+  <data name="Each screen session requires approval. Requests expire after 30 seconds." xml:space="preserve">
+    <value>Chaque session d’écran nécessite une autorisation. Les demandes expirent après 30 secondes.</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Modifier</value>
+  </data>
+  <data name="Edit device" xml:space="preserve">
+    <value>Modifier l’appareil</value>
+  </data>
+  <data name="Edit device group" xml:space="preserve">
+    <value>Modifier le groupe d’appareils</value>
+  </data>
+  <data name="Edit devices" xml:space="preserve">
+    <value>Modifier les appareils</value>
+  </data>
+  <data name="Edit role" xml:space="preserve">
+    <value>Modifier le rôle</value>
+  </data>
+  <data name="Edit script" xml:space="preserve">
+    <value>Modifier le script</value>
+  </data>
+  <data name="EiB" xml:space="preserve">
+    <value>Eio</value>
+  </data>
+  <data name="Enable" xml:space="preserve">
+    <value>Activer</value>
+  </data>
+  <data name="Enable keyboard &amp; mouse" xml:space="preserve">
+    <value>Activer le clavier et la souris</value>
+  </data>
+  <data name="Enable two-factor authentication" xml:space="preserve">
+    <value>Activer l’authentification à deux facteurs</value>
+  </data>
+  <data name="Enable {0}?" xml:space="preserve">
+    <value>Activer {0} ?</value>
+  </data>
+  <data name="Enabled" xml:space="preserve">
+    <value>Activé</value>
+  </data>
+  <data name="Enroll agents" xml:space="preserve">
+    <value>Inscrire des agents</value>
+  </data>
+  <data name="Enrollment key created" xml:space="preserve">
+    <value>Clé d’inscription créée</value>
+  </data>
+  <data name="Enrollment key created." xml:space="preserve">
+    <value>Clé d’inscription créée.</value>
+  </data>
+  <data name="Enrollment key is invalid, expired, or exhausted." xml:space="preserve">
+    <value>La clé d’inscription est invalide, expirée ou épuisée.</value>
+  </data>
+  <data name="Enrollment key revoked" xml:space="preserve">
+    <value>Clé d’inscription révoquée</value>
+  </data>
+  <data name="Enrollment key revoked." xml:space="preserve">
+    <value>Clé d’inscription révoquée.</value>
+  </data>
+  <data name="Enrollment keys" xml:space="preserve">
+    <value>Clés d’inscription</value>
+  </data>
+  <data name="Enrollment token is invalid, expired, or exhausted." xml:space="preserve">
+    <value>Le jeton d’inscription est invalide, expiré ou épuisé.</value>
+  </data>
+  <data name="Enter a command up to 16000 characters." xml:space="preserve">
+    <value>Saisissez une commande de 16000 caractères maximum.</value>
+  </data>
+  <data name="Enter a file or folder name without a path." xml:space="preserve">
+    <value>Saisissez un nom de fichier ou de dossier sans chemin.</value>
+  </data>
+  <data name="Enter a value between 1 and {0} characters." xml:space="preserve">
+    <value>Saisissez une valeur de 1 à {0} caractères.</value>
+  </data>
+  <data name="Enter a workspace name of 1–70 characters." xml:space="preserve">
+    <value>Saisissez un nom d’espace de travail de 1 à 70 caractères.</value>
+  </data>
+  <data name="Enter an HTTP or HTTPS origin without a path or credentials." xml:space="preserve">
+    <value>Saisissez une origine HTTP ou HTTPS sans chemin ni identifiants.</value>
+  </data>
+  <data name="Enter the six-digit code from your authenticator app, or an unused recovery code." xml:space="preserve">
+    <value>Saisissez le code à six chiffres de l’authentificateur ou un code de récupération inutilisé.</value>
+  </data>
+  <data name="Event" xml:space="preserve">
+    <value>Événement</value>
+  </data>
+  <data name="Execution shell" xml:space="preserve">
+    <value>Interpréteur</value>
+  </data>
+  <data name="Existing sessions are invalidated. Two-factor authentication remains enabled." xml:space="preserve">
+    <value>Les sessions existantes sont invalidées. L’authentification à deux facteurs reste activée.</value>
+  </data>
+  <data name="Expires" xml:space="preserve">
+    <value>Expiration</value>
+  </data>
+  <data name="Expires in (hours)" xml:space="preserve">
+    <value>Expire dans (heures)</value>
+  </data>
+  <data name="Export JSON" xml:space="preserve">
+    <value>Exporter en JSON</value>
+  </data>
+  <data name="Export audit log" xml:space="preserve">
+    <value>Exporter le journal d’audit</value>
+  </data>
+  <data name="Failed" xml:space="preserve">
+    <value>Échec</value>
+  </data>
+  <data name="Family" xml:space="preserve">
+    <value>Famille</value>
+  </data>
+  <data name="Feature verification details:" xml:space="preserve">
+    <value>Détails de vérification des fonctionnalités :</value>
+  </data>
+  <data name="File could not be created." xml:space="preserve">
+    <value>Impossible de créer le fichier.</value>
+  </data>
+  <data name="File could not be opened." xml:space="preserve">
+    <value>Impossible d’ouvrir le fichier.</value>
+  </data>
+  <data name="File download interrupted." xml:space="preserve">
+    <value>Téléchargement du fichier interrompu.</value>
+  </data>
+  <data name="File downloaded" xml:space="preserve">
+    <value>Fichier téléchargé</value>
+  </data>
+  <data name="File exceeds the 5 MB transfer limit." xml:space="preserve">
+    <value>Le fichier dépasse la limite de transfert de 5 Mio.</value>
+  </data>
+  <data name="File manager" xml:space="preserve">
+    <value>Gestionnaire de fichiers</value>
+  </data>
+  <data name="File session ended." xml:space="preserve">
+    <value>La session de fichiers est terminée.</value>
+  </data>
+  <data name="File upload failed." xml:space="preserve">
+    <value>Le transfert du fichier a échoué.</value>
+  </data>
+  <data name="File uploaded." xml:space="preserve">
+    <value>Fichier envoyé.</value>
+  </data>
+  <data name="Files" xml:space="preserve">
+    <value>Fichiers</value>
+  </data>
+  <data name="Find this in the server’s Data/bootstrap.key file." xml:space="preserve">
+    <value>Cette clé se trouve dans le fichier Data/bootstrap.key du serveur.</value>
+  </data>
+  <data name="First administrator configured" xml:space="preserve">
+    <value>Premier administrateur configuré</value>
+  </data>
+  <data name="Average CPU" xml:space="preserve">
+    <value>Utilisation CPU moyenne</value>
+  </data>
+  <data name="Device health signals" xml:space="preserve">
+    <value>Indicateurs de santé des appareils</value>
+  </data>
+  <data name="Average memory" xml:space="preserve">
+    <value>Mémoire moyenne</value>
+  </data>
+  <data name="Average storage" xml:space="preserve">
+    <value>Stockage moyen</value>
+  </data>
+  <data name="Folder" xml:space="preserve">
+    <value>Dossier</value>
+  </data>
+  <data name="Folder created." xml:space="preserve">
+    <value>Dossier créé.</value>
+  </data>
+  <data name="Free space" xml:space="preserve">
+    <value>Espace libre</value>
+  </data>
+  <data name="Fresh authenticator or recovery code" xml:space="preserve">
+    <value>Nouveau code d’authentification ou de récupération</value>
+  </data>
+  <data name="Fullest disk" xml:space="preserve">
+    <value>Disque le plus rempli</value>
+  </data>
+  <data name="Fullscreen" xml:space="preserve">
+    <value>Plein écran</value>
+  </data>
+  <data name="Generate new recovery codes" xml:space="preserve">
+    <value>Générer de nouveaux codes de récupération</value>
+  </data>
+  <data name="Generating new recovery codes replaces all previous recovery codes." xml:space="preserve">
+    <value>Les nouveaux codes de récupération remplacent tous les précédents.</value>
+  </data>
+  <data name="GiB" xml:space="preserve">
+    <value>Gio</value>
+  </data>
+  <data name="Go to dashboard" xml:space="preserve">
+    <value>Aller au tableau de bord</value>
+  </data>
+  <data name="Group" xml:space="preserve">
+    <value>Groupe</value>
+  </data>
+  <data name="Group deleted" xml:space="preserve">
+    <value>Groupe supprimé</value>
+  </data>
+  <data name="Group deleted." xml:space="preserve">
+    <value>Groupe supprimé.</value>
+  </data>
+  <data name="Group name" xml:space="preserve">
+    <value>Nom du groupe</value>
+  </data>
+  <data name="Group no longer exists." xml:space="preserve">
+    <value>Ce groupe n’existe plus.</value>
+  </data>
+  <data name="Group saved" xml:space="preserve">
+    <value>Groupe enregistré</value>
+  </data>
+  <data name="Group saved." xml:space="preserve">
+    <value>Groupe enregistré.</value>
+  </data>
+  <data name="HTTPS 5188" xml:space="preserve">
+    <value>HTTPS 5188</value>
+  </data>
+  <data name="Health" xml:space="preserve">
+    <value>Santé</value>
+  </data>
+  <data name="Healthy" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="High CPU" xml:space="preserve">
+    <value>CPU élevé</value>
+  </data>
+  <data name="High memory" xml:space="preserve">
+    <value>Mémoire élevée</value>
+  </data>
+  <data name="Highest CPU" xml:space="preserve">
+    <value>CPU le plus élevé</value>
+  </data>
+  <data name="Highest memory" xml:space="preserve">
+    <value>Mémoire la plus élevée</value>
+  </data>
+  <data name="Hostname" xml:space="preserve">
+    <value>Nom d’hôte</value>
+  </data>
+  <data name="I saved my recovery codes" xml:space="preserve">
+    <value>J’ai enregistré mes codes de récupération</value>
+  </data>
+  <data name="Initial password" xml:space="preserve">
+    <value>Mot de passe initial</value>
+  </data>
+  <data name="Initial setup" xml:space="preserve">
+    <value>Configuration initiale</value>
+  </data>
+  <data name="Install MeshAll" xml:space="preserve">
+    <value>Installer MeshAll</value>
+  </data>
+  <data name="Install the service before starting the agent interactively. Key expiration does not disconnect enrolled devices." xml:space="preserve">
+    <value>Installez le service avant de démarrer l’agent en mode interactif. L’expiration de la clé ne déconnecte pas les appareils inscrits.</value>
+  </data>
+  <data name="Installation command copied." xml:space="preserve">
+    <value>Commande d’installation copiée.</value>
+  </data>
+  <data name="Interactive agent terminal" xml:space="preserve">
+    <value>Terminal interactif de l’agent</value>
+  </data>
+  <data name="Interactive terminal" xml:space="preserve">
+    <value>Terminal interactif</value>
+  </data>
+  <data name="Interface" xml:space="preserve">
+    <value>Interface</value>
+  </data>
+  <data name="Invalid agent certificate." xml:space="preserve">
+    <value>Certificat de l’agent non valide.</value>
+  </data>
+  <data name="Invalid agent challenge." xml:space="preserve">
+    <value>Défi d’authentification de l’agent non valide.</value>
+  </data>
+  <data name="Invalid agent inventory." xml:space="preserve">
+    <value>Inventaire de l’agent non valide.</value>
+  </data>
+  <data name="Invalid agent signature envelope." xml:space="preserve">
+    <value>Enveloppe de signature de l’agent non valide.</value>
+  </data>
+  <data name="Invalid authenticator code. Check the code and the time on your phone." xml:space="preserve">
+    <value>Code d’authentification non valide. Vérifiez le code et l’heure de votre téléphone.</value>
+  </data>
+  <data name="Invalid authenticator key." xml:space="preserve">
+    <value>Clé d’authentification non valide.</value>
+  </data>
+  <data name="Invalid language selection." xml:space="preserve">
+    <value>Sélection de langue non valide.</value>
+  </data>
+  <data name="Invalid native agent information." xml:space="preserve">
+    <value>Informations de l’agent natif non valides.</value>
+  </data>
+  <data name="Invalid or already used authenticator/recovery code." xml:space="preserve">
+    <value>Code d’authentification ou de récupération non valide ou déjà utilisé.</value>
+  </data>
+  <data name="Invalid platform." xml:space="preserve">
+    <value>Plateforme non valide.</value>
+  </data>
+  <data name="Invalid protocol instruction separator." xml:space="preserve">
+    <value>Séparateur d’instruction de protocole non valide.</value>
+  </data>
+  <data name="Invalid protocol instruction." xml:space="preserve">
+    <value>Instruction de protocole non valide.</value>
+  </data>
+  <data name="Invalid, expired, or already used code. After five failed attempts, start sign-in again." xml:space="preserve">
+    <value>Code invalide, expiré ou déjà utilisé. Après cinq échecs, recommencez la connexion.</value>
+  </data>
+  <data name="Inventory refresh" xml:space="preserve">
+    <value>Actualisation de l’inventaire</value>
+  </data>
+  <data name="Inventory refresh requested." xml:space="preserve">
+    <value>Actualisation de l’inventaire demandée.</value>
+  </data>
+  <data name="Item deleted." xml:space="preserve">
+    <value>Élément supprimé.</value>
+  </data>
+  <data name="Just now" xml:space="preserve">
+    <value>À l’instant</value>
+  </data>
+  <data name="Keep at least one active Administrator." xml:space="preserve">
+    <value>Conservez au moins un administrateur actif.</value>
+  </data>
+  <data name="Key name" xml:space="preserve">
+    <value>Nom de la clé</value>
+  </data>
+  <data name="KiB" xml:space="preserve">
+    <value>Kio</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Langue</value>
+  </data>
+  <data name="Last contact" xml:space="preserve">
+    <value>Dernier contact</value>
+  </data>
+  <data name="Last inventory" xml:space="preserve">
+    <value>Dernier inventaire</value>
+  </data>
+  <data name="Last sample" xml:space="preserve">
+    <value>Dernière mesure</value>
+  </data>
+  <data name="Last seen" xml:space="preserve">
+    <value>Dernière activité</value>
+  </data>
+  <data name="License information:" xml:space="preserve">
+    <value>Informations sur les licences :</value>
+  </data>
+  <data name="Licensing" xml:space="preserve">
+    <value>Licences</value>
+  </data>
+  <data name="Linux/macOS:" xml:space="preserve">
+    <value>Linux/macOS :</value>
+  </data>
+  <data name="Live dashboard" xml:space="preserve">
+    <value>Actualisation automatique</value>
+  </data>
+  <data name="Live updates" xml:space="preserve">
+    <value>Actualisation automatique</value>
+  </data>
+  <data name="Local time" xml:space="preserve">
+    <value>Heure locale</value>
+  </data>
+  <data name="Logical CPU cores" xml:space="preserve">
+    <value>Cœurs logiques du processeur</value>
+  </data>
+  <data name="MAC" xml:space="preserve">
+    <value>MAC</value>
+  </data>
+  <data name="MAC address" xml:space="preserve">
+    <value>Adresse MAC</value>
+  </data>
+  <data name="Main navigation" xml:space="preserve">
+    <value>Navigation principale</value>
+  </data>
+  <data name="Manage all devices" xml:space="preserve">
+    <value>Gérer les appareils</value>
+  </data>
+  <data name="Manage device groups" xml:space="preserve">
+    <value>Gérer les groupes d’appareils</value>
+  </data>
+  <data name="Manage device power" xml:space="preserve">
+    <value>Gérer l’alimentation des appareils</value>
+  </data>
+  <data name="Manage instance settings" xml:space="preserve">
+    <value>Gérer les paramètres de l’instance</value>
+  </data>
+  <data name="Manage roles" xml:space="preserve">
+    <value>Gérer les rôles</value>
+  </data>
+  <data name="Manage saved scripts" xml:space="preserve">
+    <value>Gérer les scripts enregistrés</value>
+  </data>
+  <data name="Manage users" xml:space="preserve">
+    <value>Gérer les utilisateurs</value>
+  </data>
+  <data name="Management UI" xml:space="preserve">
+    <value>Interface de gestion</value>
+  </data>
+  <data name="Manufacturer / model" xml:space="preserve">
+    <value>Fabricant / modèle</value>
+  </data>
+  <data name="Maximum devices" xml:space="preserve">
+    <value>Nombre maximal d’appareils</value>
+  </data>
+  <data name="Maximum transfer size: 5 MiB." xml:space="preserve">
+    <value>Taille maximale de transfert : 5 Mio.</value>
+  </data>
+  <data name="Memory" xml:space="preserve">
+    <value>Mémoire</value>
+  </data>
+  <data name="Memory usage" xml:space="preserve">
+    <value>Utilisation de la mémoire</value>
+  </data>
+  <data name="MeshAll" xml:space="preserve">
+    <value>MeshAll</value>
+  </data>
+  <data name="MeshAll access updated." xml:space="preserve">
+    <value>Accès MeshAll mis à jour.</value>
+  </data>
+  <data name="MiB" xml:space="preserve">
+    <value>Mio</value>
+  </data>
+  <data name="Missing agent certificate." xml:space="preserve">
+    <value>Certificat de l’agent manquant.</value>
+  </data>
+  <data name="Missing connection parameters." xml:space="preserve">
+    <value>Paramètres de connexion manquants.</value>
+  </data>
+  <data name="Missing enrollment key." xml:space="preserve">
+    <value>Clé d’inscription manquante.</value>
+  </data>
+  <data name="Modified" xml:space="preserve">
+    <value>Modification</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Nom</value>
+  </data>
+  <data name="Native MeshAll Agent connected" xml:space="preserve">
+    <value>Agent MeshAll natif connecté</value>
+  </data>
+  <data name="Native MeshAll Agent disconnected" xml:space="preserve">
+    <value>Agent MeshAll natif déconnecté</value>
+  </data>
+  <data name="Native MeshAll Agent enrolled" xml:space="preserve">
+    <value>Agent MeshAll natif inscrit</value>
+  </data>
+  <data name="Native PC agent" xml:space="preserve">
+    <value>Agent PC natif</value>
+  </data>
+  <data name="Native agent build" xml:space="preserve">
+    <value>Version de l’agent natif</value>
+  </data>
+  <data name="Native agent connections require the configured HTTPS certificate." xml:space="preserve">
+    <value>Les connexions d’agents natifs nécessitent le certificat HTTPS configuré.</value>
+  </data>
+  <data name="Native agent disconnected." xml:space="preserve">
+    <value>Agent natif déconnecté.</value>
+  </data>
+  <data name="Native desktop access." xml:space="preserve">
+    <value>Accès au bureau natif.</value>
+  </data>
+  <data name="Native enrollment key is invalid, expired, or exhausted." xml:space="preserve">
+    <value>La clé d’inscription native est invalide, expirée ou épuisée.</value>
+  </data>
+  <data name="Native frame exceeds the size limit." xml:space="preserve">
+    <value>La trame native dépasse la taille autorisée.</value>
+  </data>
+  <data name="Native identity has no device record." xml:space="preserve">
+    <value>L’identité native n’est associée à aucun appareil.</value>
+  </data>
+  <data name="Nearly full devices" xml:space="preserve">
+    <value>Appareils presque pleins</value>
+  </data>
+  <data name="Nearly full disks" xml:space="preserve">
+    <value>Disques presque pleins</value>
+  </data>
+  <data name="Nearly full: 90% used. Critical: 97% used." xml:space="preserve">
+    <value>Presque plein : 90 % utilisés. Critique : 97 %.</value>
+  </data>
+  <data name="Needs attention" xml:space="preserve">
+    <value>À surveiller</value>
+  </data>
+  <data name="New device group" xml:space="preserve">
+    <value>Nouveau groupe d’appareils</value>
+  </data>
+  <data name="New folder name" xml:space="preserve">
+    <value>Nom du nouveau dossier</value>
+  </data>
+  <data name="New group" xml:space="preserve">
+    <value>Nouveau groupe</value>
+  </data>
+  <data name="New password" xml:space="preserve">
+    <value>Nouveau mot de passe</value>
+  </data>
+  <data name="New role" xml:space="preserve">
+    <value>Nouveau rôle</value>
+  </data>
+  <data name="New script" xml:space="preserve">
+    <value>Nouveau script</value>
+  </data>
+  <data name="Next" xml:space="preserve">
+    <value>Suivant</value>
+  </data>
+  <data name="No active user" xml:space="preserve">
+    <value>Aucun utilisateur actif</value>
+  </data>
+  <data name="No connected devices to show" xml:space="preserve">
+    <value>Aucun appareil connecté à afficher</value>
+  </data>
+  <data name="No devices to show" xml:space="preserve">
+    <value>Aucun appareil à afficher</value>
+  </data>
+  <data name="No disk report yet" xml:space="preserve">
+    <value>Aucune mesure de disque</value>
+  </data>
+  <data name="No enrollment keys" xml:space="preserve">
+    <value>Aucune clé d’inscription</value>
+  </data>
+  <data name="No events to show" xml:space="preserve">
+    <value>Aucun événement à afficher</value>
+  </data>
+  <data name="No memory sample" xml:space="preserve">
+    <value>Aucune mesure de mémoire</value>
+  </data>
+  <data name="No notes" xml:space="preserve">
+    <value>Aucune note</value>
+  </data>
+  <data name="No process snapshot" xml:space="preserve">
+    <value>Aucun relevé de processus</value>
+  </data>
+  <data name="No results to show" xml:space="preserve">
+    <value>Aucun résultat à afficher</value>
+  </data>
+  <data name="No saved scripts" xml:space="preserve">
+    <value>Aucun script enregistré</value>
+  </data>
+  <data name="No sessions to show" xml:space="preserve">
+    <value>Aucune session à afficher</value>
+  </data>
+  <data name="No tags" xml:space="preserve">
+    <value>Aucune étiquette</value>
+  </data>
+  <data name="No volume reported" xml:space="preserve">
+    <value>Aucun volume signalé</value>
+  </data>
+  <data name="Not enabled" xml:space="preserve">
+    <value>Non activée</value>
+  </data>
+  <data name="Not reported" xml:space="preserve">
+    <value>Non disponible</value>
+  </data>
+  <data name="Not set up" xml:space="preserve">
+    <value>Non configurée</value>
+  </data>
+  <data name="Notes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="Notes are too long." xml:space="preserve">
+    <value>Les notes sont trop longues.</value>
+  </data>
+  <data name="Notify the user when desktop access starts" xml:space="preserve">
+    <value>Avertir l’utilisateur au début de l’accès au bureau</value>
+  </data>
+  <data name="Offline" xml:space="preserve">
+    <value>Hors ligne</value>
+  </data>
+  <data name="Online" xml:space="preserve">
+    <value>En ligne</value>
+  </data>
+  <data name="Only the desktop protocol is allowed on this relay." xml:space="preserve">
+    <value>Seul le protocole de bureau est autorisé sur ce relais.</value>
+  </data>
+  <data name="Open audit log" xml:space="preserve">
+    <value>Ouvrir le journal d’audit</value>
+  </data>
+  <data name="Open desktop" xml:space="preserve">
+    <value>Ouvrir le bureau</value>
+  </data>
+  <data name="Open in new tab" xml:space="preserve">
+    <value>Ouvrir dans un nouvel onglet</value>
+  </data>
+  <data name="Open path" xml:space="preserve">
+    <value>Ouvrir le chemin</value>
+  </data>
+  <data name="Open sessions" xml:space="preserve">
+    <value>Ouvrir les sessions</value>
+  </data>
+  <data name="Open the remote filesystem" xml:space="preserve">
+    <value>Ouvrir le système de fichiers distant</value>
+  </data>
+  <data name="Open {0}" xml:space="preserve">
+    <value>Ouvrir {0}</value>
+  </data>
+  <data name="Opening sign-in…" xml:space="preserve">
+    <value>Ouverture de la connexion…</value>
+  </data>
+  <data name="Operating system" xml:space="preserve">
+    <value>Système d’exploitation</value>
+  </data>
+  <data name="Operation" xml:space="preserve">
+    <value>Opération</value>
+  </data>
+  <data name="Operator" xml:space="preserve">
+    <value>Opérateur</value>
+  </data>
+  <data name="Orchestration and management" xml:space="preserve">
+    <value>Orchestration et gestion</value>
+  </data>
+  <data name="Overview" xml:space="preserve">
+    <value>Vue d’ensemble</value>
+  </data>
+  <data name="PID" xml:space="preserve">
+    <value>PID</value>
+  </data>
+  <data name="Page" xml:space="preserve">
+    <value>Page</value>
+  </data>
+  <data name="Page not found" xml:space="preserve">
+    <value>Page introuvable</value>
+  </data>
+  <data name="Page number" xml:space="preserve">
+    <value>Numéro de page</value>
+  </data>
+  <data name="Partial / stale data" xml:space="preserve">
+    <value>Données partielles ou anciennes</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Mot de passe</value>
+  </data>
+  <data name="Password is used as the key passphrase when a key is provided." xml:space="preserve">
+    <value>Lorsqu’une clé est fournie, le mot de passe sert de phrase secrète.</value>
+  </data>
+  <data name="Password reset" xml:space="preserve">
+    <value>Mot de passe réinitialisé</value>
+  </data>
+  <data name="Password reset. Existing sessions must sign in again." xml:space="preserve">
+    <value>Mot de passe réinitialisé. Les sessions existantes doivent se reconnecter.</value>
+  </data>
+  <data name="Pending" xml:space="preserve">
+    <value>En attente</value>
+  </data>
+  <data name="Person" xml:space="preserve">
+    <value>Compte</value>
+  </data>
+  <data name="PiB" xml:space="preserve">
+    <value>Pio</value>
+  </data>
+  <data name="Platform" xml:space="preserve">
+    <value>Plateforme</value>
+  </data>
+  <data name="Platform default" xml:space="preserve">
+    <value>Valeur par défaut de la plateforme</value>
+  </data>
+  <data name="Power action" xml:space="preserve">
+    <value>Commande d’alimentation</value>
+  </data>
+  <data name="Power action sent." xml:space="preserve">
+    <value>Commande d’alimentation envoyée.</value>
+  </data>
+  <data name="Power management" xml:space="preserve">
+    <value>Gestion de l’alimentation</value>
+  </data>
+  <data name="PowerShell (.ps1)" xml:space="preserve">
+    <value>PowerShell (.ps1)</value>
+  </data>
+  <data name="PowerShell terminal" xml:space="preserve">
+    <value>Terminal PowerShell</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>Aperçu</value>
+  </data>
+  <data name="Previous" xml:space="preserve">
+    <value>Précédent</value>
+  </data>
+  <data name="Primary IP address" xml:space="preserve">
+    <value>Adresse IP principale</value>
+  </data>
+  <data name="Private key (optional)" xml:space="preserve">
+    <value>Clé privée (facultatif)</value>
+  </data>
+  <data name="Process pages" xml:space="preserve">
+    <value>Pages des processus</value>
+  </data>
+  <data name="Processes" xml:space="preserve">
+    <value>Processus</value>
+  </data>
+  <data name="Protocol instruction has too many arguments." xml:space="preserve">
+    <value>L’instruction de protocole contient trop d’arguments.</value>
+  </data>
+  <data name="Protocol worker closed the connection." xml:space="preserve">
+    <value>Le service de protocole a fermé la connexion.</value>
+  </data>
+  <data name="Protocol worker: " xml:space="preserve">
+    <value>Service de protocole : </value>
+  </data>
+  <data name="Public server URL" xml:space="preserve">
+    <value>URL publique du serveur</value>
+  </data>
+  <data name="Recent activity" xml:space="preserve">
+    <value>Activité récente</value>
+  </data>
+  <data name="Recovery and changes" xml:space="preserve">
+    <value>Récupération et modifications</value>
+  </data>
+  <data name="Recovery codes" xml:space="preserve">
+    <value>Codes de récupération</value>
+  </data>
+  <data name="Refresh inventory" xml:space="preserve">
+    <value>Actualiser l’inventaire</value>
+  </data>
+  <data name="Refresh processes" xml:space="preserve">
+    <value>Actualiser les processus</value>
+  </data>
+  <data name="Reload MeshAll" xml:space="preserve">
+    <value>Recharger MeshAll</value>
+  </data>
+  <data name="Reload the page to reconnect to your workspace. Server logs contain the diagnostic details." xml:space="preserve">
+    <value>Rechargez la page pour vous reconnecter. Les détails du diagnostic se trouvent dans les journaux du serveur.</value>
+  </data>
+  <data name="Remote Desktop (RDP)" xml:space="preserve">
+    <value>Bureau à distance (RDP)</value>
+  </data>
+  <data name="Remote commands" xml:space="preserve">
+    <value>Commandes distantes</value>
+  </data>
+  <data name="Remote desktop" xml:space="preserve">
+    <value>Bureau distant</value>
+  </data>
+  <data name="Remote display" xml:space="preserve">
+    <value>Affichage distant</value>
+  </data>
+  <data name="Remote file pages" xml:space="preserve">
+    <value>Pages des fichiers distants</value>
+  </data>
+  <data name="Remote files" xml:space="preserve">
+    <value>Fichiers distants</value>
+  </data>
+  <data name="Remote login failed." xml:space="preserve">
+    <value>Échec de la connexion distante.</value>
+  </data>
+  <data name="Remote operations in progress" xml:space="preserve">
+    <value>Opérations distantes en cours</value>
+  </data>
+  <data name="Remote path" xml:space="preserve">
+    <value>Chemin distant</value>
+  </data>
+  <data name="Remote port" xml:space="preserve">
+    <value>Port distant</value>
+  </data>
+  <data name="Remote protocol setup failed: " xml:space="preserve">
+    <value>Échec de la configuration du protocole distant : </value>
+  </data>
+  <data name="Remote session opened" xml:space="preserve">
+    <value>Session distante ouverte</value>
+  </data>
+  <data name="Remote tool" xml:space="preserve">
+    <value>Outil distant</value>
+  </data>
+  <data name="Remote tools" xml:space="preserve">
+    <value>Outils distants</value>
+  </data>
+  <data name="Remove device" xml:space="preserve">
+    <value>Retirer l’appareil</value>
+  </data>
+  <data name="Remove devices from the website" xml:space="preserve">
+    <value>Retirer les appareils de la liste</value>
+  </data>
+  <data name="Remove {0}? The device can return when its agent reconnects." xml:space="preserve">
+    <value>Retirer {0} ? L’appareil pourra réapparaître à la reconnexion de son agent.</value>
+  </data>
+  <data name="Removes this entry. The device returns when its agent reconnects." xml:space="preserve">
+    <value>Retire cette entrée. L’appareil réapparaît à la reconnexion de son agent.</value>
+  </data>
+  <data name="Reported network interfaces" xml:space="preserve">
+    <value>Interfaces réseau signalées</value>
+  </data>
+  <data name="Require two-factor authentication for all users" xml:space="preserve">
+    <value>Exiger l’authentification à deux facteurs pour tous les utilisateurs</value>
+  </data>
+  <data name="Required viewing capabilities are added automatically when granting control or write access." xml:space="preserve">
+    <value>Les autorisations de lecture nécessaires sont ajoutées automatiquement avec les droits de contrôle ou d’écriture.</value>
+  </data>
+  <data name="Requires RDP on the device." xml:space="preserve">
+    <value>Nécessite RDP sur l’appareil.</value>
+  </data>
+  <data name="Requires SSH on the device." xml:space="preserve">
+    <value>Nécessite SSH sur l’appareil.</value>
+  </data>
+  <data name="Requires an existing VNC service." xml:space="preserve">
+    <value>Nécessite un service VNC existant.</value>
+  </data>
+  <data name="Requires configured Intel AMT." xml:space="preserve">
+    <value>Nécessite une configuration Intel AMT.</value>
+  </data>
+  <data name="Reset password" xml:space="preserve">
+    <value>Réinitialiser le mot de passe</value>
+  </data>
+  <data name="Reset password for {0}" xml:space="preserve">
+    <value>Réinitialiser le mot de passe de {0}</value>
+  </data>
+  <data name="Resource collection failed: {0}" xml:space="preserve">
+    <value>Échec du relevé des ressources : {0}</value>
+  </data>
+  <data name="Resource collection timed out; unavailable samples were not refreshed." xml:space="preserve">
+    <value>Le relevé des ressources a expiré ; les mesures indisponibles n’ont pas été actualisées.</value>
+  </data>
+  <data name="Resource filter" xml:space="preserve">
+    <value>Filtre de ressources</value>
+  </data>
+  <data name="Resource statistics" xml:space="preserve">
+    <value>Statistiques des ressources</value>
+  </data>
+  <data name="Restart device" xml:space="preserve">
+    <value>Redémarrer l’appareil</value>
+  </data>
+  <data name="Restart {0} now?" xml:space="preserve">
+    <value>Redémarrer {0} maintenant ?</value>
+  </data>
+  <data name="Restore MeshAll access" xml:space="preserve">
+    <value>Rétablir l’accès MeshAll</value>
+  </data>
+  <data name="Restore MeshAll access for {0}?" xml:space="preserve">
+    <value>Rétablir l’accès MeshAll pour {0} ?</value>
+  </data>
+  <data name="Restoring the desktop session…" xml:space="preserve">
+    <value>Rétablissement de la session de bureau…</value>
+  </data>
+  <data name="Result" xml:space="preserve">
+    <value>Résultat</value>
+  </data>
+  <data name="Results" xml:space="preserve">
+    <value>Résultats</value>
+  </data>
+  <data name="Results pages" xml:space="preserve">
+    <value>Pages de résultats</value>
+  </data>
+  <data name="Retained browser protocol components" xml:space="preserve">
+    <value>Composants de protocole du navigateur</value>
+  </data>
+  <data name="Return to workspace" xml:space="preserve">
+    <value>Retour à l’espace de travail</value>
+  </data>
+  <data name="Revoke" xml:space="preserve">
+    <value>Révoquer</value>
+  </data>
+  <data name="Revoked" xml:space="preserve">
+    <value>Révoqué</value>
+  </data>
+  <data name="Role" xml:space="preserve">
+    <value>Rôle</value>
+  </data>
+  <data name="Role changed. Existing sessions must sign in again." xml:space="preserve">
+    <value>Rôle modifié. Les sessions existantes doivent se reconnecter.</value>
+  </data>
+  <data name="Role deleted" xml:space="preserve">
+    <value>Rôle supprimé</value>
+  </data>
+  <data name="Role deleted." xml:space="preserve">
+    <value>Rôle supprimé.</value>
+  </data>
+  <data name="Role for {0}" xml:space="preserve">
+    <value>Rôle de {0}</value>
+  </data>
+  <data name="Role name" xml:space="preserve">
+    <value>Nom du rôle</value>
+  </data>
+  <data name="Role no longer exists." xml:space="preserve">
+    <value>Ce rôle n’existe plus.</value>
+  </data>
+  <data name="Role saved" xml:space="preserve">
+    <value>Rôle enregistré</value>
+  </data>
+  <data name="Role saved. Members must sign in again to use their updated permissions." xml:space="preserve">
+    <value>Rôle enregistré. Les membres doivent se reconnecter pour utiliser les nouvelles autorisations.</value>
+  </data>
+  <data name="Roles" xml:space="preserve">
+    <value>Rôles</value>
+  </data>
+  <data name="Roles and capabilities" xml:space="preserve">
+    <value>Rôles et autorisations</value>
+  </data>
+  <data name="Rows per page" xml:space="preserve">
+    <value>Lignes par page</value>
+  </data>
+  <data name="Run a command to view its output." xml:space="preserve">
+    <value>Exécutez une commande pour afficher sa sortie.</value>
+  </data>
+  <data name="Run command" xml:space="preserve">
+    <value>Exécuter la commande</value>
+  </data>
+  <data name="Run commands" xml:space="preserve">
+    <value>Exécuter des commandes</value>
+  </data>
+  <data name="Run saved scripts from a device's Commands tab." xml:space="preserve">
+    <value>Exécutez les scripts depuis l’onglet Commandes d’un appareil.</value>
+  </data>
+  <data name="Run this command as root on Debian 13." xml:space="preserve">
+    <value>Exécutez cette commande en tant que root sur Debian 13.</value>
+  </data>
+  <data name="Running processes" xml:space="preserve">
+    <value>Processus en cours</value>
+  </data>
+  <data name="Running…" xml:space="preserve">
+    <value>Exécution…</value>
+  </data>
+  <data name="Runs as the agent service account" xml:space="preserve">
+    <value>Exécution avec le compte du service de l’agent</value>
+  </data>
+  <data name="Runtime" xml:space="preserve">
+    <value>Environnement d’exécution</value>
+  </data>
+  <data name="SQLite, WAL mode" xml:space="preserve">
+    <value>SQLite, mode WAL</value>
+  </data>
+  <data name="SQLite/state" xml:space="preserve">
+    <value>SQLite / état</value>
+  </data>
+  <data name="Sample interval: 15 seconds. Readings expire after 2 minutes." xml:space="preserve">
+    <value>Mesures toutes les 15 secondes. Expiration après 2 minutes.</value>
+  </data>
+  <data name="Save changes" xml:space="preserve">
+    <value>Enregistrer les modifications</value>
+  </data>
+  <data name="Save group" xml:space="preserve">
+    <value>Enregistrer le groupe</value>
+  </data>
+  <data name="Save role" xml:space="preserve">
+    <value>Enregistrer le rôle</value>
+  </data>
+  <data name="Save script" xml:space="preserve">
+    <value>Enregistrer le script</value>
+  </data>
+  <data name="Save settings" xml:space="preserve">
+    <value>Enregistrer les paramètres</value>
+  </data>
+  <data name="Save your recovery codes" xml:space="preserve">
+    <value>Enregistrer les codes de récupération</value>
+  </data>
+  <data name="Saved script" xml:space="preserve">
+    <value>Script enregistré</value>
+  </data>
+  <data name="Saved scripts" xml:space="preserve">
+    <value>Scripts enregistrés</value>
+  </data>
+  <data name="Scan this QR code with your authenticator app, or enter the setup key manually." xml:space="preserve">
+    <value>Scannez ce code QR avec votre application d’authentification ou saisissez la clé manuellement.</value>
+  </data>
+  <data name="Script" xml:space="preserve">
+    <value>Script</value>
+  </data>
+  <data name="Script deleted" xml:space="preserve">
+    <value>Script supprimé</value>
+  </data>
+  <data name="Script deleted." xml:space="preserve">
+    <value>Script supprimé.</value>
+  </data>
+  <data name="Script name" xml:space="preserve">
+    <value>Nom du script</value>
+  </data>
+  <data name="Script saved" xml:space="preserve">
+    <value>Script enregistré</value>
+  </data>
+  <data name="Script saved." xml:space="preserve">
+    <value>Script enregistré.</value>
+  </data>
+  <data name="Script type" xml:space="preserve">
+    <value>Type de script</value>
+  </data>
+  <data name="Scripts" xml:space="preserve">
+    <value>Scripts</value>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>Rechercher</value>
+  </data>
+  <data name="Search audit log" xml:space="preserve">
+    <value>Rechercher dans le journal d’audit</value>
+  </data>
+  <data name="Search connected devices" xml:space="preserve">
+    <value>Rechercher les appareils connectés</value>
+  </data>
+  <data name="Search device, address, platform, or group…" xml:space="preserve">
+    <value>Rechercher un appareil, une adresse, une plateforme ou un groupe…</value>
+  </data>
+  <data name="Search device, person, operation, or result…" xml:space="preserve">
+    <value>Rechercher un appareil, un compte, une opération ou un résultat…</value>
+  </data>
+  <data name="Search devices" xml:space="preserve">
+    <value>Rechercher des appareils</value>
+  </data>
+  <data name="Search devices, IPs, or tags…" xml:space="preserve">
+    <value>Rechercher un appareil, une adresse IP ou une étiquette…</value>
+  </data>
+  <data name="Search events, people, or devices…" xml:space="preserve">
+    <value>Rechercher un événement, un compte ou un appareil…</value>
+  </data>
+  <data name="Search sessions" xml:space="preserve">
+    <value>Rechercher des sessions</value>
+  </data>
+  <data name="Search…" xml:space="preserve">
+    <value>Rechercher…</value>
+  </data>
+  <data name="Security" xml:space="preserve">
+    <value>Sécurité</value>
+  </data>
+  <data name="Select Refresh processes to load the current list." xml:space="preserve">
+    <value>Sélectionnez Actualiser les processus pour charger la liste actuelle.</value>
+  </data>
+  <data name="Server installation" xml:space="preserve">
+    <value>Installation du serveur</value>
+  </data>
+  <data name="Server layout" xml:space="preserve">
+    <value>Organisation du serveur</value>
+  </data>
+  <data name="Sessions" xml:space="preserve">
+    <value>Sessions</value>
+  </data>
+  <data name="Set up" xml:space="preserve">
+    <value>Configurer</value>
+  </data>
+  <data name="Set up two-factor authentication" xml:space="preserve">
+    <value>Configurer l’authentification à deux facteurs</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Paramètres</value>
+  </data>
+  <data name="Settings saved. Security enforcement applies at the next sign-in." xml:space="preserve">
+    <value>Paramètres enregistrés. La règle de sécurité s’applique à la prochaine connexion.</value>
+  </data>
+  <data name="Setup expired. Start again." xml:space="preserve">
+    <value>La configuration a expiré. Recommencez.</value>
+  </data>
+  <data name="Setup failed. Check the setup key and use a password of at least 12 characters." xml:space="preserve">
+    <value>Échec de la configuration. Vérifiez la clé et utilisez un mot de passe d’au moins 12 caractères.</value>
+  </data>
+  <data name="Setup is complete." xml:space="preserve">
+    <value>La configuration est terminée.</value>
+  </data>
+  <data name="Setup key" xml:space="preserve">
+    <value>Clé de configuration</value>
+  </data>
+  <data name="Shell (.sh)" xml:space="preserve">
+    <value>Shell (.sh)</value>
+  </data>
+  <data name="Show a connection toolbar on the user’s desktop" xml:space="preserve">
+    <value>Afficher une barre de connexion sur le bureau de l’utilisateur</value>
+  </data>
+  <data name="Shut down device" xml:space="preserve">
+    <value>Arrêter l’appareil</value>
+  </data>
+  <data name="Shut down {0} now?" xml:space="preserve">
+    <value>Arrêter {0} maintenant ?</value>
+  </data>
+  <data name="Sign in" xml:space="preserve">
+    <value>Se connecter</value>
+  </data>
+  <data name="Sign out" xml:space="preserve">
+    <value>Déconnexion</value>
+  </data>
+  <data name="Sign-in failed" xml:space="preserve">
+    <value>Échec de la connexion</value>
+  </data>
+  <data name="Sign-in failed. Check your username and password." xml:space="preserve">
+    <value>Échec de la connexion. Vérifiez le nom d’utilisateur et le mot de passe.</value>
+  </data>
+  <data name="Signed in" xml:space="preserve">
+    <value>Connexion effectuée</value>
+  </data>
+  <data name="Signed in for required two-factor enrollment" xml:space="preserve">
+    <value>Connexion pour configurer l’authentification à deux facteurs</value>
+  </data>
+  <data name="Signed in with two-factor authentication" xml:space="preserve">
+    <value>Connexion avec authentification à deux facteurs</value>
+  </data>
+  <data name="Signed-in user" xml:space="preserve">
+    <value>Utilisateur connecté</value>
+  </data>
+  <data name="Six-digit authenticator code" xml:space="preserve">
+    <value>Code d’authentification à six chiffres</value>
+  </data>
+  <data name="Size" xml:space="preserve">
+    <value>Taille</value>
+  </data>
+  <data name="Skip to content" xml:space="preserve">
+    <value>Aller au contenu</value>
+  </data>
+  <data name="Something went wrong" xml:space="preserve">
+    <value>Une erreur s’est produite</value>
+  </data>
+  <data name="Sort connected devices" xml:space="preserve">
+    <value>Trier les appareils connectés</value>
+  </data>
+  <data name="Source" xml:space="preserve">
+    <value>Source</value>
+  </data>
+  <data name="Started" xml:space="preserve">
+    <value>Début</value>
+  </data>
+  <data name="Started by" xml:space="preserve">
+    <value>Lancée par</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>État</value>
+  </data>
+  <data name="Storage" xml:space="preserve">
+    <value>Stockage</value>
+  </data>
+  <data name="Supply the account username." xml:space="preserve">
+    <value>Indiquez le nom d’utilisateur du compte.</value>
+  </data>
+  <data name="Tags" xml:space="preserve">
+    <value>Étiquettes</value>
+  </data>
+  <data name="Tags are too long." xml:space="preserve">
+    <value>Les étiquettes sont trop longues.</value>
+  </data>
+  <data name="Target" xml:space="preserve">
+    <value>Cible</value>
+  </data>
+  <data name="Technology" xml:space="preserve">
+    <value>Technologie</value>
+  </data>
+  <data name="Terminal" xml:space="preserve">
+    <value>Terminal</value>
+  </data>
+  <data name="Terminal / VNC / RDP rendering" xml:space="preserve">
+    <value>Affichage terminal / VNC / RDP</value>
+  </data>
+  <data name="Terminal connection failed." xml:space="preserve">
+    <value>Échec de la connexion au terminal.</value>
+  </data>
+  <data name="The VNC service requested authentication." xml:space="preserve">
+    <value>Le service VNC demande une authentification.</value>
+  </data>
+  <data name="The agent must be connected to use this tool." xml:space="preserve">
+    <value>L’agent doit être connecté pour utiliser cet outil.</value>
+  </data>
+  <data name="The agent will report its available local volumes." xml:space="preserve">
+    <value>L’agent signalera ses volumes locaux disponibles.</value>
+  </data>
+  <data name="The built-in Administrator role always retains full access." xml:space="preserve">
+    <value>Le rôle Administrateur prédéfini conserve toujours un accès complet.</value>
+  </data>
+  <data name="The device is unavailable or has been removed." xml:space="preserve">
+    <value>L’appareil est indisponible ou a été retiré.</value>
+  </data>
+  <data name="The form expired. Reload the page and try again." xml:space="preserve">
+    <value>Le formulaire a expiré. Rechargez la page et réessayez.</value>
+  </data>
+  <data name="The native agent reports hardware and resource information automatically." xml:space="preserve">
+    <value>L’agent natif transmet automatiquement l’inventaire matériel et les ressources.</value>
+  </data>
+  <data name="The native executable is unavailable in this build." xml:space="preserve">
+    <value>L’exécutable natif n’est pas disponible dans cette version.</value>
+  </data>
+  <data name="The person at the PC did not approve this screen session." xml:space="preserve">
+    <value>La personne devant l’appareil n’a pas autorisé cette session d’écran.</value>
+  </data>
+  <data name="The person at the computer ended desktop sharing." xml:space="preserve">
+    <value>La personne devant l’appareil a arrêté le partage du bureau.</value>
+  </data>
+  <data name="The remote filesystem rejected this change." xml:space="preserve">
+    <value>Le système de fichiers distant a refusé cette modification.</value>
+  </data>
+  <data name="The remote viewer could not be loaded." xml:space="preserve">
+    <value>Impossible de charger la visionneuse distante.</value>
+  </data>
+  <data name="The script type selects the interpreter and file extension." xml:space="preserve">
+    <value>Le type de script détermine l’interpréteur et l’extension du fichier.</value>
+  </data>
+  <data name="The setup key is invalid or setup is already complete." xml:space="preserve">
+    <value>La clé de configuration est invalide ou la configuration est déjà terminée.</value>
+  </data>
+  <data name="The unassigned group cannot be removed." xml:space="preserve">
+    <value>Le groupe Non attribué ne peut pas être supprimé.</value>
+  </data>
+  <data name="This change could not be saved. Check for a duplicate name and try again." xml:space="preserve">
+    <value>Impossible d’enregistrer la modification. Vérifiez qu’aucun nom n’est déjà utilisé, puis réessayez.</value>
+  </data>
+  <data name="This instance requires two-factor authentication." xml:space="preserve">
+    <value>Cette instance exige l’authentification à deux facteurs.</value>
+  </data>
+  <data name="This instance requires two-factor authentication. Complete setup to access your workspace." xml:space="preserve">
+    <value>Cette instance exige l’authentification à deux facteurs. Terminez sa configuration pour accéder à l’espace de travail.</value>
+  </data>
+  <data name="This page doesn’t exist." xml:space="preserve">
+    <value>Cette page n’existe pas.</value>
+  </data>
+  <data name="This policy also applies to RDP, VNC and AMT access through the agent." xml:space="preserve">
+    <value>Cette règle s’applique aussi aux accès RDP, VNC et AMT via l’agent.</value>
+  </data>
+  <data name="This remote transport is still being implemented." xml:space="preserve">
+    <value>Ce transport distant n’est pas encore disponible.</value>
+  </data>
+  <data name="This script type does not match the target operating system." xml:space="preserve">
+    <value>Ce type de script n’est pas compatible avec le système cible.</value>
+  </data>
+  <data name="This security change could not be completed. Check your password and use a fresh authenticator code. Setup expires after ten minutes; codes can only be used once." xml:space="preserve">
+    <value>La modification a échoué. Vérifiez le mot de passe et utilisez un nouveau code. La configuration expire après dix minutes ; chaque code est utilisable une fois.</value>
+  </data>
+  <data name="TiB" xml:space="preserve">
+    <value>Tio</value>
+  </data>
+  <data name="Time" xml:space="preserve">
+    <value>Heure</value>
+  </data>
+  <data name="Toggle light or dark theme" xml:space="preserve">
+    <value>Changer le thème clair ou sombre</value>
+  </data>
+  <data name="Try a different filter or connect an enrolled agent." xml:space="preserve">
+    <value>Modifiez les filtres ou connectez un agent inscrit.</value>
+  </data>
+  <data name="Try a different filter." xml:space="preserve">
+    <value>Modifiez les filtres.</value>
+  </data>
+  <data name="Try another filter, or enroll a new device." xml:space="preserve">
+    <value>Modifiez les filtres ou inscrivez un nouvel appareil.</value>
+  </data>
+  <data name="Try another search, or open a device's remote tools." xml:space="preserve">
+    <value>Modifiez la recherche ou ouvrez les outils distants d’un appareil.</value>
+  </data>
+  <data name="Try another search. New workspace activity will appear here." xml:space="preserve">
+    <value>Modifiez la recherche. Les nouvelles activités s’affichent ici.</value>
+  </data>
+  <data name="Two-factor" xml:space="preserve">
+    <value>Deux facteurs</value>
+  </data>
+  <data name="Two-factor authentication is already enabled." xml:space="preserve">
+    <value>L’authentification à deux facteurs est déjà activée.</value>
+  </data>
+  <data name="Two-factor authentication is required by your instance administrator." xml:space="preserve">
+    <value>L’administrateur exige l’authentification à deux facteurs.</value>
+  </data>
+  <data name="Two-factor authentication reset" xml:space="preserve">
+    <value>Authentification à deux facteurs réinitialisée</value>
+  </data>
+  <data name="Two-factor authentication: {0}" xml:space="preserve">
+    <value>Authentification à deux facteurs : {0}</value>
+  </data>
+  <data name="Two-factor enforcement disabled" xml:space="preserve">
+    <value>Obligation des deux facteurs désactivée</value>
+  </data>
+  <data name="Two-factor enforcement enabled" xml:space="preserve">
+    <value>Obligation des deux facteurs activée</value>
+  </data>
+  <data name="Two-factor sign-in failed" xml:space="preserve">
+    <value>Échec de la connexion à deux facteurs</value>
+  </data>
+  <data name="Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Unassigned" xml:space="preserve">
+    <value>Non attribué</value>
+  </data>
+  <data name="Unattended policy" xml:space="preserve">
+    <value>Accès sans confirmation</value>
+  </data>
+  <data name="Unknown capability." xml:space="preserve">
+    <value>Autorisation inconnue.</value>
+  </data>
+  <data name="Unknown script type." xml:space="preserve">
+    <value>Type de script inconnu.</value>
+  </data>
+  <data name="Unsupported file operation." xml:space="preserve">
+    <value>Opération de fichier non prise en charge.</value>
+  </data>
+  <data name="Unsupported native agent platform." xml:space="preserve">
+    <value>Plateforme de l’agent natif non prise en charge.</value>
+  </data>
+  <data name="Unsupported native operation: " xml:space="preserve">
+    <value>Opération native non prise en charge : </value>
+  </data>
+  <data name="Up" xml:space="preserve">
+    <value>Dossier parent</value>
+  </data>
+  <data name="Update GitHub" xml:space="preserve">
+    <value>Mise à jour depuis GitHub</value>
+  </data>
+  <data name="Update own edits" xml:space="preserve">
+    <value>Reconstruire les modifications locales</value>
+  </data>
+  <data name="Upload / change / delete files" xml:space="preserve">
+    <value>Envoyer, modifier ou supprimer des fichiers</value>
+  </data>
+  <data name="Upload a file or create a folder to get started." xml:space="preserve">
+    <value>Transférez un fichier ou créez un dossier.</value>
+  </data>
+  <data name="Upload file" xml:space="preserve">
+    <value>Envoyer un fichier</value>
+  </data>
+  <data name="Uptime" xml:space="preserve">
+    <value>Durée de fonctionnement</value>
+  </data>
+  <data name="Use 1–100 devices and 1–168 hours." xml:space="preserve">
+    <value>Utilisez de 1 à 100 appareils et de 1 à 168 heures.</value>
+  </data>
+  <data name="Use Intel AMT" xml:space="preserve">
+    <value>Utiliser Intel AMT</value>
+  </data>
+  <data name="Use RDP" xml:space="preserve">
+    <value>Utiliser RDP</value>
+  </data>
+  <data name="Use SSH" xml:space="preserve">
+    <value>Utiliser SSH</value>
+  </data>
+  <data name="Use VNC" xml:space="preserve">
+    <value>Utiliser VNC</value>
+  </data>
+  <data name="Use a password between 12 and 256 characters." xml:space="preserve">
+    <value>Utilisez un mot de passe de 12 à 256 caractères.</value>
+  </data>
+  <data name="Use an authenticator app such as Microsoft Authenticator, Google Authenticator, or Aegis." xml:space="preserve">
+    <value>Utilisez une application d’authentification comme Microsoft Authenticator, Google Authenticator ou Aegis.</value>
+  </data>
+  <data name="Use interactive terminals" xml:space="preserve">
+    <value>Utiliser les terminaux interactifs</value>
+  </data>
+  <data name="Used" xml:space="preserve">
+    <value>Utilisé</value>
+  </data>
+  <data name="Used in agent enrollment. Use the HTTPS URL your devices can reach." xml:space="preserve">
+    <value>Utilisée pour l’inscription des agents. Indiquez l’URL HTTPS accessible aux appareils.</value>
+  </data>
+  <data name="User" xml:space="preserve">
+    <value>Utilisateur</value>
+  </data>
+  <data name="User consent granted" xml:space="preserve">
+    <value>Autorisation de l’utilisateur accordée</value>
+  </data>
+  <data name="User created" xml:space="preserve">
+    <value>Utilisateur créé</value>
+  </data>
+  <data name="User created." xml:space="preserve">
+    <value>Utilisateur créé.</value>
+  </data>
+  <data name="User disabled" xml:space="preserve">
+    <value>Utilisateur désactivé</value>
+  </data>
+  <data name="User enabled" xml:space="preserve">
+    <value>Utilisateur activé</value>
+  </data>
+  <data name="User privacy" xml:space="preserve">
+    <value>Confidentialité de l’utilisateur</value>
+  </data>
+  <data name="User role changed" xml:space="preserve">
+    <value>Rôle de l’utilisateur modifié</value>
+  </data>
+  <data name="User updated." xml:space="preserve">
+    <value>Utilisateur mis à jour.</value>
+  </data>
+  <data name="Username" xml:space="preserve">
+    <value>Nom d’utilisateur</value>
+  </data>
+  <data name="Users" xml:space="preserve">
+    <value>Utilisateurs</value>
+  </data>
+  <data name="Uses remaining" xml:space="preserve">
+    <value>Utilisations restantes</value>
+  </data>
+  <data name="VNC authentication" xml:space="preserve">
+    <value>Authentification VNC</value>
+  </data>
+  <data name="VNC password" xml:space="preserve">
+    <value>Mot de passe VNC</value>
+  </data>
+  <data name="VNC username" xml:space="preserve">
+    <value>Nom d’utilisateur VNC</value>
+  </data>
+  <data name="Verification" xml:space="preserve">
+    <value>Vérification</value>
+  </data>
+  <data name="Verify and sign in" xml:space="preserve">
+    <value>Vérifier et se connecter</value>
+  </data>
+  <data name="Verify sign-in" xml:space="preserve">
+    <value>Vérifier la connexion</value>
+  </data>
+  <data name="Verify your sign-in" xml:space="preserve">
+    <value>Vérifier votre connexion</value>
+  </data>
+  <data name="Version" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="View audit log" xml:space="preserve">
+    <value>Voir le journal d’audit</value>
+  </data>
+  <data name="View device inventory" xml:space="preserve">
+    <value>Voir l’inventaire des appareils</value>
+  </data>
+  <data name="View devices" xml:space="preserve">
+    <value>Voir les appareils</value>
+  </data>
+  <data name="View native desktop" xml:space="preserve">
+    <value>Voir le bureau natif</value>
+  </data>
+  <data name="View processes" xml:space="preserve">
+    <value>Voir les processus</value>
+  </data>
+  <data name="View sessions" xml:space="preserve">
+    <value>Voir les sessions</value>
+  </data>
+  <data name="Viewer" xml:space="preserve">
+    <value>Observateur</value>
+  </data>
+  <data name="Volume" xml:space="preserve">
+    <value>Volume</value>
+  </data>
+  <data name="Waiting for a disk report" xml:space="preserve">
+    <value>En attente d’une mesure de disque</value>
+  </data>
+  <data name="Waiting for a memory report" xml:space="preserve">
+    <value>En attente d’une mesure de mémoire</value>
+  </data>
+  <data name="Waiting for devices" xml:space="preserve">
+    <value>En attente d’appareils</value>
+  </data>
+  <data name="Waiting for inventory" xml:space="preserve">
+    <value>En attente de l’inventaire</value>
+  </data>
+  <data name="Waiting for the agent. Reconnecting automatically…" xml:space="preserve">
+    <value>En attente de l’agent. Reconnexion automatique…</value>
+  </data>
+  <data name="Waiting for the desktop frame…" xml:space="preserve">
+    <value>En attente de l’image du bureau…</value>
+  </data>
+  <data name="Waiting for the person at the PC to approve screen access…" xml:space="preserve">
+    <value>En attente de l’autorisation d’accès à l’écran…</value>
+  </data>
+  <data name="Waiting for the person at the PC to approve…" xml:space="preserve">
+    <value>En attente de l’autorisation de la personne devant l’appareil…</value>
+  </data>
+  <data name="Waiting for user to grant access..." xml:space="preserve">
+    <value>En attente de l’autorisation de l’utilisateur…</value>
+  </data>
+  <data name="Wake device" xml:space="preserve">
+    <value>Réveiller l’appareil</value>
+  </data>
+  <data name="Web UI / agent endpoint" xml:space="preserve">
+    <value>Interface Web / agents</value>
+  </data>
+  <data name="Where to focus" xml:space="preserve">
+    <value>À surveiller</value>
+  </data>
+  <data name="Windows changed desktop. Restoring the view automatically…" xml:space="preserve">
+    <value>Le bureau Windows a changé. Rétablissement automatique…</value>
+  </data>
+  <data name="Windows inventory query failed: {0}" xml:space="preserve">
+    <value>Échec de la requête d’inventaire Windows : {0}</value>
+  </data>
+  <data name="Windows: run the executable and select Install or Update." xml:space="preserve">
+    <value>Windows : lancez l’exécutable et sélectionnez Install ou Update.</value>
+  </data>
+  <data name="Working directory" xml:space="preserve">
+    <value>Répertoire de travail</value>
+  </data>
+  <data name="Workspace" xml:space="preserve">
+    <value>Espace de travail</value>
+  </data>
+  <data name="Workspace created" xml:space="preserve">
+    <value>Espace de travail créé</value>
+  </data>
+  <data name="Workspace name" xml:space="preserve">
+    <value>Nom de l’espace de travail</value>
+  </data>
+  <data name="Workspace settings saved" xml:space="preserve">
+    <value>Paramètres de l’espace de travail enregistrés</value>
+  </data>
+  <data name="Workspace users" xml:space="preserve">
+    <value>Utilisateurs de l’espace de travail</value>
+  </data>
+  <data name="You" xml:space="preserve">
+    <value>Vous</value>
+  </data>
+  <data name="You cannot disable your own account." xml:space="preserve">
+    <value>Vous ne pouvez pas désactiver votre propre compte.</value>
+  </data>
+  <data name="Your account does not have permission for this action." xml:space="preserve">
+    <value>Votre compte n’a pas l’autorisation nécessaire pour cette action.</value>
+  </data>
+  <data name="Your current password is incorrect." xml:space="preserve">
+    <value>Le mot de passe actuel est incorrect.</value>
+  </data>
+  <data name="Your password and an authenticator or recovery code are required at sign-in." xml:space="preserve">
+    <value>La connexion nécessite votre mot de passe et un code d’authentification ou de récupération.</value>
+  </data>
+  <data name="Your profile security" xml:space="preserve">
+    <value>Sécurité de votre compte</value>
+  </data>
+  <data name="Your role does not grant this capability." xml:space="preserve">
+    <value>Votre rôle n’accorde pas cette autorisation.</value>
+  </data>
+  <data name="Your session expired. Sign in again." xml:space="preserve">
+    <value>Votre session a expiré. Reconnectez-vous.</value>
+  </data>
+  <data name="Your sign-in challenge expired. Start again." xml:space="preserve">
+    <value>La demande de connexion a expiré. Recommencez.</value>
+  </data>
+  <data name="Your sign-in expired. Sign in again." xml:space="preserve">
+    <value>Votre connexion a expiré. Reconnectez-vous.</value>
+  </data>
+  <data name="Your username" xml:space="preserve">
+    <value>Votre nom d’utilisateur</value>
+  </data>
+  <data name="[Exit status not reported]" xml:space="preserve">
+    <value>[Code de sortie indisponible]</value>
+  </data>
+  <data name="[exit {0}]" xml:space="preserve">
+    <value>[sortie {0}]</value>
+  </data>
+  <data name="default" xml:space="preserve">
+    <value>par défaut</value>
+  </data>
+  <data name="of" xml:space="preserve">
+    <value>sur</value>
+  </data>
+  <data name="restart" xml:space="preserve">
+    <value>redémarrer</value>
+  </data>
+  <data name="{0:0.#}%" xml:space="preserve">
+    <value>{0:0.#} %</value>
+  </data>
+  <data name="{0} blocked device" xml:space="preserve">
+    <value>{0} appareil bloqué</value>
+  </data>
+  <data name="{0} blocked devices" xml:space="preserve">
+    <value>{0} appareils bloqués</value>
+  </data>
+  <data name="{0} connected" xml:space="preserve">
+    <value>{0} en ligne</value>
+  </data>
+  <data name="{0} device" xml:space="preserve">
+    <value>{0} appareil</value>
+  </data>
+  <data name="{0} device has incomplete readings." xml:space="preserve">
+    <value>{0} appareil a des mesures incomplètes.</value>
+  </data>
+  <data name="{0} device needs attention" xml:space="preserve">
+    <value>{0} appareil à surveiller</value>
+  </data>
+  <data name="{0} devices" xml:space="preserve">
+    <value>{0} appareils</value>
+  </data>
+  <data name="{0} devices have incomplete readings." xml:space="preserve">
+    <value>{0} appareils ont des mesures incomplètes.</value>
+  </data>
+  <data name="{0} devices need attention" xml:space="preserve">
+    <value>{0} appareils à surveiller</value>
+  </data>
+  <data name="{0} event" xml:space="preserve">
+    <value>{0} événement</value>
+  </data>
+  <data name="{0} events" xml:space="preserve">
+    <value>{0} événements</value>
+  </data>
+  <data name="{0} free" xml:space="preserve">
+    <value>{0} libres</value>
+  </data>
+  <data name="{0} item" xml:space="preserve">
+    <value>{0} élément</value>
+  </data>
+  <data name="{0} items" xml:space="preserve">
+    <value>{0} éléments</value>
+  </data>
+  <data name="{0} logical core" xml:space="preserve">
+    <value>{0} cœur logique</value>
+  </data>
+  <data name="{0} logical cores" xml:space="preserve">
+    <value>{0} cœurs logiques</value>
+  </data>
+  <data name="{0} managed device" xml:space="preserve">
+    <value>{0} appareil géré</value>
+  </data>
+  <data name="{0} managed devices" xml:space="preserve">
+    <value>{0} appareils gérés</value>
+  </data>
+  <data name="{0} offline" xml:space="preserve">
+    <value>{0} hors ligne</value>
+  </data>
+  <data name="{0} pages" xml:space="preserve">
+    <value>Pages : {0}</value>
+  </data>
+  <data name="{0} recovery code remaining." xml:space="preserve">
+    <value>{0} code de récupération restant.</value>
+  </data>
+  <data name="{0} recovery codes remaining." xml:space="preserve">
+    <value>{0} codes de récupération restants.</value>
+  </data>
+  <data name="{0} result" xml:space="preserve">
+    <value>{0} résultat</value>
+  </data>
+  <data name="{0} results" xml:space="preserve">
+    <value>{0} résultats</value>
+  </data>
+  <data name="{0} session" xml:space="preserve">
+    <value>{0} session</value>
+  </data>
+  <data name="{0} sessions" xml:space="preserve">
+    <value>{0} sessions</value>
+  </data>
+  <data name="{0} total RAM" xml:space="preserve">
+    <value>{0} de RAM au total</value>
+  </data>
+  <data name="{0} total capacity" xml:space="preserve">
+    <value>{0} de capacité totale</value>
+  </data>
+  <data name="{0} used of {1}" xml:space="preserve">
+    <value>{0} utilisés sur {1}</value>
+  </data>
+  <data name="{0} volume" xml:space="preserve">
+    <value>{0} volume</value>
+  </data>
+  <data name="{0} volume needs attention" xml:space="preserve">
+    <value>{0} volume à surveiller</value>
+  </data>
+  <data name="{0} volumes" xml:space="preserve">
+    <value>{0} volumes</value>
+  </data>
+  <data name="{0} volumes need attention" xml:space="preserve">
+    <value>{0} volumes à surveiller</value>
+  </data>
+  <data name="{0} · {1} free" xml:space="preserve">
+    <value>{0} · {1} libres</value>
+  </data>
+  <data name="{0}/{1} reporting" xml:space="preserve">
+    <value>{0}/{1} à jour</value>
+  </data>
+  <data name="{0}d ago" xml:space="preserve">
+    <value>il y a {0} j</value>
+  </data>
+  <data name="{0}d {1:00}h {2:00}m" xml:space="preserve">
+    <value>{0} j {1:00} h {2:00} min</value>
+  </data>
+  <data name="{0}h ago" xml:space="preserve">
+    <value>il y a {0} h</value>
+  </data>
+  <data name="{0}m ago" xml:space="preserve">
+    <value>il y a {0} min</value>
+  </data>
+  <data name="{0}–{1} of {2}" xml:space="preserve">
+    <value>{0}–{1} sur {2}</value>
+  </data>
+  <data name="· MeshAll" xml:space="preserve">
+    <value>· MeshAll</value>
+  </data>
+  <data name="Windows x64 (.msi)" xml:space="preserve">
+    <value>Windows x64 (.msi)</value>
+  </data>
+  <data name="Set enough uses and time for every computer's first enrollment. Maximum: 10,000 devices and 90 days." xml:space="preserve">
+    <value>Prévoyez assez d’utilisations et de temps pour le premier enrôlement de chaque ordinateur. Maximum : 10 000 appareils et 90 jours.</value>
+  </data>
+  <data name="GPO: assign the MSI to computers from a UNC network share. Enrollment settings are included." xml:space="preserve">
+    <value>GPO : attribuez le MSI aux ordinateurs à partir d’un partage réseau UNC. Les paramètres d’enrôlement sont inclus.</value>
+  </data>
+  <data name="Install wixl and msitools on the server to enable MSI downloads." xml:space="preserve">
+    <value>Installez wixl et msitools sur le serveur pour activer les téléchargements MSI.</value>
+  </data>
+  <data name="Use 1–10,000 devices and 1–2,160 hours." xml:space="preserve">
+    <value>Utilisez de 1 à 10 000 appareils et de 1 à 2 160 heures.</value>
+  </data>
+  <data name="App settings" xml:space="preserve">
+    <value>Paramètres de l’application</value>
+  </data>
+  <data name="Reload EndpointControl" xml:space="preserve"><value>Recharger EndpointControl</value></data>
+  <data name="About EndpointControl" xml:space="preserve"><value>À propos d’EndpointControl</value></data>
+  <data name="Install EndpointControl" xml:space="preserve"><value>Installer EndpointControl</value></data>
+  <data name="Device access in EndpointControl" xml:space="preserve"><value>Accès à l’appareil dans EndpointControl</value></data>
+  <data name="Device access is blocked in EndpointControl." xml:space="preserve"><value>L’accès à l’appareil est bloqué dans EndpointControl.</value></data>
+  <data name="Block EndpointControl access" xml:space="preserve"><value>Bloquer l’accès EndpointControl</value></data>
+  <data name="Block EndpointControl access for {0}?" xml:space="preserve"><value>Bloquer l’accès EndpointControl pour {0} ?</value></data>
+  <data name="Restore EndpointControl access" xml:space="preserve"><value>Rétablir l’accès EndpointControl</value></data>
+  <data name="Restore EndpointControl access for {0}?" xml:space="preserve"><value>Rétablir l’accès EndpointControl pour {0} ?</value></data>
+  <data name="EndpointControl access updated." xml:space="preserve"><value>Accès EndpointControl mis à jour.</value></data>
+  <data name="Native EndpointControl Agent connected" xml:space="preserve"><value>Agent EndpointControl natif connecté</value></data>
+  <data name="Native EndpointControl Agent disconnected" xml:space="preserve"><value>Agent EndpointControl natif déconnecté</value></data>
+  <data name="Native EndpointControl Agent enrolled" xml:space="preserve"><value>Agent EndpointControl natif inscrit</value></data>
+  <data name="Windows agent MSI" xml:space="preserve"><value>Agent Windows MSI</value></data>
+  <data name="Ready for silent installation and Group Policy deployment." xml:space="preserve"><value>Prêt pour l’installation silencieuse et le déploiement par stratégie de groupe.</value></data>
+  <data name="Download Windows x64 MSI" xml:space="preserve"><value>Télécharger le MSI Windows x64</value></data>
+  <data name="Enrollment expires" xml:space="preserve"><value>Expiration de l’inscription</value></data>
+</root>

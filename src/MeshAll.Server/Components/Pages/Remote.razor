@@ -1,70 +1,16 @@
 @page "/remote/{Id}/{Tool}"
 @layout ToolLayout
 @attribute [Authorize]
-@implements IAsyncDisposable
-@inject Workspace Workspace
-@inject Store Store
-@inject IJSRuntime JS
-@inject AgentGateway Agents
-<PageTitle>@Label · MeshAll</PageTitle>
-<section class="remote-workspace" data-remote-workspace @ref="workspace">
-<div class="remote-toolbar"><div class="remote-title"><h2>@Label <span class="muted">/ @device?.Name</span></h2><p class="muted small-text" role="status">@status</p></div><div class="remote-actions">
-    @if (Tool is "desktop" or "amt" && running) { <label class="checkbox-label"><input type="checkbox" @bind="control" @bind:after="SetControl" disabled="@(!canControl || !inputAvailable)" />Enable keyboard &amp; mouse</label><button class="button small" @onclick="SendCad" disabled="@(!canControl || !inputAvailable || !control)">Ctrl+Alt+Delete</button> }
-    @if (running) { <button class="button small" type="button" data-remote-fullscreen>Fullscreen</button><button class="button danger small" @onclick="Disconnect">Disconnect</button> } else { <button class="button primary small" disabled="@(busy || !ready)" @onclick="Connect"><Icon Name="monitor" />Connect</button> }
-    <a class="button small" href="@($"/devices/{Id}")" target="_top">Back to device</a>
-</div></div>
-<Notice Error="@error" />
-@if (!running && Tool!="vnc") {
-<form class="panel editor-panel remote-setup" @onsubmit="Connect" @onsubmit:preventDefault><fieldset disabled="@(!ready || busy)">
-    @if (Tool is "rdp" or "vnc" or "ssh") { <div class="form-grid"><label>Remote port<input type="number" @bind="port" min="1" max="65535" /></label>@if (Tool == "rdp") { <label>Domain<input @bind="domain" autocomplete="off" /></label> }<label>Username<input @bind="username" autocomplete="off" /></label><label>Password<input @bind="password" type="password" autocomplete="off" /></label></div> }
-    @if (Tool == "ssh") { <label>Private key (optional)<textarea @bind="privateKey" rows="3" class="code-input" maxlength="16000" autocomplete="off"></textarea><small>Password is used as the key passphrase when a key is provided.</small></label> }
-    @if (Tool is "rdp" or "vnc" or "ssh") { <label class="checkbox-label"><input type="checkbox" @bind="direct" />Connect directly from the orchestrator to @device?.Inventory?.Ip</label><p class="muted small-text mt-2">Use direct/agentless access when the target service is reachable and the native agent is offline.</p> }
-    <p class="muted small-text mt-4">MeshAll uses its own agent connection. The target service must be enabled for RDP, VNC, or SSH. Screen-access policy is enforced before opening a screen transport.</p>
-</fieldset></form>
-}
-@if(Tool=="vnc" && !running){<section class="panel editor-panel remote-setup"><h2>Agent-assisted VNC</h2><p class="muted">Connects to this device's existing VNC service through the agent. VNC requests credentials only if its service requires them.</p><details class="mt-4"><summary>Connection settings</summary><label class="mt-3">Remote port<input type="number" @bind="port" min="1" max="65535" /></label><label class="checkbox-label"><input type="checkbox" @bind="direct" />Connect directly from the orchestrator</label><p class="muted small-text">Device editors' selected port is remembered for future connections.</p></details></section>}
-@if(Tool=="vnc" && vncNeedsCredentials){<form class="panel editor-panel remote-setup" @onsubmit="SubmitVncCredentials" @onsubmit:preventDefault><h2>VNC authentication</h2><p class="muted">The VNC service requested authentication.</p>@if(vncNeedsUsername){<label>VNC username<input @bind="username" autocomplete="off" required maxlength="256" /></label>}@if(vncNeedsPassword){<label>VNC password<input type="password" @bind="password" autocomplete="off" required maxlength="256" /></label>}<button type="submit" class="button primary">Continue</button></form>}
-<div class="remote-surface" style="@(running ? "" : "display:none")"><canvas id="remote-canvas" @ref="canvas" tabindex="0" aria-label="Remote display"></canvas><div id="remote-terminal" @ref="terminal"></div><div id="remote-vnc" @ref="vnc"></div></div>
-</section>
-@code {
+
+<PageTitle>@Ui[RemoteTools.Label(Tool)] · @ProductBrand.Name</PageTitle>
+<RemoteViewer Id="@Id" Tool="@Tool" AutoConnect="@AutoConnect" RequestedPort="@RequestedPort"
+              RequestedDirect="@RequestedDirect" @key="(Id, Tool)" />
+
+@code
+{
     [Parameter] public string Id { get; set; } = "";
     [Parameter] public string Tool { get; set; } = "desktop";
-    [SupplyParameterFromQuery(Name="connect")] public bool AutoConnect { get; set; }
-    [SupplyParameterFromQuery(Name="port")] public int? RequestedPort { get; set; }
-    [SupplyParameterFromQuery(Name="direct")] public bool? RequestedDirect { get; set; }
-    private DeviceInfo? device; private ElementReference canvas, terminal, vnc, workspace;
-    private string username = "", password = "", domain = "", privateKey = "", status = "Disconnected"; private string? error;
-    private int port; private bool busy, running, control, ready, direct, canControl, inputAvailable;
-    private bool vncNeedsCredentials,vncNeedsUsername,vncNeedsPassword;
-    private readonly string owner=Guid.NewGuid().ToString("N");
-    private DotNetObjectReference<Remote>? reference;
-    private string Label => Tool switch { "desktop" => "Agent desktop", "terminal" => "Agent terminal", "powershell" => "PowerShell terminal", "rdp" => "Remote Desktop (RDP)", "vnc" => "VNC", "ssh" => "SSH", "amt" => "Intel AMT KVM", _ => "Remote tool" };
-    protected override async Task OnInitializedAsync()
-    {
-        try { var user=await Workspace.RequireAsync(Permissions.ForTool(Tool));canControl=Store.HasPermission(user,Permissions.Control);control=canControl; device = Store.FindDevice(Id); port = Tool switch { "rdp" => 3389, "vnc" => RequestedPort??Store.VncPort(Id), "ssh" => 22, _ => 0 }; direct=Tool is "rdp" or "vnc" or "ssh"&&(RequestedDirect??!Agents.Online(Id)); if (Tool is not ("desktop" or "terminal" or "powershell" or "rdp" or "vnc" or "ssh" or "amt") || device is null) error = "Remote tool or device not found."; }
-        catch (Exception ex) { error = ex.Message; }
-    }
-    protected override async Task OnAfterRenderAsync(bool firstRender) { if (firstRender) { ready = true; StateHasChanged();if((AutoConnect||Tool=="vnc") && error is null)await Connect(); } }
-    private async Task Connect()
-    {
-        if (busy || running || device is null) return; busy = true; error = null;
-        try {
-            var user=await Workspace.RequireAsync(Permissions.ForTool(Tool));
-            if(Tool=="vnc"&&Store.HasPermission(user,Permissions.EditDevices))Store.SaveVncPort(Id,port);
-            if (Store.FindDevice(Id) is not { Disabled: false }) throw new InvalidOperationException("Device access is blocked in MeshAll.");
-            reference ??= DotNetObjectReference.Create(this);
-            running = true; status = Tool is "rdp" or "vnc" or "amt" && Store.RequiresDesktopConsent(Id) ? "Waiting for the person at the PC to approve screen access…" : "Connecting…"; await InvokeAsync(StateHasChanged); await Task.Yield();
-            await JS.InvokeVoidAsync("meshAll.remote.connect", new { id = Id, tool = Tool, port, username, password, domain, privateKey, direct, native = Store.IsNative(Id),owner,controlRequested=control,controlAllowed=canControl }, reference);
-            password = privateKey = "";
-        } catch (Exception ex) { error = ex.Message; running = false; status = "Disconnected"; }
-        finally { busy = false; }
-    }
-    [JSInvokable] public async Task StateAsync(string next, bool connected) { status = next; if (!connected && next != "Connecting…") {running = false;vncNeedsCredentials=false;} await InvokeAsync(StateHasChanged); }
-    [JSInvokable] public async Task DesktopInputStateAsync(bool allowed,bool available,bool enabled){canControl=allowed;inputAvailable=available;if(!allowed)control=false;else if(available)control=enabled;await InvokeAsync(StateHasChanged);}
-    [JSInvokable] public async Task VncCredentialsAsync(bool needsUsername,bool needsPassword){vncNeedsCredentials=true;vncNeedsUsername=needsUsername;vncNeedsPassword=needsPassword;await InvokeAsync(StateHasChanged);}
-    private async Task SubmitVncCredentials(){await Workspace.RequireAsync(Permissions.Vnc);await JS.InvokeVoidAsync("meshAll.remote.credentials",username,password);password="";vncNeedsCredentials=false;}
-    private async Task Disconnect() { await JS.InvokeVoidAsync("meshAll.remote.disconnect",owner); running = inputAvailable = false; status = "Disconnected"; }
-    private async Task SetControl() { var user=await Workspace.RequireAsync(Permissions.Control);canControl=Store.HasPermission(user,Permissions.Control);await JS.InvokeVoidAsync("meshAll.remote.control",control&&canControl); }
-    private async Task SendCad() { if (control) await JS.InvokeVoidAsync("meshAll.remote.cad"); }
-    public async ValueTask DisposeAsync() { if(ready)try { await JS.InvokeVoidAsync("meshAll.remote.disconnect",owner); } catch (Exception ex) when(ex is JSDisconnectedException or TaskCanceledException or ObjectDisposedException) { } reference?.Dispose(); }
+    [SupplyParameterFromQuery(Name = "connect")] public bool AutoConnect { get; set; }
+    [SupplyParameterFromQuery(Name = "port")] public int? RequestedPort { get; set; }
+    [SupplyParameterFromQuery(Name = "direct")] public bool? RequestedDirect { get; set; }
 }

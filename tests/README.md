@@ -15,7 +15,7 @@ and capture detachment, local-stop acknowledgement, bounded cleanup and native
 connection-count preservation:
 
 ```bash
-node --test tests/desktop-session.test.mjs tests/notifybar.test.cjs
+node --test tests/desktop-session.test.mjs tests/remote-session.test.mjs tests/screen-consent.test.cjs tests/consent-dialog.test.cjs tests/notifybar.test.cjs tests/inventory.test.cjs
 ```
 
 `tests/remote_workflows.py --base-url URL --auth-state /private/state.json` runs on
@@ -23,6 +23,40 @@ a disposable instance. It drives the actual native viewer against a simulated KV
 transport, forces a disconnect, verifies automatic recovery/input and local-user
 stop, tests `.cmd`/`.ps1` library-to-device routing, and negotiates VNC None/password
 authentication against isolated loopback fixtures.
+
+## Device dashboard and paged tables
+
+On a disposable instance with no other agents connected:
+
+```bash
+.venv/bin/python tests/device_dashboard.py \
+  --base-url https://your-disposable-instance:5188 \
+  --auth-state /private/administrator-session.json \
+  --database /private/disposable-data/meshall.db \
+  --screenshots /private/device-screenshots
+```
+
+This creates controlled resource reporters and temporary database fixtures. It
+checks equal-device CPU/memory/storage averages, offline exclusion, capacity alerts, per-device
+readings, 263-session history pagination/search, the other paged lists, mobile
+layout and dark mode. Its own fixtures are removed afterward. Database tests also
+place malformed data outside the requested page to prove those rows are never
+materialized.
+
+## English/French localization
+
+```bash
+.venv/bin/python tests/localization.py \
+  --base-url https://your-disposable-instance:5188 \
+  --auth-state /private/administrator-session.json \
+  --screenshots /private/localization-screenshots
+```
+
+This checks concise login copy, language persistence on anonymous and static
+pages, both languages across pages/editors, translated dialogs and connection
+statuses, preserved script identifiers/output, and French desktop/tablet/mobile
+layouts. Unit tests cover resource/placeholder parity, culture-aware formatting,
+antiforgery, local redirects and language selection during required 2FA setup.
 
 ## Layout, navigation and removal regressions
 
@@ -35,10 +69,71 @@ On a **disposable instance** with an authenticated administrator browser state:
 ```
 
 This enrolls a uniquely named simulated agent and uses generated landscape and
-portrait frames. It checks auto-connect, no nested desktop iframe or scrollbars,
-window resizing, fullscreen, pointer scaling, theme/navigation across Settings
+portrait frames. It checks inline and standalone auto-connect, tab return, no nested
+desktop iframe or viewer scrollbars, window resizing, fullscreen, pointer scaling, theme/navigation across Settings
 and Security, device removal, heartbeat behavior and return on reconnect. It
 removes the test device from the list and revokes its enrollment key afterward.
+
+`tests/fullscreen_workflows.py --base-url URL --auth-state /private/state.json`
+checks inline/standalone Desktop and Terminal plus PowerShell in English/French.
+It enters/exits fullscreen before connection, disconnects while fullscreen,
+reconnects, forces a terminal socket close, simulates browser fullscreen refusal,
+checks recovery after an asset-load failure, verifies browser-initiated exit and
+navigation cleanup, and reviews 1440/768/390px layouts. Optional `--screenshots DIR`
+captures disconnected fullscreen views. Its terminal fixtures intercept only the
+disposable browser's sockets, and enrollment/device fixtures are cleaned up.
+
+## Personal RDP defaults
+
+```bash
+.venv/bin/python tests/connection_preferences.py \
+  --base-url https://your-disposable-instance:5188 \
+  --auth-state /private/administrator-session.json \
+  --screenshots /private/connection-screenshots
+```
+
+Use a disposable account with no existing RDP defaults. The test saves a random
+fixture password, checks masked save/reload/update/clear and inline/standalone
+prefill, English/French account Security placement and language-arrow spacing, and rejects
+plaintext in prerendered HTML/audit exports. It removes its credentials, device
+and enrollment-key fixtures. Server tests cover ciphertext, cross-user decryption
+failure, account/capability revocation and required-2FA gating.
+
+`tests/management_workflows.py --base-url URL --auth-state /private/state.json`
+checks native-first horizontal tool cards, Bash save/selection, shared dropdown
+spacing/full-width behavior, permission-aware Logs navigation and RDP defaults
+beside two-factor controls. Its fixtures are disposable and cleaned up.
+
+Security boundary tests include cookie replay after logout, bounded legacy-cookie
+migration, delegated privilege-escalation rejection, controller-device isolation,
+cross-origin interactive socket rejection and revocation during remote setup.
+`python3 tests/source_packaging.py` rejects local state/secrets in source archives.
+`python3 -O tests/native_artifact_import.py` checks hash-pinned imports offline,
+including rejection before an existing artifact can be overwritten. The optimized
+Python invocation ensures artifact validation cannot disappear with assertions.
+See `docs/SECURITY-REVIEW.md` for the scope and validation limits.
+
+## Windows MSI packaging
+
+After a Release build, on Linux with `wixl` and `msitools` installed:
+
+```bash
+python3 tests/msi_packaging.py
+```
+
+This builds an actual self-contained native-agent MSI, inspects its compiled service,
+64-bit registry, upgrade/rollback and launch-condition tables, and extracts the
+embedded native executable/notices. It checks that package creation consumes no
+enrollment uses, includes no generated device identity, and cannot overwrite an
+existing output. Source-packaging tests reject generated MSI/MST/CAB files.
+Server tests check MSI-download authorization, revoked enrollment keys, architecture
+and payload validation, stable upgrade identities and bounded bulk-deployment keys.
+See `docs/WINDOWS-GPO.md` for a domain computer-startup pilot.
+
+`tests/msi_workflows.py --base-url URL --auth-state /private/state.json` checks
+the authenticated download, anonymous rejection, no-store response, unchanged key
+uses, and English/French GPO instructions at desktop/tablet/mobile widths on a
+disposable instance with the packaging tools installed.
 
 ## Live native-agent checks
 
@@ -78,6 +173,8 @@ For `--checks rdp`, `--checks vnc` or `--checks ssh`, set
 `MESHALL_REMOTE_USERNAME` and `MESHALL_REMOTE_PASSWORD`. The target service must
 already be configured. `--port` selects a nonstandard target port; `--direct`
 tests agentless access, otherwise traffic uses the native agent's TCP tunnel.
+RDP/SSH also require a host identity verified through the registered agent or
+administrator configuration; an unknown offline identity fails closed.
 Use separate invocations for services with different credentials or ports.
 
 `--renderer src/MeshAll.Server/wwwroot/app.js` tests local renderer changes against

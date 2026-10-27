@@ -1,7 +1,13 @@
 @inject NavigationManager Navigation
 @inject Store Store
-<p>Opening sign-in… <a href="/login">Continue</a></p>
-@code {
+<p>@Ui["Opening sign-in…"] <a href="/login">@Ui["Continue"]</a></p>
+@code
+{
     protected override void OnAfterRender(bool firstRender)
-    { if (firstRender) Navigation.NavigateTo(Store.HasUsers ? "/login" : "/setup", forceLoad: true); }
+    {
+        if (firstRender)
+        {
+            Navigation.NavigateTo(Store.HasUsers ? "/login" : "/setup", forceLoad: true);
+        }
+    }
 }

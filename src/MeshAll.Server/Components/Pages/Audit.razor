@@ -1,10 +1,8 @@
 @page "/audit"
 @attribute [Authorize(Policy = Permissions.Audit)]
-@inherits PageBase
-<PageTitle>Audit log · MeshAll</PageTitle>
-<div class="page-heading"><div><div class="breadcrumb">Workspace / Audit log</div><h1>A clear trail.</h1><p class="muted">Workspace changes, device connections, and remote activity.</p></div>@if (Can(Permissions.ExportAudit)) { <a class="button" href="/api/audit/export" download><Icon Name="download" />Export JSON</a> }</div>
-<Notice Error="@Error" />
-<section class="panel"><div class="filter-bar"><div class="search-field"><Icon Name="search" /><input @bind="search" @bind:event="oninput" placeholder="Search events, people, or devices…" aria-label="Search audit log" /></div><span class="muted small-text">Latest 250 events · local time</span></div>
-@if (audit.Count == 0) { <EmptyState Icon="clock" Title="Nothing to report yet" Text="Your activity will appear here as you use MeshAll." /> }
-else { <div class="table-scroll"><table><thead><tr><th>Time</th><th>Person</th><th>Event</th><th>Target</th><th>Details</th></tr></thead><tbody>@foreach (var a in audit.Where(a => $"{a.Actor} {a.Action} {a.Target} {a.Detail}".Contains(search, StringComparison.OrdinalIgnoreCase))) { <tr><td class="muted nowrap">@a.Time.ToLocalTime().ToString("MMM d, HH:mm:ss")</td><td>@a.Actor</td><td><strong>@a.Action</strong></td><td>@a.Target</td><td class="muted">@a.Detail</td></tr> }</tbody></table></div> }</section>
-@code { protected override string? ViewPermission=>Permissions.Audit;private List<AuditInfo> audit = []; private string search = ""; protected override Task LoadAsync() { audit = Store.AuditLog(); return Task.CompletedTask; } }
+@inject NavigationManager Navigation
+
+@code
+{
+    protected override void OnInitialized() => Navigation.NavigateTo("/logs?tab=audit", replace: true);
+}

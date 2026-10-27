@@ -1,3 +1,17 @@
-@if (!string.IsNullOrEmpty(Error)) { <div class="notice error" role="alert"><Icon Name="shield" /><span>@Error</span></div> }
-@if (!string.IsNullOrEmpty(Success)) { <div class="notice success" role="status"><Icon Name="check" /><span>@Success</span></div> }
-@code { [Parameter] public string? Error { get; set; } [Parameter] public string? Success { get; set; } }
+@if (!string.IsNullOrEmpty(Error))
+{
+    <div class="notice error" role="alert"><Icon Name="shield" /><span>@Ui.Message(Error)</span></div>
+}
+@if (!string.IsNullOrEmpty(Success))
+{
+    <div class="notice success" role="status"><Icon Name="check" /><span>@Ui.Message(Success)</span></div>
+}
+
+@code
+{
+    [Parameter]
+    public string? Error { get; set; }
+
+    [Parameter]
+    public string? Success { get; set; }
+}

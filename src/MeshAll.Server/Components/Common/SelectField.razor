@@ -1,0 +1,28 @@
+@typeparam TValue
+@using System.Globalization
+
+<span class="select-field @(Expand ? "select-expand" : "select-fit")">
+    <select @attributes="AdditionalAttributes" value="@BindConverter.FormatValue(Value, CultureInfo.InvariantCulture)" @onchange="ChangeAsync">
+        @ChildContent
+    </select>
+    <svg class="select-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg>
+</span>
+
+@code
+{
+    [Parameter] public TValue? Value { get; set; }
+    [Parameter] public EventCallback<TValue> ValueChanged { get; set; }
+    [Parameter] public EventCallback<ChangeEventArgs> Changed { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public bool Expand { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private async Task ChangeAsync(ChangeEventArgs arguments)
+    {
+        if (BindConverter.TryConvertTo(arguments.Value, CultureInfo.InvariantCulture, out TValue? value))
+        {
+            await ValueChanged.InvokeAsync(value);
+            await Changed.InvokeAsync(arguments);
+        }
+    }
+}

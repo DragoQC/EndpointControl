@@ -1,0 +1,7 @@
+<img class="@CssClass" src="@($"favicon.svg?v={Wire.Version}")" alt="" aria-hidden="true" width="48" height="48" />
+
+@code
+{
+    [Parameter]
+    public string CssClass { get; set; } = "brand-mark";
+}

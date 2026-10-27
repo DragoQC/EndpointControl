@@ -1,0 +1,57 @@
+@implements IDisposable
+
+<div class="search-field">
+    <Icon Name="search" />
+    <input value="@input" @oninput="ChangeAsync" placeholder="@Ui[Placeholder]" aria-label="@Ui[Label]" type="search" />
+</div>
+
+@code
+{
+    [Parameter]
+    public string Value { get; set; } = "";
+
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = "Search";
+
+    [Parameter]
+    public string Placeholder { get; set; } = "Search…";
+
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    private string input = "";
+    private string previousValue = "";
+    private CancellationTokenSource? pending;
+    protected override void OnParametersSet()
+    {
+        if (Value != previousValue)
+        {
+            input = previousValue = Value;
+        }
+    }
+
+    private async Task ChangeAsync(ChangeEventArgs arguments)
+    {
+        input = arguments.Value?.ToString() ?? "";
+        pending?.Cancel();
+        pending?.Dispose();
+        pending = new CancellationTokenSource();
+        CancellationToken cancellation = pending.Token;
+        try
+        {
+            await Task.Delay(250, cancellation);
+            await ValueChanged.InvokeAsync(input);
+            previousValue = input;
+        }
+        catch (OperationCanceledException)
+        {
+        // A newer keystroke superseded this database search.
+        }
+    }
+
+    public void Dispose()
+    {
+        pending?.Cancel();
+        pending?.Dispose();
+    }
+}

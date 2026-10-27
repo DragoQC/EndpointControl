@@ -2,15 +2,28 @@
 @attribute [ExcludeFromInteractiveRouting]
 @layout AuthLayout
 @inject Store Store
-<PageTitle>Sign in · MeshAll</PageTitle>
-<section class="auth-card"><span class="auth-eyebrow">Welcome back</span><h1>Your fleet, within reach.</h1><p class="muted">Sign in to your MeshAll workspace.</p>
-    @if (Failed) { <Notice Error="Sign-in failed. Check your username and password." /> }
+
+<PageTitle>@Ui["Sign in"] · @ProductBrand.Name</PageTitle>
+<section class="auth-card">
+    <h1>@Ui["Sign in"]</h1>
+    @if (Failed)
+    {
+        <Notice Error="Sign-in failed. Check your username and password." />
+    }
     <form action="/auth/login" method="post" data-enhance="false">
         <AntiforgeryToken />
-        <label>Username<input name="username" autocomplete="username" required maxlength="50" autofocus /></label>
-        <label>Password<input type="password" name="password" autocomplete="current-password" required maxlength="256" /></label>
-        <button type="submit" class="button primary full-width">Sign in <Icon Name="arrow" /></button>
+        <label>@Ui["Username"]<input name="username" autocomplete="username" required maxlength="50" autofocus /></label>
+        <label>@Ui["Password"]<input type="password" name="password" autocomplete="current-password" required maxlength="256" /></label>
+        <button type="submit" class="button primary full-width">@Ui["Sign in"] <Icon Name="arrow" /></button>
     </form>
-    @if (!Store.HasUsers) { <p class="muted">First time here? <a href="/setup">Set up your workspace</a></p> }
+    @if (!Store.HasUsers)
+    {
+        <p><a href="/setup">@Ui["Initial setup"]</a></p>
+    }
 </section>
-@code { [SupplyParameterFromQuery(Name = "failed")] public bool Failed { get; set; } }
+
+@code
+{
+    [SupplyParameterFromQuery(Name = "failed")]
+    public bool Failed { get; set; }
+}

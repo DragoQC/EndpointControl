@@ -1,0 +1,85 @@
+<section class="panel device-resource-panel">
+    <div class="panel-header">
+        <div>
+            <h2>@Ui["Resource statistics"]</h2>
+            @if (!Online)
+            {
+                <p>@Ui["Device offline. Waiting for new readings."]</p>
+            }
+        </div>
+        <span class="health-badge @(Online ? ResourceUsage.Tone(resources.Health(now)) : "unknown")">
+            @(Online ? ResourceUsage.Label(resources.Health(now)) : Ui["Offline"])
+        </span>
+    </div>
+    <div class="device-resource-grid">
+        <ResourceMeter Label="CPU usage" Percent="@(Online ? resources.CpuPercent(now) : null)"
+                       Detail="@(Ui.Plural(Inventory.Cores, "{0} logical core", "{0} logical cores") + " · " + DisplayFormat.RelativeTime(Inventory.CpuReportedAt))" />
+        <ResourceMeter Label="Memory usage" Percent="@(Online ? resources.MemoryPercent(now) : null)" WarningAt="90"
+                       Detail="@MemoryDetail" />
+        <ResourceMeter Label="Fullest disk" Percent="@(Online ? resources.DiskPercent(now) : null)" WarningAt="90"
+                       Detail="@(resources.BusiestDisk is DiskInfo disk ? Ui["{0} · {1} free", disk.Name, DisplayFormat.Bytes(disk.Free)] : Ui["Waiting for a disk report"])" />
+    </div>
+    <div class="resource-sample-note">
+        @Ui["Sample interval: 15 seconds. Readings expire after 2 minutes."]
+    </div>
+    <div class="panel-header resource-disk-heading">
+        <div><h3>@Ui["Disk capacity"]</h3><p>@Ui["Nearly full: 90% used. Critical: 97% used."]</p></div>
+        <span class="count-badge">@Ui.Plural(disks.TotalCount, "{0} volume", "{0} volumes")</span>
+    </div>
+    <DataTable Items="disks.Items" Label="Device disk capacity" ItemKey="disk => disk.Name"
+               EmptyTitle="No disk report yet" EmptyText="The agent will report its available local volumes.">
+        <Header><th>@Ui["Volume"]</th><th>@Ui["Used"]</th><th>@Ui["Free space"]</th><th>@Ui["Capacity"]</th></Header>
+        <RowTemplate Context="disk">
+            <td><strong>@disk.Name</strong></td>
+            <td><ResourceMeter Label="Used" Percent="@(Online && resources.HasFreshDisks(now) ? ResourceUsage.DiskPercent(disk) : null)"
+                               Compact="true" WarningAt="90" /></td>
+            <td>@DisplayFormat.Bytes(disk.Free)</td>
+            <td class="muted">@DisplayFormat.Bytes(disk.Total)</td>
+        </RowTemplate>
+    </DataTable>
+    <Pagination TotalCount="disks.TotalCount" PageNumber="disks.PageNumber" PageSize="disks.PageSize"
+                PageChanged="ChangeDiskPage" PageSizeChanged="ChangeDiskPageSize" Label="Disk pages" />
+</section>
+
+@code
+{
+    [Parameter, EditorRequired]
+    public Inventory Inventory { get; set; } = default!;
+
+    [Parameter]
+    public bool Online { get; set; }
+
+    private DeviceResourceInfo resources = default!;
+    private DateTimeOffset now;
+    private PageResult<DiskInfo> disks = PageResult<DiskInfo>.Empty();
+    private int diskPage = 1;
+    private int diskPageSize = PageRequest.MaximumSize;
+    private string MemoryDetail => Inventory.MemoryTotal > 0 ? Ui["{0} used of {1}", DisplayFormat.Bytes(Inventory.MemoryUsed), DisplayFormat.Bytes(Inventory.MemoryTotal)] : Ui["Waiting for a memory report"];
+
+    protected override void OnParametersSet()
+    {
+        now = DateTimeOffset.UtcNow;
+        resources = DeviceResourceInfo.FromInventory("", Inventory.Hostname, Inventory);
+        UpdateDiskPage();
+    }
+
+    private void ChangeDiskPage(int page)
+    {
+        diskPage = page;
+        UpdateDiskPage();
+    }
+
+    private void ChangeDiskPageSize(int size)
+    {
+        diskPage = 1;
+        diskPageSize = size;
+        UpdateDiskPage();
+    }
+
+    private void UpdateDiskPage()
+    {
+        DiskInfo[] validDisks = Inventory.Disks.Where(ResourceUsage.IsValidDisk).OrderByDescending(ResourceUsage.DiskPercent).ThenBy(disk => disk.Name, StringComparer.Ordinal).ToArray();
+        disks = PageResult<DiskInfo>.FromSnapshot(validDisks, new PageRequest(diskPage, diskPageSize));
+        diskPage = disks.PageNumber;
+    }
+}

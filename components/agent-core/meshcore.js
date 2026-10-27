@@ -1258,8 +1258,14 @@ function server_getUserImage(userid) {
     var ret = new xpromise(server_promise_default);
 
     if (require('MeshAgent')._promises == null) { require('MeshAgent')._promises = {}; }
-    require('MeshAgent')._promises[ret._hashCode()] = ret;
-    require('MeshAgent').SendCommand({ action: 'getUserImage', userid: userid, promise: ret._hashCode(), sentDefault: true });
+    var imageId = ret._hashCode();
+    require('MeshAgent')._promises[imageId] = ret;
+    ret._meshallImageTimer = setTimeout(function () {
+        if (require('MeshAgent')._promises[imageId] !== ret) return;
+        delete require('MeshAgent')._promises[imageId];
+        ret.resolve('default2');
+    }, 1000);
+    require('MeshAgent').SendCommand({ action: 'getUserImage', userid: userid, promise: imageId, sentDefault: true });
     return ret;
 }
 require('MeshAgent')._consentTimers = {};
@@ -1308,36 +1314,7 @@ function tunnel_onError()
 // user before a separately relayed RDP/VNC/AMT screen session can be opened.
 // Approval is nonce-bound to this request, uncached, and denied on timeout.
 function meshallRequestScreenConsent(data) {
-    if (!data || typeof data.sessionid != 'string' || typeof data.responseid != 'string' ||
-        typeof data.nonce != 'string' || data.nonce.length != 32 ||
-        ['rdp', 'vnc', 'amt'].indexOf(data.protocol) < 0 ||
-        typeof data.rights != 'number' || (data.rights & 8) == 0) return;
-    var finished = false, prompt = null, timer = null;
-    function reply(allowed) {
-        if (finished) return;
-        finished = true;
-        if (timer != null) clearTimeout(timer);
-        mesh.SendCommand({ action: 'msg', type: 'meshall-consent', sessionid: data.sessionid,
-            responseid: data.responseid, nonce: data.nonce, granted: allowed === true });
-        if (prompt && prompt.close) { try { prompt.close(); } catch (e) { } }
-    }
-    try {
-        var account = data.realname || data.username || 'Administrator';
-        var requestor = typeof data.meshallRequestor == 'string' ? data.meshallRequestor.substring(0, 80) + ' via ' + account : account;
-        var message = requestor + ' is requesting ' + data.protocol.toUpperCase() + ' access to your screen. Allow this session?';
-        var uid = require('user-sessions').consoleUid();
-        timer = setTimeout(function () { reply(false); }, 30000);
-        if (process.platform == 'win32') {
-            try {
-                prompt = require('win-userconsent').create('MeshAll — screen access request', message, requestor,
-                    { uid: uid, timeout: 30000, timeoutAutoAccept: false, noCheck: true, meshallStrict: true,
-                        translations: { Allow: 'Allow this session', Deny: 'Deny', Auto: 'Ask again next time', Caption: message } });
-            } catch (e) { prompt = require('message-box').create('MeshAll — screen access request', message, 30, null, uid); }
-        } else {
-            prompt = require('message-box').create('MeshAll — screen access request', message, 30, null, uid);
-        }
-        prompt.then(function () { reply(true); }, function () { reply(false); });
-    } catch (e) { reply(false); }
+    require('meshall-screen-consent').request(data, function (reply) { mesh.SendCommand(reply); });
 }
 // MESHALL_CONSENT_END
 
@@ -1352,6 +1329,7 @@ function handleServerCommand(data) {
             case 'msg': {
                 switch (data.type) {
                     case 'meshall-consent': { meshallRequestScreenConsent(data); break; }
+                    case 'meshall-consent-cancel': { require('meshall-screen-consent').cancel(data); break; }
                     case 'console': { // Process a console command
                         if ((typeof data.rights != 'number') || ((data.rights & 8) == 0) || ((data.rights & 16) == 0)) break; // Check console rights (Remote Control and Console)
                         if (data.value && data.sessionid) {
@@ -1364,6 +1342,12 @@ function handleServerCommand(data) {
                     case 'tunnel':
                         {
                         if (data.value != null) { // Process a new tunnel connection request
+                            var meshallApproval = null;
+                            if (data.soptions && data.soptions.meshallApprovalNonce) {
+                                meshallApproval = require('meshall-screen-consent').consume(data.soptions.meshallApprovalNonce,
+                                    data.sessionid, data.soptions.meshallApprovalProtocol, data.username);
+                                if (!meshallApproval) return;
+                            }
                             // Create a new tunnel object
                             var xurl = getServerTargetUrlEx(data.value);
                             if (xurl != null) {
@@ -1387,6 +1371,10 @@ function handleServerCommand(data) {
                                 tunnel.rights = data.rights;
                                 tunnel.consent = data.consent;
                                 if (global._MSH && _MSH().LocalConsent != null) { tunnel.consent |= parseInt(_MSH().LocalConsent); }
+                                if (meshallApproval) {
+                                    tunnel.meshallApprovedSession = meshallApproval.uid;
+                                    tunnel.consent &= ~8;
+                                }
                                 tunnel.privacybartext = data.privacybartext ? data.privacybartext : currentTranslation['privacyBar'];
                                 tunnel.privacybarmaxwidth = ((typeof data.privacybarmaxwidth == 'number') && (data.privacybarmaxwidth > 0)) ? data.privacybarmaxwidth : 0;
                                 tunnel.username = data.username + (data.guestname ? (' - ' + data.guestname) : '');
@@ -1394,7 +1382,7 @@ function handleServerCommand(data) {
                                 tunnel.guestuserid = data.guestuserid;
                                 tunnel.guestname = data.guestname;
                                 tunnel.userid = data.userid;
-                                if (!(data.soptions && data.soptions.meshallStrictConsent === true) && server_check_consentTimer(tunnel.userid)) { tunnel.consent = (tunnel.consent & -57); } // MeshAll: strict consent never reuses approval.
+                                if (!(data.soptions && data.soptions.meshallStrictConsent === true) && !(tunnel.consent & 8) && server_check_consentTimer(tunnel.userid)) { tunnel.consent = (tunnel.consent & -57); } // MeshAll: screen consent never reuses approval.
                                 tunnel.desktopviewonly = data.desktopviewonly;
                                 tunnel.remoteaddr = data.remoteaddr;
                                 tunnel.state = 0;
@@ -2173,6 +2161,7 @@ function handleServerCommand(data) {
                 if (data.promise != null && require('MeshAgent')._promises[data.promise] != null) {
                     var p = require('MeshAgent')._promises[data.promise];
                     delete require('MeshAgent')._promises[data.promise];
+                    if (p._meshallImageTimer != null) { clearTimeout(p._meshallImageTimer); p._meshallImageTimer = null; }
                     p.resolve(data.image);
                 }
                 break;
@@ -3133,7 +3122,16 @@ function kvm_tunnel_consentpromise_closehandler()
 function meshallDesktopLocalClose(kvm) {
     require('meshall-desktop-close')(kvm);
 }
+function meshallDesktopAttachInput(ws) {
+    if (ws.httprequest._meshallInputAttached) return;
+    if (ws.httprequest.desktopviewonly != true &&
+        (ws.httprequest.rights == 0xFFFFFFFF || ((ws.httprequest.rights & MESHRIGHT_REMOTECONTROL) != 0 && (ws.httprequest.rights & MESHRIGHT_REMOTEVIEW) == 0))) {
+        ws.httprequest._meshallInputAttached = true;
+        ws.pipe(ws.httprequest.desktop.kvm, { dataTypeSkip: 1, end: false });
+    }
+}
 function kvm_consent_ok(ws) {
+    meshallDesktopAttachInput(ws);
     // User Consent Prompt is not required because no user is present
     if (ws.httprequest.consent && (ws.httprequest.consent & 1)){
         // User Notifications is required
@@ -3247,6 +3245,7 @@ function kvm_consentpromise_resolved(always)
     if (always && process.platform=='win32') { server_set_consentTimer(this.ws.httprequest.userid); }
 
     // Success
+    meshallDesktopAttachInput(this.ws);
     this.ws._consentpromise = null;
     MeshServerLogEx(30, null, "Starting remote desktop after local user accepted (" + this.ws.httprequest.remoteaddr + ")", this.ws.httprequest);
     this.ws.write(JSON.stringify({ ctrlChannel: '102938', type: 'console', msg: null, msgid: 0 }));
@@ -3670,6 +3669,7 @@ function onTunnelData(data)
                 // Look for a TSID
                 var tsid = null;
                 if ((this.httprequest.xoptions != null) && (typeof this.httprequest.xoptions.tsid == 'number')) { tsid = this.httprequest.xoptions.tsid; }
+                if (typeof this.httprequest.meshallApprovedSession == 'number') { tsid = this.httprequest.meshallApprovedSession; }
                 require('MeshAgent')._tsid = tsid;
                 this.tsid = tsid;
 
@@ -3730,17 +3730,7 @@ function onTunnelData(data)
                     this.httprequest.desktop.kvm.users = [this.httprequest.username];
                 }
 
-                if ((this.httprequest.desktopviewonly != true) && ((this.httprequest.rights == 0xFFFFFFFF) || (((this.httprequest.rights & MESHRIGHT_REMOTECONTROL) != 0) && ((this.httprequest.rights & MESHRIGHT_REMOTEVIEW) == 0))))
-                {
-                    // If we have remote control rights, pipe the KVM input
-                    this.pipe(this.httprequest.desktop.kvm, { dataTypeSkip: 1, end: false }); // 0 = Binary, 1 = Text. Pipe the Browser --> KVM input.
-                }
-                else
-                {
-                    // We need to only pipe non-mouse & non-keyboard inputs.
-                    // sendConsoleText('Warning: No Remote Desktop Input Rights.');
-                    // TODO!!!
-                }
+                // Keyboard/mouse input is attached only after approval (or an explicit unattended policy).
 
                 // Perform notification if needed. Toast messages may not be supported on all platforms.
                 if (this.httprequest.consent && (this.httprequest.consent & 8)) {
@@ -7254,6 +7244,7 @@ function handleServerConnection(state) {
     meshServerConnectionState = state;
     if (meshServerConnectionState == 0) {
         try { require('meshall-inventory').stop(); } catch(ex) { }
+        try { require('meshall-screen-consent').reset(); } catch(ex) { }
         // Server disconnected
         if (selfInfoUpdateTimer != null) { clearInterval(selfInfoUpdateTimer); selfInfoUpdateTimer = null; }
         lastSelfInfo = null;

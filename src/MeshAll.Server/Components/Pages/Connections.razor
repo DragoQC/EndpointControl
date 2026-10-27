@@ -1,0 +1,9 @@
+@page "/account/connections"
+@attribute [Authorize(Policy = Permissions.Rdp)]
+@attribute [ExcludeFromInteractiveRouting]
+@inject NavigationManager Navigation
+
+@code
+{
+    protected override void OnInitialized() => Navigation.NavigateTo("/account/security#rdp-credentials", forceLoad: true, replace: true);
+}

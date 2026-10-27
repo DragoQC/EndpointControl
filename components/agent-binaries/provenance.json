@@ -3,21 +3,27 @@
     "platform": "win-x64",
     "file": "MeshAllAgent.exe",
     "size": 3559424,
-    "sha384": "b0d11491fed718133d8cc0082b84e41aed60a7a86e9bb97edf8694f2908b425c383654d79e7fad89cb493926e6a7cf78",
+    "sha384": "70e4be35cf9f35815a70da574b09177576cbe3e8d5acfb7f42b462c02c6a835a28f3f95b62ca4e347fe27eb1fc5cefa2",
     "origin": "DragoQC/MeshAll GitHub Actions",
     "sourceFile": "meshservice/Release/MeshService64.exe",
     "license": "Apache-2.0",
     "sourceCommit": "d786b3e",
-    "workflowRun": 39873839533
+    "workflowRun": 39873839533,
+    "baselineSha384": "b0d11491fed718133d8cc0082b84e41aed60a7a86e9bb97edf8694f2908b425c383654d79e7fad89cb493926e6a7cf78",
+    "resourceBranding": "EndpointControl 0.10.0",
+    "resourceBrandingTool": "LIEF 0.17.6"
   },
   {
     "platform": "win-arm64",
     "file": "MeshAllAgent.exe",
     "size": 3637760,
-    "sha384": "08a3372068b5f636c89b909d0dac1d4fafac7ff8bbe55a78b27593dae1606ceef69bfa5078ece112915272b96f8c46bb",
+    "sha384": "e9117aae3c14c752fb574bbe8da94e23eec53516f5cc063a4c287e48aed2971f6f3cb723944b00a6791a8d9c1509888f",
     "origin": "Ylianst/MeshAgent legacy-1.2.6",
     "sourceFile": "MeshServiceARM64.exe",
-    "license": "Apache-2.0"
+    "license": "Apache-2.0",
+    "baselineSha384": "08a3372068b5f636c89b909d0dac1d4fafac7ff8bbe55a78b27593dae1606ceef69bfa5078ece112915272b96f8c46bb",
+    "resourceBranding": "EndpointControl 0.10.0",
+    "resourceBrandingTool": "LIEF 0.17.6"
   },
   {
     "platform": "linux-x64",

@@ -1,0 +1,52 @@
+@inherits PagedPageBase<SessionInfo>
+
+<div class="section-heading"><h2>@Ui["Sessions"]</h2><span class="live-label"><span class="status-dot green-dot"></span>@Ui["Live updates"]</span></div>
+<Notice Error="@Error" />
+
+<PagedTable Result="Rows" Label="Sessions" ItemKey="session => session.Id"
+            PageChanged="ChangePageAsync" PageSizeChanged="ChangePageSizeAsync"
+            EmptyTitle="No sessions to show" EmptyText="Try another search, or open a device's remote tools.">
+    <Toolbar>
+        <SearchField Value="@Search" ValueChanged="ChangeSearchAsync" Label="Search sessions"
+                     Placeholder="Search device, person, operation, or result…" />
+        <span class="muted small-text">@Ui.Plural(Rows.TotalCount, "{0} session", "{0} sessions") · @Ui["Local time"]</span>
+    </Toolbar>
+    <Header>
+        <th>@Ui["Device"]</th>
+        <th>@Ui["Operation"]</th>
+        <th>@Ui["Started by"]</th>
+        <th>@Ui["Started"]</th>
+        <th>@Ui["Duration"]</th>
+        <th>@Ui["Result"]</th>
+    </Header>
+    <RowTemplate Context="session">
+        <td><a class="text-link" href="@($"/devices/{session.DeviceId}")">@session.DeviceName</a></td>
+        <td>@Ui[session.Kind]</td>
+        <td>@session.Actor</td>
+        <td class="muted">@session.Started.ToLocalTime().ToString("g")</td>
+        <td>@Duration(session)</td>
+        <td>
+            <span class="status @StatusClass(session.Status)">
+                <span class="status-dot"></span>@Ui[session.Status]
+            </span>
+        </td>
+    </RowTemplate>
+</PagedTable>
+
+@code
+{
+    protected override string? ViewPermission => Permissions.Sessions;
+
+    protected override PageResult<SessionInfo> ReadPage(PageRequest request) => Store.SessionPage(request, Search);
+    private static string StatusClass(string status) => status switch
+    {
+        "Failed" or "Denied" => "revoked",
+        "Active" => "online",
+        _ => "offline"
+    };
+    private static string Duration(SessionInfo session)
+    {
+        double seconds = (session.Ended ?? DateTimeOffset.UtcNow).Subtract(session.Started).TotalSeconds;
+        return $"{Math.Max(0, seconds):0}s";
+    }
+}

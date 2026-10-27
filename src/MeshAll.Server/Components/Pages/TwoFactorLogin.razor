@@ -2,22 +2,38 @@
 @attribute [ExcludeFromInteractiveRouting]
 @layout AuthLayout
 @using Microsoft.AspNetCore.Authentication
-<PageTitle>Verify your sign-in · MeshAll</PageTitle>
+
+<PageTitle>@Ui["Verify your sign-in"] · @ProductBrand.Name</PageTitle>
 <section class="auth-card">
-    <span class="auth-eyebrow">Two-factor authentication</span><h1>One more step.</h1>
-    @if (pending) {
-        <p class="muted">Enter the six-digit code from your authenticator app, or an unused recovery code.</p>
-        @if (Failed) { <Notice Error="Invalid, expired, or already used code. After five failed attempts, start sign-in again." /> }
-        <form action="/auth/2fa" method="post" data-enhance="false"><AntiforgeryToken />
-            <label>Authenticator or recovery code<input name="code" autocomplete="one-time-code" required maxlength="30" autofocus /></label>
-            <button type="submit" class="button primary full-width">Verify and sign in</button>
+    <h1>@Ui["Verify sign-in"]</h1>
+    @if (pending)
+    {
+        <p class="muted">@Ui["Enter the six-digit code from your authenticator app, or an unused recovery code."]</p>
+        @if (Failed)
+        {
+            <Notice Error="Invalid, expired, or already used code. After five failed attempts, start sign-in again." />
+        }
+        <form action="/auth/2fa" method="post" data-enhance="false">
+            <AntiforgeryToken />
+            <label>@Ui["Authenticator or recovery code"]<input name="code" autocomplete="one-time-code" required maxlength="30" autofocus /></label>
+            <button type="submit" class="button primary full-width">@Ui["Verify and sign in"]</button>
         </form>
-    } else { <Notice Error="Your sign-in challenge expired. Start again." /> }
-    <a class="text-link" href="/login">Back to sign in</a>
+    }
+    else
+    {
+        <Notice Error="Your sign-in challenge expired. Start again." />
+    }
+    <a class="text-link" href="/login">@Ui["Back to sign in"]</a>
 </section>
-@code {
-    [CascadingParameter] public HttpContext HttpContext { get; set; } = default!;
-    [SupplyParameterFromQuery(Name="failed")] public bool Failed { get; set; }
+
+@code
+{
+    [CascadingParameter]
+    public HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromQuery(Name = "failed")]
+    public bool Failed { get; set; }
+
     private bool pending;
-    protected override async Task OnInitializedAsync() => pending=(await HttpContext.AuthenticateAsync(AccountAuthentication.ChallengeScheme)).Succeeded;
+    protected override async Task OnInitializedAsync() => pending = (await HttpContext.AuthenticateAsync(AccountAuthentication.ChallengeScheme)).Succeeded;
 }

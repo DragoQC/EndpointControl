@@ -1,0 +1,98 @@
+@inherits PageBase
+
+<Notice Error="@Error" />
+<section class="panel command-panel">
+    <div class="panel-header">
+        <div><h2>@Ui["Remote commands"]</h2><p>@Ui[ShellLabel] · @Ui["Runs as the agent service account"]</p></div>
+        <button class="button small" @onclick="() => transcript = string.Empty">@Ui["Clear output"]</button>
+    </div>
+    <pre class="terminal-output" role="log" aria-label="@Ui["Command output"]">@(string.IsNullOrEmpty(transcript) ? Ui["Run a command to view its output."] : transcript)@if (Busy){<span class="terminal-pending">@Ui["Running…"]</span>}</pre>
+    <form class="command-form" @onsubmit="RunCommand" @onsubmit:preventDefault>
+        <div class="form-grid three-column">
+            <label>@Ui["Working directory"]<input @bind="directory" placeholder="@Ui["Agent home directory"]" /></label>
+            <label>@Ui["Execution shell"]
+                <SelectField TValue="string" Expand="true" aria-label="@Ui["Execution shell"]" @bind-Value="shell">
+                    <option value="auto">@Ui["Platform default"]</option>
+                    @if (IsWindows)
+                    {
+                        <option value=".ps1">@Ui["PowerShell (.ps1)"]</option>
+                        <option value=".cmd">@Ui["Command Prompt (.cmd)"]</option>
+                    }
+                    else
+                    {
+                        <option value="bash">@Ui["Bash (.sh)"]</option>
+                        <option value=".sh">@Ui["Shell (.sh)"]</option>
+                    }
+                </SelectField>
+            </label>
+            <label>@Ui["Saved script"]
+                <SelectField TValue="string" Expand="true" aria-label="@Ui["Saved script"]" Value="@string.Empty" Changed="UseScript">
+                    <option value="">@Ui["Choose a script…"]</option>
+                    @foreach (ScriptOption script in scriptOptions.Where(script => ScriptTypes.Compatible(script.Kind, IsWindows)))
+                    {
+                        <option value="@script.Id">@script.Name · @Ui[ScriptTypes.Label(script.Kind)]</option>
+                    }
+                </SelectField>
+            </label>
+        </div>
+        <label>@Ui["Command"]<textarea class="code-input" @bind="command" rows="3" required maxlength="16000"></textarea></label>
+        <div class="form-actions">
+            <button class="button primary" disabled="@Busy">@Ui["Run command"]</button>
+        </div>
+    </form>
+</section>
+
+@code
+{
+    [Parameter, EditorRequired]
+    public string DeviceId { get; set; } = "";
+
+    [Parameter, EditorRequired]
+    public string Platform { get; set; } = "";
+    protected override string? ViewPermission => Permissions.Commands;
+
+    private List<ScriptOption> scriptOptions = [];
+    private string command = "";
+    private string directory = "";
+    private string transcript = "";
+    private string shell = "auto";
+    private bool IsWindows => Platform == "Windows";
+    private string ShellLabel => ScriptTypes.Label(shell == "auto" ? IsWindows ? ".ps1" : ".sh" : shell);
+
+    protected override Task LoadAsync()
+    {
+        scriptOptions = Can(Permissions.Scripts) ? Store.ScriptOptions(Platform) : [];
+        return Task.CompletedTask;
+    }
+
+    private Task RunCommand() => Act(async () =>
+    {
+        if (string.IsNullOrWhiteSpace(command))
+        {
+            return;
+        }
+
+        string submittedCommand = command;
+        transcript += $"\n› {submittedCommand}\n";
+        CommandOutput result = await Workspace.RunAsync<CommandOutput>(DeviceId, "command", new CommandInput(submittedCommand, directory, Shell: shell));
+        directory = result.Directory;
+        transcript += result.Output + "\n" + (result.ExitCode < 0 ? Ui["[Exit status not reported]"] : Ui["[exit {0}]", result.ExitCode]) + "\n";
+        if (transcript.Length > 150000)
+        {
+            transcript = transcript[^150000..];
+        }
+
+        command = "";
+    }, permission: Permissions.Commands);
+    private Task UseScript(ChangeEventArgs arguments) => Act(() =>
+    {
+        ScriptInfo? script = Store.FindScript(arguments.Value?.ToString() ?? "");
+        if (script is null || !ScriptTypes.Compatible(script.Kind, IsWindows) || script.Platform != "Any" && script.Platform != Platform)
+        {
+            return;
+        }
+
+        command = script.Code;
+        shell = script.Kind;
+    }, permission: Permissions.Scripts);
+}

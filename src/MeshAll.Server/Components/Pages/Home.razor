@@ -1,29 +1,182 @@
 @page "/"
-@attribute [Authorize]
-@inherits PageBase
-<PageTitle>Overview · MeshAll</PageTitle>
-<div class="page-heading"><div><div class="breadcrumb">Workspace / Overview</div><h1>A little clarity for your fleet.</h1><p class="muted">All your devices, connections, and activity. In one place.</p></div>
-    @if (Can(Permissions.Enroll)) { <a class="button primary" href="/enroll"><Icon Name="plus" />Add device</a> }
-</div>
+@attribute [Authorize(Policy = Permissions.Inventory)]
+@inherits PagedPageBase<DeviceResourceInfo>
+
+<PageTitle>@Ui["Dashboard"] · @ProductBrand.Name</PageTitle>
+<PageHeader Title="Dashboard" Description="Average resource usage across connected devices.">
+    <Actions>
+        <span class="live-label"><span class="status-dot green-dot"></span>@Ui["Live dashboard"]</span>
+        @if (Can(Permissions.Enroll))
+        {
+            <a class="button primary" href="/enroll"><Icon Name="plus" />@Ui["Add device"]</a>
+        }
+    </Actions>
+</PageHeader>
 <Notice Error="@Error" />
-<div class="stats-grid grid grid-cols-2 gap-4 xl:grid-cols-4">
-    <section class="stat-card"><span class="stat-icon teal"><Icon Name="monitor" /></span><div><span class="stat-label">Total devices</span><strong>@devices.Count</strong><small>Across @groups.Count device @(groups.Count == 1 ? "group" : "groups")</small></div></section>
-    <section class="stat-card"><span class="stat-icon green"><Icon Name="activity" /></span><div><span class="stat-label">Online now</span><strong>@devices.Count(d => Gateway.Online(d.Id))</strong><small><span class="status-dot green-dot"></span> Ready to connect</small></div></section>
-    <section class="stat-card"><span class="stat-icon amber"><Icon Name="clock" /></span><div><span class="stat-label">Offline</span><strong>@devices.Count(d => !d.Disabled && !Gateway.Online(d.Id))</strong><small>Waiting for a connection</small></div></section>
-    <section class="stat-card"><span class="stat-icon blue"><Icon Name="terminal" /></span><div><span class="stat-label">Active sessions</span><strong>@sessions.Count(s => s.Ended is null)</strong><small>Remote operations in progress</small></div></section>
+
+<div class="dashboard-stats-grid">
+    <StatCard Label="Connected devices" Value="@snapshot.ConnectedDevices.ToString()" IconName="monitor"
+              Tone="green" Detail="@Ui.Plural(snapshot.TotalDevices, "{0} managed device", "{0} managed devices")">
+        <a href="/devices?status=offline">@Ui["{0} offline", snapshot.OfflineDevices]</a>
+        <span>· @Ui.Plural(snapshot.BlockedDevices, "{0} blocked device", "{0} blocked devices")</span>
+    </StatCard>
+    <StatCard Label="Average CPU" Value="@MetricValue(snapshot.CpuPercent)" IconName="cpu"
+              Detail="Average CPU used per device">
+        <span>@Ui["{0}/{1} reporting", snapshot.CpuReportingDevices, snapshot.ConnectedDevices]</span>
+    </StatCard>
+    <StatCard Label="Average memory" Value="@MetricValue(snapshot.MemoryPercent)" IconName="memory"
+              Tone="blue" Detail="Average memory used per device">
+        <span>@Ui["{0}/{1} reporting", snapshot.MemoryReportingDevices, snapshot.ConnectedDevices] · @Ui["{0} total RAM", DisplayFormat.Bytes(snapshot.MemoryTotal)]</span>
+    </StatCard>
+    <StatCard Label="Average storage" Value="@MetricValue(snapshot.StoragePercent)" IconName="disk"
+              Tone="blue" Detail="Average storage used per device">
+        <span>@Ui["{0}/{1} reporting", snapshot.StorageReportingDevices, snapshot.ConnectedDevices] · @Ui["{0} total capacity", DisplayFormat.Bytes(snapshot.StorageTotal)]</span>
+    </StatCard>
+    <StatCard Label="Nearly full devices" Value="@(snapshot.StorageReportingDevices > 0 ? snapshot.NearlyFullDevices.ToString() : "—")"
+              IconName="warning" Tone="amber" Detail="At least one disk is 90% used or more">
+        <span>@Ui.Plural(snapshot.NearlyFullVolumes, "{0} volume needs attention", "{0} volumes need attention")</span>
+    </StatCard>
+    @if (Can(Permissions.Sessions))
+    {
+        <StatCard Label="Active sessions" Value="@snapshot.ActiveSessions.ToString()" IconName="terminal"
+                  Tone="teal" Detail="Remote operations in progress">
+            <a class="text-link" href="/logs?tab=sessions">@Ui["Open sessions"] <Icon Name="arrow" /></a>
+        </StatCard>
+    }
+    else
+    {
+        <StatCard Label="Needs attention" Value="@snapshot.AttentionDevices.ToString()" IconName="warning"
+                  Tone="amber" Detail="Connected devices with resource pressure">
+            <span>@Ui["CPU ≥85% · memory ≥90% · disks ≥90%"]</span>
+        </StatCard>
+    }
 </div>
-<div class="health-strip"><span class="health-symbol"><Icon Name="@(devices.Count == 0 ? "shield" : "check")" /></span><div><strong>@(devices.Count == 0 ? "Your workspace is ready." : Gateway.OnlineCount == devices.Count ? "Your fleet is all connected." : $"{Gateway.OnlineCount} of {devices.Count} devices connected.")</strong><span> @(devices.Count == 0 ? "Add your first device to bring it all together." : "Connection status updates automatically every few seconds.")</span></div><span class="live-label"><span class="status-dot green-dot"></span> Live</span></div>
-<div class="dashboard-grid"><section class="panel fleet-panel"><div class="panel-header"><div><h2>Your devices <span class="count-badge">@devices.Count</span></h2><p>A quick view of your managed fleet.</p></div><a class="text-link" href="/devices">View all <Icon Name="arrow" /></a></div>
-@if (devices.Count == 0) { <EmptyState Title="A home for every device" Text="Connect a Windows or Linux device with the MeshAll agent. Its status and inventory will appear here automatically.">@if (Can(Permissions.Enroll)) { <a href="/enroll" class="button primary"><Icon Name="plus" />Add your first device</a> }</EmptyState> }
-else { <FleetTable Items="devices.Take(6)" Groups="groups" /> }
-<div class="panel-foot"><span><span class="status-dot green-dot"></span> Encrypted agent connections supported</span><span>@devices.Count @(devices.Count == 1 ? "device" : "devices")</span></div>
-</section><section class="panel activity-panel"><div class="panel-header"><div><h2>Recent activity</h2><p>What’s happening in your workspace.</p></div><Icon Name="clock" /></div>
-@if (audit.Count == 0) { <EmptyState Icon="clock" Title="A fresh activity log" Text="Device connections and workspace changes will show up here." /> }
-else { <ol class="activity-list">@foreach (var item in audit.Take(5)) { <li><span class="activity-symbol"><Icon Name="@(item.Action.Contains("connect", StringComparison.OrdinalIgnoreCase) ? "activity" : "shield")" /></span><div><strong>@item.Action</strong><p>@item.Target</p><small>@item.Actor <span>·</span> @Ago(item.Time)</small></div></li> }</ol> }
-<a class="activity-footer text-link" href="/audit">Open audit log <Icon Name="arrow" /></a></section></div>
-<div class="bottom-grid"><section class="panel"><div class="panel-header"><div><h2>Device groups</h2><p>A little organization goes a long way.</p></div><a class="text-link" href="/groups">Manage groups <Icon Name="arrow" /></a></div><div class="group-summary">@foreach (var group in groups.Take(4)) { <a href="@($"/devices?group={group.Id}")"><span class="group-icon"><Icon Name="layers" /></span><span><strong>@group.Name</strong><small>@devices.Count(d => d.GroupId == group.Id) devices</small></span><Icon Name="arrow" /></a> }</div></section>
-<section class="platform-panel"><span class="platform-icon"><Icon Name="windows" /></span><div><h2>Windows, meet MeshAll.</h2><p>A native agent, a C# control plane, and your devices—all from a clearer Blazor workspace.</p>@if (Can(Permissions.Enroll)) { <a href="/enroll" class="text-link">Set up a Windows device <Icon Name="arrow" /></a> }</div></section></div>
-@code {
-    private List<DeviceInfo> devices = []; private List<GroupInfo> groups = []; private List<AuditInfo> audit = []; private List<SessionInfo> sessions = [];
-    protected override Task LoadAsync() { devices = Store.Devices(); groups = Store.Groups(); audit = Can(Permissions.Audit)?Store.AuditLog(5):[]; sessions = Can(Permissions.Sessions)?Store.Sessions():[]; return Task.CompletedTask; }
+
+<div class="dashboard-insights-grid">
+    <section class="panel dashboard-insights" aria-label="@Ui["Device health signals"]">
+        <div class="panel-header">
+            <div>
+                <h2>@Ui["Where to focus"]</h2>
+            </div>
+            <span class="health-badge @(snapshot.AttentionDevices > 0 ? "warning" : "healthy")">
+                @Ui.Plural(snapshot.AttentionDevices, "{0} device needs attention", "{0} devices need attention")
+            </span>
+        </div>
+        <div class="pressure-signals">
+            <button type="button" @onclick='() => SetAttentionAsync("cpu")'>
+                <Icon Name="cpu" /><strong>@snapshot.HighCpuDevices</strong>
+                <span>@Ui["High CPU"]<small>@Ui["85% or higher"]</small></span>
+            </button>
+            <button type="button" @onclick='() => SetAttentionAsync("memory")'>
+                <Icon Name="memory" /><strong>@snapshot.HighMemoryDevices</strong>
+                <span>@Ui["High memory"]<small>@Ui["90% or higher"]</small></span>
+            </button>
+            <button type="button" @onclick='() => SetAttentionAsync("disk")'>
+                <Icon Name="disk" /><strong>@snapshot.NearlyFullDevices</strong>
+                <span>@Ui["Nearly full disks"]<small>@Ui["90% or higher"]</small></span>
+            </button>
+        </div>
+        <div class="dashboard-note">
+            <Icon Name="clock" />
+            <p>@Ui["Each device counts equally. Updated every 5 seconds; samples older than 2 minutes are excluded."]
+                @if (snapshot.IncompleteDevices > 0)
+                {
+                    <strong>@Ui.Plural(snapshot.IncompleteDevices, "{0} device has incomplete readings.", "{0} devices have incomplete readings.")</strong>
+                }
+            </p>
+        </div>
+    </section>
+
+    <section class="panel dashboard-platforms" aria-label="@Ui["Connected platforms"]">
+        <div class="panel-header">
+            <div><h2>@Ui["Connected platforms"]</h2></div>
+            <Icon Name="layers" />
+        </div>
+        @if (snapshot.ConnectedDevices == 0)
+        {
+            <EmptyState Title="Waiting for devices" Text="Connected agents will appear here automatically." />
+        }
+        else
+        {
+            <ul class="platform-breakdown">
+                @foreach (IGrouping<string, DeviceResourceInfo> platform in snapshot.Devices.GroupBy(device => device.Platform).OrderByDescending(group => group.Count()))
+                {
+                    <li>
+                        <span class="device-symbol @(platform.Key == "Windows" ? "blue" : "slate")">
+                            <Icon Name="@(platform.Key == "Windows" ? "windows" : "server")" />
+                        </span>
+                        <strong>@platform.Key</strong><span>@Ui["{0} connected", platform.Count()]</span>
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+</div>
+
+<div class="section-heading">
+    <div><h2>@Ui["Connected devices"]</h2></div>
+    <a class="text-link" href="/devices">@Ui["Manage all devices"] <Icon Name="arrow" /></a>
+</div>
+<PagedTable Result="Rows" Label="Connected devices" ItemKey="device => device.Id" CssClass="resource-table"
+            PageChanged="ChangePageAsync" PageSizeChanged="ChangePageSizeAsync"
+            EmptyTitle="No connected devices to show" EmptyText="Try a different filter or connect an enrolled agent.">
+    <Toolbar>
+        <SearchField Value="@Search" ValueChanged="ChangeSearchAsync" Label="Search connected devices"
+                     Placeholder="Search device, address, platform, or group…" />
+        <SelectField TValue="string" Value="@attention" Changed="AttentionChangedAsync" aria-label="@Ui["Resource filter"]">
+            <option value="all">@Ui["All connected devices"]</option>
+            <option value="attention">@Ui["Needs attention"]</option>
+            <option value="cpu">@Ui["High CPU"]</option>
+            <option value="memory">@Ui["High memory"]</option>
+            <option value="disk">@Ui["Nearly full disks"]</option>
+            <option value="unknown">@Ui["Partial / stale data"]</option>
+        </SelectField>
+        <SelectField TValue="string" Value="@sort" Changed="SortChangedAsync" aria-label="@Ui["Sort connected devices"]">
+            <option value="attention">@Ui["Attention first"]</option>
+            <option value="cpu">@Ui["Highest CPU"]</option>
+            <option value="memory">@Ui["Highest memory"]</option>
+            <option value="disk">@Ui["Fullest disk"]</option>
+            <option value="name">@Ui["Device name"]</option>
+        </SelectField>
+    </Toolbar>
+    <Header>
+        <th>@Ui["Device"]</th><th>@Ui["CPU"]</th><th>@Ui["Memory"]</th><th>@Ui["Fullest disk"]</th><th>@Ui["Last sample"]</th><th>@Ui["Health"]</th><th></th>
+    </Header>
+    <RowTemplate Context="device">
+        <td>
+            <a class="device-link" href="@($"/devices/{device.Id}")">
+                <span class="device-symbol @(device.Platform == "Windows" ? "blue" : "slate")">
+                    <Icon Name="@(device.Platform == "Windows" ? "windows" : "server")" />
+                </span>
+                <span><strong>@device.Name</strong><small>@device.Address · @Ui.GroupName(device.GroupName, device.GroupId)</small></span>
+            </a>
+        </td>
+        <td><ResourceMeter Label="CPU" Percent="device.CpuPercent(snapshot.SampledAt)" Compact="true"
+                           Detail="@Ui.Plural(device.Cores, "{0} logical core", "{0} logical cores")" /></td>
+        <td><ResourceMeter Label="Memory" Percent="device.MemoryPercent(snapshot.SampledAt)" Compact="true"
+                           WarningAt="90" Detail="@MemoryDescription(device)" /></td>
+        <td><ResourceMeter Label="@(device.BusiestDisk?.Name ?? "Disk")" Percent="device.DiskPercent(snapshot.SampledAt)"
+                           Compact="true" WarningAt="90" Detail="@DiskDescription(device)" /></td>
+        <td class="muted nowrap">@DisplayFormat.RelativeTime(device.LastSampleAt)</td>
+        <td><span class="health-badge @ResourceUsage.Tone(device.Health(snapshot.SampledAt))">@ResourceUsage.Label(device.Health(snapshot.SampledAt))</span></td>
+        <td><a class="row-action" href="@($"/devices/{device.Id}")" aria-label="@Ui["Open {0}", device.Name]"><Icon Name="arrow" /></a></td>
+    </RowTemplate>
+</PagedTable>
+
+@if (Can(Permissions.Audit) && recentActivity.Count > 0)
+{
+    <section class="panel dashboard-recent">
+        <div class="panel-header">
+            <h2>@Ui["Recent activity"]</h2><a class="text-link" href="/logs?tab=audit">@Ui["Open audit log"] <Icon Name="arrow" /></a>
+        </div>
+        <ol class="activity-list">
+            @foreach (AuditInfo entry in recentActivity)
+            {
+                <li>
+                    <span class="activity-symbol"><Icon Name="activity" /></span>
+                    <div><strong>@Ui.Message(entry.Action)</strong><p>@entry.Target</p><small>@entry.Actor · @DisplayFormat.RelativeTime(entry.Time)</small></div>
+                </li>
+            }
+        </ol>
+    </section>
 }

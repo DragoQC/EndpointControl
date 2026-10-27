@@ -4,6 +4,9 @@
 **/agent-state.json
 **/appsettings.Local.json
 artifacts/
+*.msi
+*.mst
+*.cab
 .vs/
 .idea/
 *.user

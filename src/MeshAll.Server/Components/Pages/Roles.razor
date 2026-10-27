@@ -1,31 +1,125 @@
 @page "/roles"
 @attribute [Authorize(Policy = Permissions.Roles)]
-@inherits PageBase
-<PageTitle>Roles and capabilities · MeshAll</PageTitle>
-<div class="page-heading"><div><div class="breadcrumb">Workspace / Roles</div><h1>Access, capability by capability.</h1><p class="muted">Create custom roles and assign them to users.</p></div><button class="button primary" @onclick="NewRole">Create role</button></div>
+@inherits PagedPageBase<RoleInfo>
+
+<PageTitle>@Ui["Roles and capabilities"] · @ProductBrand.Name</PageTitle>
+<PageHeader Title="Roles">
+    <Actions><button class="button primary" @onclick="NewRole">@Ui["Create role"]</button></Actions>
+</PageHeader>
 <Notice Error="@Error" Success="@Success" />
-@if(editing){
-    <section class="panel editor-panel"><h2>@(editId is null?"New role":"Edit role")</h2><form @onsubmit="Save" @onsubmit:preventDefault>
-        <label>Role name<input @bind="name" maxlength="70" required /></label>
-        <fieldset><legend>Capabilities</legend><div class="grid grid-cols-1 md:grid-cols-2 gap-3 my-4">
-        @foreach(var permission in Permissions.All){<label class="checkbox-label"><input type="checkbox" checked="@selected.Contains(permission.Id)" @onchange="e => Select(permission.Id,e)" />@permission.Label</label>}
-        </div></fieldset>
-        <p class="muted small-text">Desktop control also grants desktop viewing. File changes also grant file browsing. Remote tools include inventory access. User and role management are privileged capabilities.</p>
-        <div class="form-actions"><button type="button" class="button" @onclick="() => editing=false">Cancel</button><button class="button primary" disabled="@Busy">Save role</button></div>
-    </form></section>
+
+@if (editing)
+{
+    <section class="panel editor-panel">
+        <h2>@Ui[editId is null ? "New role" : "Edit role"]</h2>
+        <form @onsubmit="Save" @onsubmit:preventDefault>
+            <label>@Ui["Role name"]<input @bind="name" maxlength="70" required /></label>
+            <fieldset class="permission-fieldset">
+                <legend>@Ui["Capabilities"]</legend>
+                <div class="permission-grid">
+                    @foreach ((string Id, string Label) permission in Permissions.All.Where(permission => Can(permission.Id)))
+                    {
+                        <label class="checkbox-label">
+                            <input type="checkbox" checked="@selected.Contains(permission.Id)" @onchange="arguments => Select(permission.Id, arguments)" />
+                            @Ui[permission.Label]
+                        </label>
+                    }
+                </div>
+            </fieldset>
+            <p class="muted small-text">@Ui["Required viewing capabilities are added automatically when granting control or write access."]</p>
+            <div class="form-actions">
+                <button type="button" class="button" @onclick="() => editing = false">@Ui["Cancel"]</button>
+                <button class="button primary" disabled="@Busy">@Ui["Save role"]</button>
+            </div>
+        </form>
+    </section>
 }
-<section class="panel"><div class="table-scroll"><table><thead><tr><th>Role</th><th>Capabilities</th><th>Users</th><th></th></tr></thead><tbody>
-@foreach(var role in roles){<tr><td><strong>@role.Name</strong>@if(role.BuiltIn){<span class="muted small-text"> Built-in</span>}</td><td>@role.Permissions.Length</td><td>@users.Count(u=>u.Role==role.Id)</td><td><div class="inline-actions">@if(role.Id!="Admin"){<button class="link-button" @onclick="() => Edit(role)">Edit</button>@if(!role.BuiltIn){<button class="link-button danger-text" @onclick="() => Delete(role)">Delete</button>}}else{<span class="muted small-text">Always full access</span>}</div></td></tr>}
-</tbody></table></div></section>
-@code{
-    protected override string? ViewPermission=>Permissions.Roles;
-    protected override string? ChangePermission=>Permissions.Roles;
-    private List<RoleInfo> roles=[];private List<UserInfo> users=[];private HashSet<string> selected=[];
-    private bool editing;private string? editId;private string name="";
-    protected override Task LoadAsync(){roles=Store.Roles();users=Store.Users();return Task.CompletedTask;}
-    private void NewRole(){editId=null;name="";selected=[Permissions.Inventory];editing=true;}
-    private void Edit(RoleInfo role){editId=role.Id;name=role.Name;selected=role.Permissions.ToHashSet(StringComparer.Ordinal);editing=true;}
-    private void Select(string permission,ChangeEventArgs e){if(e.Value is true)selected.Add(permission);else selected.Remove(permission);}
-    private Task Save()=>Act(()=>{Store.SaveRole(editId,name,selected);Store.Audit(CurrentUser!.Name,"Role saved",name);editing=false;},"Role saved. Members must sign in again to use their updated permissions.");
-    private Task Delete(RoleInfo role)=>Act(()=>{Store.DeleteRole(role.Id);Store.Audit(CurrentUser!.Name,"Role deleted",role.Name);},"Role deleted.");
+
+<PagedTable Result="Rows" Label="Roles" ItemKey="role => role.Id"
+            PageChanged="ChangePageAsync" PageSizeChanged="ChangePageSizeAsync">
+    <Header><th>@Ui["Role"]</th><th>@Ui["Capabilities"]</th><th>@Ui["Users"]</th><th></th></Header>
+    <RowTemplate Context="role">
+        <td class="role-name">
+            <strong>@Ui.RoleName(role.Name, role.BuiltIn)</strong>
+            @if (role.BuiltIn)
+            {
+                <span class="muted small-text">@Ui["Built-in"]</span>
+            }
+        </td>
+        <td>@role.Permissions.Length</td>
+        <td>@userCounts.GetValueOrDefault(role.Id)</td>
+        <td>
+            <div class="inline-actions">
+                @if (role.Id == "Admin")
+                {
+                    <span class="muted small-text">@Ui["Always full access"]</span>
+                }
+                else if (Store.CanDelegateRole(CurrentUser, role))
+                {
+                    <button class="link-button" @onclick="() => Edit(role)">@Ui["Edit"]</button>
+                    @if (!role.BuiltIn)
+                    {
+                        <button class="link-button danger-text" @onclick="() => Delete(role)">@Ui["Delete"]</button>
+                    }
+                }
+            </div>
+        </td>
+    </RowTemplate>
+</PagedTable>
+
+@code
+{
+    protected override string? ViewPermission => Permissions.Roles;
+    protected override string? ChangePermission => Permissions.Roles;
+
+    private Dictionary<string, long> userCounts = [];
+    private HashSet<string> selected = [];
+    private bool editing;
+    private string? editId;
+    private string name = "";
+    protected override PageResult<RoleInfo> ReadPage(PageRequest request)
+    {
+        userCounts = Store.UserCountsByRole();
+        return Store.RolePage(request);
+    }
+
+    private void NewRole()
+    {
+        editId = null;
+        name = "";
+        selected = Can(Permissions.Inventory) ? [Permissions.Inventory] : [];
+        editing = true;
+    }
+
+    private void Edit(RoleInfo role)
+    {
+        editId = role.Id;
+        name = role.Name;
+        selected = role.Permissions.ToHashSet(StringComparer.Ordinal);
+        editing = true;
+    }
+
+    private void Select(string permission, ChangeEventArgs arguments)
+    {
+        if (arguments.Value is true)
+        {
+            selected.Add(permission);
+        }
+        else
+        {
+            selected.Remove(permission);
+        }
+    }
+
+    private Task Save() => Act(() =>
+    {
+        Store.ManageRole(CurrentUser!, editId, name, selected);
+        Store.Audit(CurrentUser!.Name, "Role saved", name);
+        editing = false;
+    }, "Role saved. Members must sign in again to use their updated permissions.");
+    private Task Delete(RoleInfo role) => Act(() =>
+    {
+        Store.ManageDeleteRole(CurrentUser!, role.Id);
+        Store.Audit(CurrentUser!.Name, "Role deleted", role.Name);
+    }, "Role deleted.");
 }

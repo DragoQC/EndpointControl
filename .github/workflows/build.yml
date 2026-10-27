@@ -1,4 +1,4 @@
-name: Build MeshAll
+name: Build EndpointControl
 on:
   push:
   pull_request:
@@ -16,11 +16,19 @@ jobs:
         with:
           node-version: 24
       - run: npm --prefix src/MeshAll.Server ci
+      - run: sudo apt-get update && sudo apt-get install -y wixl msitools
+      - run: npm --prefix src/MeshAll.Server run format:check
       - run: npm --prefix src/MeshAll.Server run build
       - run: dotnet build MeshAll.slnx -c Release
+      - run: dotnet format whitespace MeshAll.slnx --verify-no-changes --no-restore
+      - run: dotnet format style MeshAll.slnx --verify-no-changes --no-restore --diagnostics IDE0005 IDE0008 IDE0011 --severity info
       - run: dotnet test tests/MeshAll.Tests/MeshAll.Tests.csproj -c Release --no-build
-      - run: node --test tests/desktop-session.test.mjs tests/notifybar.test.cjs
+      - run: node --test tests/desktop-session.test.mjs tests/remote-session.test.mjs tests/screen-consent.test.cjs tests/consent-dialog.test.cjs tests/notifybar.test.cjs tests/inventory.test.cjs
       - run: bash -n install.sh
+      - run: python3 tests/source_packaging.py
+      - run: python3 tests/branding.py
+      - run: python3 -O tests/native_artifact_import.py
+      - run: python3 tests/msi_packaging.py
   native-windows:
     runs-on: windows-latest
     steps:
@@ -36,7 +44,7 @@ jobs:
         run: msbuild components/agent-native/meshservice/MeshService-2022.vcxproj /m /p:Configuration=Release /p:Platform=x64
       - uses: actions/upload-artifact@v4
         with:
-          name: MeshAll-native-agent-win-x64
+          name: EndpointControl-native-agent-win-x64
           path: |
             components/agent-native/**/MeshService64.exe
             components/agent-native/**/MeshAllAgent.exe

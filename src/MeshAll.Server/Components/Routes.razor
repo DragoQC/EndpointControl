@@ -1,9 +1,17 @@
 <Router AppAssembly="typeof(Program).Assembly">
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)">
-            <NotAuthorized><RedirectToLogin /></NotAuthorized>
+            <NotAuthorized>
+                <RedirectToLogin />
+            </NotAuthorized>
         </AuthorizeRouteView>
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
-    <NotFound><LayoutView Layout="typeof(MainLayout)"><h1>Page not found</h1><p>This page doesn’t exist.</p><a class="button primary" href="/">Go to dashboard</a></LayoutView></NotFound>
+    <NotFound>
+        <LayoutView Layout="typeof(MainLayout)">
+            <h1>@Ui["Page not found"]</h1>
+            <p>@Ui["This page doesn’t exist."]</p>
+            <a class="button primary" href="/">@Ui["Go to dashboard"]</a>
+        </LayoutView>
+    </NotFound>
 </Router>

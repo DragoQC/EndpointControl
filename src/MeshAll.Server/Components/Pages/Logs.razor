@@ -1,0 +1,43 @@
+@page "/logs"
+@attribute [Authorize(Policy = Permissions.LogsPolicy)]
+@inherits PageBase
+@inject NavigationManager Navigation
+
+<PageTitle>@Ui["Logs"] · @ProductBrand.Name</PageTitle>
+<PageHeader Title="Logs" />
+<Notice Error="@Error" />
+<div class="tab-bar" role="navigation" aria-label="@Ui["Log views"]">
+    @if (Can(Permissions.Sessions))
+    {
+        <button type="button" class="@(selected == "sessions" ? "active" : "")" aria-current="@(selected == "sessions" ? "page" : null)" @onclick='() => SelectTab("sessions")'>@Ui["Sessions"]</button>
+    }
+    @if (Can(Permissions.Audit))
+    {
+        <button type="button" class="@(selected == "audit" ? "active" : "")" aria-current="@(selected == "audit" ? "page" : null)" @onclick='() => SelectTab("audit")'>@Ui["Audit log"]</button>
+    }
+</div>
+@if (selected == "sessions" && Can(Permissions.Sessions))
+{
+    <SessionLogs @key="selected" />
+}
+else if (selected == "audit" && Can(Permissions.Audit))
+{
+    <AuditLogs @key="selected" />
+}
+
+@code
+{
+    [SupplyParameterFromQuery(Name = "tab")] public string? Tab { get; set; }
+    protected override string? ViewPermission => null;
+    private string selected = "sessions";
+
+    protected override Task LoadAsync()
+    {
+        selected = Tab == "audit" && Can(Permissions.Audit) ? "audit"
+            : Can(Permissions.Sessions) ? "sessions" : "audit";
+        return Task.CompletedTask;
+    }
+
+    protected override Task OnParametersSetAsync() => LoadAsync();
+    private void SelectTab(string tab) => Navigation.NavigateTo("/logs?tab=" + tab, replace: true);
+}

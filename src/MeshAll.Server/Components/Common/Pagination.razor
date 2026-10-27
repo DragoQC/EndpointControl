@@ -1,0 +1,68 @@
+<nav class="pagination" aria-label="@Ui.Message(Label)">
+    <span class="pagination-summary" aria-live="polite">@Ui["{0}–{1} of {2}", FirstItem, LastItem, TotalCount]</span>
+    <label class="pagination-size">
+        @Ui["Rows per page"]
+        <SelectField TValue="int" Value="PageSize" Changed="ChangeSizeAsync" aria-label="@Ui["Rows per page"]">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+        </SelectField>
+    </label>
+    <div class="pagination-controls">
+        <button class="button small" type="button" disabled="@(PageNumber <= 1)"
+                @onclick="() => PageChanged.InvokeAsync(PageNumber - 1)">@Ui["Previous"]</button>
+        <label class="pagination-page">
+            @Ui["Page"]
+            <input type="number" min="1" max="@TotalPages" value="@PageNumber"
+                   aria-label="@Ui["Page number"]" @onchange="ChangePageAsync" />
+            <span>@Ui["of"] @TotalPages</span>
+        </label>
+        <button class="button small" type="button" disabled="@(PageNumber >= TotalPages)"
+                @onclick="() => PageChanged.InvokeAsync(PageNumber + 1)">@Ui["Next"]</button>
+    </div>
+</nav>
+
+@code
+{
+    [Parameter]
+    public string Label { get; set; } = "Results pages";
+
+    [Parameter]
+    public long TotalCount { get; set; }
+
+    [Parameter]
+    public int PageNumber { get; set; } = 1;
+
+    [Parameter]
+    public int PageSize { get; set; } = PageRequest.MaximumSize;
+
+    [Parameter]
+    public EventCallback<int> PageChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<int> PageSizeChanged { get; set; }
+    private long TotalPages => Math.Max(1, (TotalCount + PageSize - 1) / PageSize);
+    private long FirstItem => TotalCount == 0 ? 0 : ((long)PageNumber - 1) * PageSize + 1;
+    private long LastItem => Math.Min(TotalCount, (long)PageNumber * PageSize);
+
+    private Task ChangePageAsync(ChangeEventArgs arguments)
+    {
+        if (!int.TryParse(arguments.Value?.ToString(), out int requestedPage))
+        {
+            return Task.CompletedTask;
+        }
+
+        int page = (int)Math.Clamp(requestedPage, 1, Math.Min(int.MaxValue, TotalPages));
+        return PageChanged.InvokeAsync(page);
+    }
+
+    private Task ChangeSizeAsync(ChangeEventArgs arguments)
+    {
+        if (!int.TryParse(arguments.Value?.ToString(), out int requestedSize))
+        {
+            return Task.CompletedTask;
+        }
+
+        return PageSizeChanged.InvokeAsync(Math.Clamp(requestedSize, 1, PageRequest.MaximumSize));
+    }
+}

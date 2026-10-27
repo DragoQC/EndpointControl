@@ -1,0 +1,16 @@
+@inject NavigationManager Navigation
+
+<form action="/culture" method="post" data-enhance="false" class="language-switcher">
+    <AntiforgeryToken />
+    <input type="hidden" name="returnUrl" value="@ReturnUrl" />
+    <SelectField TValue="string" Value="@Ui.Culture" name="culture" data-language-picker aria-label="@Ui["Language"]">
+        <option value="en" selected="@(Ui.Culture == "en")" lang="en">English</option>
+        <option value="fr" selected="@(Ui.Culture == "fr")" lang="fr">Français</option>
+    </SelectField>
+    <noscript><button type="submit" class="button small">@Ui["Apply language"]</button></noscript>
+</form>
+
+@code
+{
+    private string ReturnUrl => Navigation.ToAbsoluteUri(Navigation.Uri).PathAndQuery;
+}

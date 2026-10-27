@@ -1,0 +1,61 @@
+@typeparam TItem
+
+@if (Items.Count == 0)
+{
+    @if (EmptyContent is not null)
+    {
+        @EmptyContent
+    }
+    else
+    {
+        <EmptyState Title="@EmptyTitle" Text="@EmptyText" />
+    }
+}
+else
+{
+    <div class="table-scroll">
+        <table class="@CssClass" aria-label="@Ui[Label]">
+            <thead>
+                <tr>@Header</tr>
+            </thead>
+            <tbody>
+                @foreach (TItem item in Items)
+                {
+                    <tr @key="GetKey(item)">@RowTemplate(item)</tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code
+{
+    [Parameter, EditorRequired]
+    public IReadOnlyList<TItem> Items { get; set; } = [];
+
+    [Parameter, EditorRequired]
+    public RenderFragment Header { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public RenderFragment<TItem> RowTemplate { get; set; } = default!;
+
+    [Parameter]
+    public Func<TItem, object>? ItemKey { get; set; }
+
+    [Parameter]
+    public string? CssClass { get; set; }
+
+    [Parameter]
+    public string Label { get; set; } = "Results";
+
+    [Parameter]
+    public string EmptyTitle { get; set; } = "No results to show";
+
+    [Parameter]
+    public string EmptyText { get; set; } = "Try a different filter.";
+
+    [Parameter]
+    public RenderFragment? EmptyContent { get; set; }
+
+    private object GetKey(TItem item) => ItemKey?.Invoke(item) ?? item!;
+}

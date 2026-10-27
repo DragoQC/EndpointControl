@@ -2,29 +2,76 @@
 @attribute [Authorize(Policy = Permissions.Settings)]
 @inherits PageBase
 @inject IConfiguration Config
-<PageTitle>Settings · MeshAll</PageTitle>
-<div class="page-heading"><div><div class="breadcrumb">Workspace / Settings</div><h1>Make it your workspace.</h1><p class="muted">Workspace identity and instance-wide security.</p></div></div>
+
+<PageTitle>@Ui["App settings"] · @ProductBrand.Name</PageTitle>
+<PageHeader Title="App settings" />
 <Notice Error="@Error" Success="@Success" />
-<section class="health-strip"><Icon Name="server" /><div><strong>@Gateway.Status</strong><span>C# orchestration and native agent source are included in this repository.</span></div><a class="text-link ml-auto" href="/install">Install on Debian 13</a></section>
-<div class="settings-grid"><section class="panel editor-panel"><h2>Workspace</h2><form @onsubmit="Save" @onsubmit:preventDefault>
-    <label>Workspace name<input @bind="siteName" maxlength="70" required /></label>
-    <label>Public server URL<input @bind="publicUrl" type="url" required /><small>Used in agent enrollment. Use the HTTPS URL your devices can reach.</small></label>
-    <fieldset class="mb-5"><legend class="font-semibold mb-3">Account security</legend>
-        <label class="checkbox-label"><input type="checkbox" @bind="requireTwoFactor" />Require two-factor authentication for all users</label>
-        <p class="muted small-text mt-3">At their next sign-in, users without an authenticator must set one up before entering the workspace. Existing signed-in sessions continue. Users may enable 2FA in their profile even when this setting is off.</p>
-    </fieldset>
-    <button class="button primary" disabled="@Busy">Save settings</button>
-</form></section>
-<section class="panel editor-panel"><h2>About this server</h2><dl class="details-grid"><dt>Version</dt><dd>@Wire.Version</dd><dt>Runtime</dt><dd>.NET @System.Environment.Version</dd><dt>Storage</dt><dd>SQLite, WAL mode</dd><dt>Agent transport</dt><dd>Authenticated WebSocket</dd><dt>Data directory</dt><dd class="break-word">@Store.DataDirectory</dd><dt>Devices connected</dt><dd>@Gateway.OnlineCount</dd></dl><p class="muted small-text">Back up the entire data directory while the server is stopped. It includes the database, protected authenticator keys and session encryption keys.</p><a class="text-link" href="/account/security" data-enhance-nav="false">Your profile security</a></section></div>
-@code{
-    protected override string? ViewPermission=>Permissions.Settings;
-    protected override string? ChangePermission=>Permissions.Settings;
-    private string siteName="",publicUrl="";private bool loaded,requireTwoFactor;
-    protected override Task LoadAsync(){if(!loaded){siteName=Store.Setting("siteName",Config["MeshAll:SiteName"]??"My workspace");publicUrl=Store.Setting("publicUrl",Config["MeshAll:PublicUrl"]??"http://localhost:5188");requireTwoFactor=Store.RequireTwoFactor;loaded=true;}return Task.CompletedTask;}
-    private Task Save()=>Act(()=>{
-        if(string.IsNullOrWhiteSpace(siteName)||siteName.Length>70)throw new InvalidOperationException("Enter a workspace name of 1–70 characters.");
-        if(!Uri.TryCreate(publicUrl,UriKind.Absolute,out var uri)||uri.Scheme is not ("http" or "https")||!string.IsNullOrEmpty(uri.UserInfo)||uri.AbsolutePath!="/"||!string.IsNullOrEmpty(uri.Query)||!string.IsNullOrEmpty(uri.Fragment))throw new InvalidOperationException("Enter an HTTP or HTTPS origin without a path or credentials.");
-        var previous=Store.RequireTwoFactor;Store.Setting("siteName",siteName.Trim(),true);Store.Setting("publicUrl",uri.GetLeftPart(UriPartial.Authority),true);Store.Setting("requireTwoFactor",requireTwoFactor?"true":"false",true);
-        Store.Audit(CurrentUser!.Name,"Workspace settings saved","MeshAll");if(previous!=requireTwoFactor)Store.Audit(CurrentUser.Name,requireTwoFactor?"Two-factor enforcement enabled":"Two-factor enforcement disabled","Account security","Applies at next sign-in");
-    },"Settings saved. Security enforcement applies at the next sign-in.");
+
+<div class="settings-grid">
+    <section class="panel editor-panel">
+        <h2>@Ui["Server settings"]</h2>
+        <form @onsubmit="Save" @onsubmit:preventDefault>
+            <label>@Ui["Public server URL"]
+                <input @bind="publicUrl" type="url" required />
+                <small>@Ui["Used in agent enrollment. Use the HTTPS URL your devices can reach."]</small>
+            </label>
+            <fieldset class="security-fieldset">
+                <legend>@Ui["Account security"]</legend>
+                <label class="checkbox-label"><input type="checkbox" @bind="requireTwoFactor" />@Ui["Require two-factor authentication for all users"]</label>
+                <p class="muted small-text">@Ui["Applies at the next sign-in. Current sessions remain active."]</p>
+            </fieldset>
+            <button class="button primary" disabled="@Busy">@Ui["Save settings"]</button>
+        </form>
+    </section>
+    <section class="panel editor-panel">
+        <h2>@Ui["About this server"]</h2>
+        <dl class="details-grid">
+            <dt>@Ui["Version"]</dt><dd>@Wire.Version</dd>
+            <dt>@Ui["Runtime"]</dt><dd>@Ui[".NET"] @System.Environment.Version</dd>
+            <dt>@Ui["Storage"]</dt><dd>@Ui["SQLite, WAL mode"]</dd>
+            <dt>@Ui["Agent transport"]</dt><dd>@Ui["Authenticated WebSocket"]</dd>
+            <dt>@Ui["Data directory"]</dt><dd class="break-word">@Store.DataDirectory</dd>
+            <dt>@Ui["Devices connected"]</dt><dd>@Gateway.OnlineCount</dd>
+        </dl>
+        <p class="muted small-text">@Ui["Back up the entire data directory while the server is stopped. It includes the database, protected authenticator keys and session encryption keys."]</p>
+        <a class="text-link" href="/account/security" data-enhance-nav="false">@Ui["Your profile security"]</a>
+    </section>
+</div>
+
+@code
+{
+    protected override string? ViewPermission => Permissions.Settings;
+    protected override string? ChangePermission => Permissions.Settings;
+
+    private string publicUrl = "";
+    private bool loaded;
+    private bool requireTwoFactor;
+    protected override Task LoadAsync()
+    {
+        if (!loaded)
+        {
+            publicUrl = Store.Setting("publicUrl", Config["MeshAll:PublicUrl"] ?? "http://localhost:5188");
+            requireTwoFactor = Store.RequireTwoFactor;
+            loaded = true;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task Save() => Act(() =>
+    {
+        if (!Uri.TryCreate(publicUrl, UriKind.Absolute, out Uri? uri) || uri.Scheme is not ("http" or "https") || !string.IsNullOrEmpty(uri.UserInfo) || uri.AbsolutePath != "/" || !string.IsNullOrEmpty(uri.Query) || !string.IsNullOrEmpty(uri.Fragment))
+        {
+            throw new InvalidOperationException("Enter an HTTP or HTTPS origin without a path or credentials.");
+        }
+
+        bool previouslyRequired = Store.RequireTwoFactor;
+        Store.Setting("publicUrl", uri.GetLeftPart(UriPartial.Authority), true);
+        Store.Setting("requireTwoFactor", requireTwoFactor ? "true" : "false", true);
+        Store.Audit(CurrentUser!.Name, "Workspace settings saved", ProductBrand.Name);
+        if (previouslyRequired != requireTwoFactor)
+        {
+            Store.Audit(CurrentUser.Name, requireTwoFactor ? "Two-factor enforcement enabled" : "Two-factor enforcement disabled", "Account security", "Applies at next sign-in");
+        }
+    }, "Settings saved. Security enforcement applies at the next sign-in.");
 }

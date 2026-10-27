@@ -1,0 +1,41 @@
+@inherits PagedPageBase<AuditInfo>
+
+<div class="section-heading">
+    <h2>@Ui["Audit log"]</h2>
+    @if (Can(Permissions.ExportAudit))
+    {
+        <a class="button" href="/api/audit/export" download><Icon Name="download" />@Ui["Export JSON"]</a>
+    }
+</div>
+<Notice Error="@Error" />
+
+<PagedTable Result="Rows" Label="Audit log" ItemKey="entry => entry.Id"
+            PageChanged="ChangePageAsync" PageSizeChanged="ChangePageSizeAsync"
+            EmptyTitle="No events to show" EmptyText="Try another search. New workspace activity will appear here.">
+    <Toolbar>
+        <SearchField Value="@Search" ValueChanged="ChangeSearchAsync" Label="Search audit log"
+                     Placeholder="Search events, people, or devices…" />
+        <span class="muted small-text">@Ui.Plural(Rows.TotalCount, "{0} event", "{0} events") · @Ui["Local time"]</span>
+    </Toolbar>
+    <Header>
+        <th>@Ui["Time"]</th>
+        <th>@Ui["Person"]</th>
+        <th>@Ui["Event"]</th>
+        <th>@Ui["Target"]</th>
+        <th>@Ui["Details"]</th>
+    </Header>
+    <RowTemplate Context="entry">
+        <td class="muted nowrap">@entry.Time.ToLocalTime().ToString("MMM d, HH:mm:ss")</td>
+        <td>@entry.Actor</td>
+        <td><strong>@Ui.Message(entry.Action)</strong></td>
+        <td>@entry.Target</td>
+        <td class="muted audit-detail">@Ui.Message(entry.Detail)</td>
+    </RowTemplate>
+</PagedTable>
+
+@code
+{
+    protected override string? ViewPermission => Permissions.Audit;
+
+    protected override PageResult<AuditInfo> ReadPage(PageRequest request) => Store.AuditPage(request, Search);
+}

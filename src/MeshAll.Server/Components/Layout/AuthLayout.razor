@@ -1,6 +1,8 @@
 @inherits LayoutComponentBase
 <main class="auth-shell flex min-h-screen flex-col items-center justify-center">
-    <a href="/" class="brand auth-brand"><span class="brand-mark">m</span>MeshAll<span class="brand-dot">.</span></a>
+    <div class="auth-header">
+        <a href="/" class="brand auth-brand"><BrandMark />@ProductBrand.Name</a>
+        <LanguageSwitcher />
+    </div>
     @Body
-    <p class="auth-footer">Your devices. One clear view.</p>
 </main>

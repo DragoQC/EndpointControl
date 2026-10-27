@@ -1,2 +1,8 @@
-<section class="panel editor-panel"><h2>Remote desktop</h2><p class="muted">Open the full-window desktop viewer.</p><a class="button primary mt-4" href="@($"/remote/{DeviceId}/desktop?connect=true")">Open desktop</a></section>
-@code { [Parameter] public string DeviceId { get; set; } = ""; [Parameter] public bool Supported { get; set; } }
+<RemoteViewer Id="@DeviceId" Tool="desktop" Inline="true" AutoConnect="true" @key="DeviceId" />
+
+@code
+{
+    [Parameter]
+    public string DeviceId { get; set; } = "";
+
+}

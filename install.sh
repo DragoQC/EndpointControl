@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# MeshAll: C# orchestration, Blazor Server/Tailwind UI, SQLite, native agents.
+# EndpointControl: C# orchestration, Blazor Server/Tailwind UI, SQLite, native agents.
 # Runs inside an existing Debian 13 machine. MIT for MeshAll's own installer.
 set -Eeuo pipefail
 umask 027
@@ -7,15 +7,15 @@ export DEBIAN_FRONTEND=noninteractive
 export DOTNET_CLI_TELEMETRY_OPTOUT=1
 export npm_config_fetch_retries=5
 export NODE_OPTIONS="${NODE_OPTIONS:-} --dns-result-order=ipv4first"
-REPO="${MESHALL_REPOSITORY:-https://github.com/DragoQC/MeshAll}"
+REPO="${MESHALL_REPOSITORY:-https://github.com/DragoQC/EndpointControl}"
 SOURCE=""; HOST="${MESHALL_HOST:-}"; PORT=5188; UPDATE=0; PULL=0; REMOVE_LEGACY=0; PROTOCOL_WORKER=1; CHECK=0
 PREFIX=/opt/meshall; DATA=/var/lib/meshall; CONFIG=/etc/meshall; WORK=""
-info(){ printf '\033[1;36m[MeshAll]\033[0m %s\n' "$*"; }
-die(){ printf '[MeshAll] %s\n' "$*" >&2; exit 1; }
+info(){ printf '\033[1;36m[EndpointControl]\033[0m %s\n' "$*"; }
+die(){ printf '[EndpointControl] %s\n' "$*" >&2; exit 1; }
 retry(){ local attempt; for attempt in 1 2 3 4; do if "$@"; then return 0; fi; sleep "$((attempt*3))"; done; return 1; }
 cleanup(){ [[ -z "$WORK" ]] || rm -rf -- "$WORK"; }
 trap cleanup EXIT
-trap 'printf "[MeshAll] Install failed at line %s. Check the error above; configuration and persistent data are preserved.\n" "$LINENO" >&2' ERR
+trap 'printf "[EndpointControl] Install failed at line %s. Check the error above; configuration and persistent data are preserved.\n" "$LINENO" >&2' ERR
 while (($#)); do
   case "$1" in
     --source) SOURCE="${2:?Missing source directory}"; shift 2 ;;
@@ -43,11 +43,11 @@ if [[ -z "$HOST" ]]; then HOST=$(hostname -I); HOST=${HOST%% *}; fi
 if [[ "$HOST" == *:* ]]; then URL_HOST="[$HOST]"; else URL_HOST="$HOST"; fi
 if [[ -n "$SOURCE" ]]; then SOURCE=$(realpath "$SOURCE"); [[ -f "$SOURCE/src/MeshAll.Server/Services/NativeAgentHub.cs" ]] || die 'Source must contain the C# MeshAll orchestrator.'; fi
 info "Target: $(hostname) / Debian 13 / $RID / HTTPS $PORT"
-info 'Server runtime: ASP.NET Core/C#. Storage: SQLite. No MeshCentral JavaScript server.'
+info 'Server runtime: ASP.NET Core/C#. Storage: SQLite.'
 if ((CHECK)); then info 'Target preflight passed; no changes made.'; exit 0; fi
 WORK=$(mktemp -d /tmp/meshall-install.XXXXXX)
 apt-get update
-apt-get install -y ca-certificates curl gnupg git jq openssl python3 rsync build-essential pkg-config unzip
+apt-get install -y ca-certificates curl gnupg git jq openssl python3 rsync build-essential pkg-config unzip wixl msitools
 if ! command -v dotnet >/dev/null || ! dotnet --list-sdks | grep -q '^10\.'; then
   retry curl -fsSL https://packages.microsoft.com/config/debian/13/packages-microsoft-prod.deb -o "$WORK/microsoft.deb"
   dpkg -i "$WORK/microsoft.deb"; apt-get update; apt-get install -y dotnet-sdk-10.0
@@ -109,22 +109,44 @@ PY
   [[ -f "$PREFIX/protocol-worker/lib/libguac-client-rdp.so" ]] || die 'The RDP protocol library was not built.'
 fi
 if [[ -x "$PREFIX/protocol-worker/sbin/guacd" ]]; then
-  chown -R root:meshall "$PREFIX/protocol-worker"
+  getent passwd meshall-rdp >/dev/null || useradd --system --home-dir /var/lib/meshall-rdp --shell /usr/sbin/nologin meshall-rdp
+  chown -R root:meshall-rdp "$PREFIX/protocol-worker"
   chmod -R g+rX "$PREFIX/protocol-worker"
   cat > /etc/systemd/system/meshall-rdp.service <<EOF
 [Unit]
-Description=MeshAll standard RDP/SSH protocol worker
+Description=EndpointControl standard RDP/SSH protocol worker
 After=network-online.target
 [Service]
-User=meshall
-Group=meshall
+User=meshall-rdp
+Group=meshall-rdp
 Environment=LD_LIBRARY_PATH=$PREFIX/protocol-worker/lib
+Environment=HOME=/var/lib/meshall-rdp
+StateDirectory=meshall-rdp
+StateDirectoryMode=0700
 RuntimeDirectory=meshall-rdp
+RuntimeDirectoryMode=0700
 ExecStart=$PREFIX/protocol-worker/sbin/guacd -f -b 127.0.0.1 -l 4822 -p /run/meshall-rdp/guacd.pid
 Restart=on-failure
 TasksMax=256
 MemoryMax=1G
+LimitCORE=0
 NoNewPrivileges=true
+UMask=0077
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+LockPersonality=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+IPAddressDeny=any
+IPAddressAllow=localhost
+InaccessiblePaths=$CONFIG $DATA $PREFIX/source
 [Install]
 WantedBy=multi-user.target
 EOF
@@ -138,7 +160,13 @@ if [[ ! -f "$CONFIG/server.pfx" ]]; then
 fi
 FINGERPRINT=$(openssl x509 -in "$CONFIG/server.crt" -fingerprint -sha256 -noout | cut -d= -f2 | tr -d :)
 PIN="sha256//$(openssl x509 -in "$CONFIG/server.crt" -pubkey -noout | openssl pkey -pubin -outform DER | openssl dgst -sha256 -binary | openssl base64 -A)"
-jq -n --arg data "$DATA/server" --arg url "https://$URL_HOST:$PORT" --arg fingerprint "$FINGERPRINT" --arg pin "$PIN" '{MeshAll:{DataDirectory:$data,PublicUrl:$url,CertificateSha256:$fingerprint,DownloadPublicKeyPin:$pin,SiteName:"My workspace",ProtocolWorkerHost:"127.0.0.1",ProtocolWorkerPort:4822}}' > "$CONFIG/appsettings.json"
+[[ -f "$CONFIG/appsettings.json" ]] || printf '{}\n' > "$CONFIG/appsettings.json"
+jq --arg data "$DATA/server" --arg url "https://$URL_HOST:$PORT" --arg fingerprint "$FINGERPRINT" --arg pin "$PIN" --arg hosts "$HOST;localhost;127.0.0.1;::1" \
+  '.MeshAll = ((.MeshAll // {}) + {DataDirectory:(.MeshAll.DataDirectory // $data),PublicUrl:$url,CertificateSha256:$fingerprint,DownloadPublicKeyPin:$pin,ProtocolWorkerHost:"127.0.0.1",ProtocolWorkerPort:4822}) | .AllowedHosts = (.AllowedHosts // $hosts) | del(.MeshAll.SiteName)' \
+  "$CONFIG/appsettings.json" > "$WORK/appsettings.json"
+install -o root -g meshall -m 640 "$WORK/appsettings.json" "$CONFIG/appsettings.json"
+SERVER_DATA=$(jq -r '.MeshAll.DataDirectory' "$CONFIG/appsettings.json")
+[[ "$SERVER_DATA" == /* && "$SERVER_DATA" != *$'\n'* && "$SERVER_DATA" != *' '* ]] || die 'The private data directory must be an absolute path without whitespace.'
 # Normalize the previous prototype's HTTPS environment to normal .NET keys.
 if grep -q '^ASPNETCORE_Kestrel' "$CONFIG/https.env"; then python3 - "$CONFIG/https.env" <<'PY'
 import pathlib,sys
@@ -149,7 +177,7 @@ chown root:meshall "$CONFIG"/*; chmod 640 "$CONFIG"/*; chmod 600 "$CONFIG/server
 ln -sfn "$RELEASE" "$PREFIX/current"
 cat > /etc/systemd/system/meshall.service <<EOF
 [Unit]
-Description=MeshAll C# orchestrator and Blazor Server UI
+Description=EndpointControl C# orchestrator and Blazor Server UI
 After=network-online.target
 Wants=network-online.target
 [Service]
@@ -166,6 +194,19 @@ UMask=0077
 TasksMax=256
 NoNewPrivileges=true
 PrivateTmp=true
+LimitCORE=0
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+LockPersonality=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+ReadWritePaths=$SERVER_DATA
 [Install]
 WantedBy=multi-user.target
 EOF
@@ -176,7 +217,7 @@ exec bash "$SOURCE/install.sh" --source "$SOURCE" --update --host "$HOST" --port
 EOF
 chmod 755 /usr/local/bin/meshall-update
 systemctl daemon-reload
-if [[ -f /etc/systemd/system/meshall-rdp.service ]]; then systemctl enable --now meshall-rdp.service; fi
+if [[ -f /etc/systemd/system/meshall-rdp.service ]]; then systemctl enable meshall-rdp.service; systemctl restart meshall-rdp.service; fi
 systemctl enable meshall.service; systemctl restart meshall.service
 for attempt in {1..90}; do if curl -kfsS --pinnedpubkey "$PIN" "https://127.0.0.1:$PORT/health" >/dev/null 2>&1; then break; fi; sleep 1; done
 curl -kfsS --pinnedpubkey "$PIN" "https://127.0.0.1:$PORT/health" >/dev/null || die 'MeshAll did not start. Check journalctl -u meshall.'
@@ -197,5 +238,5 @@ if ((REMOVE_LEGACY)); then
   rm -rf /opt/meshcentral
   systemctl daemon-reload
 fi
-info 'MeshAll is running.'
+info 'EndpointControl is running.'
 printf '\nDashboard: https://%s:%s\nInitial credentials (fresh installs): /opt/creds.txt\nData: %s/server\nSource: %s\nUpdate local edits: meshall-update --local\nUpdate from GitHub: meshall-update --pull\n' "$URL_HOST" "$PORT" "$DATA" "$SOURCE"

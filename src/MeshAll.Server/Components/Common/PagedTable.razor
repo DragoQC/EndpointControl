@@ -1,0 +1,52 @@
+@typeparam TItem
+
+<section class="panel">
+    @if (Toolbar is not null)
+    {
+        <div class="filter-bar">@Toolbar</div>
+    }
+    <DataTable Items="Result.Items" Header="Header" RowTemplate="RowTemplate" ItemKey="ItemKey"
+               Label="@Label" CssClass="@CssClass" EmptyTitle="@EmptyTitle" EmptyText="@EmptyText"
+               EmptyContent="EmptyContent" />
+    <Pagination TotalCount="Result.TotalCount" PageNumber="Result.PageNumber" PageSize="Result.PageSize"
+                PageChanged="PageChanged" PageSizeChanged="PageSizeChanged" Label="@Ui["{0} pages", Ui[Label]]" />
+</section>
+
+@code
+{
+    [Parameter, EditorRequired]
+    public PageResult<TItem> Result { get; set; } = PageResult<TItem>.Empty();
+
+    [Parameter, EditorRequired]
+    public RenderFragment Header { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public RenderFragment<TItem> RowTemplate { get; set; } = default!;
+
+    [Parameter]
+    public Func<TItem, object>? ItemKey { get; set; }
+
+    [Parameter]
+    public RenderFragment? Toolbar { get; set; }
+
+    [Parameter]
+    public RenderFragment? EmptyContent { get; set; }
+
+    [Parameter]
+    public EventCallback<int> PageChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<int> PageSizeChanged { get; set; }
+
+    [Parameter]
+    public string Label { get; set; } = "Results";
+
+    [Parameter]
+    public string? CssClass { get; set; }
+
+    [Parameter]
+    public string EmptyTitle { get; set; } = "No results to show";
+
+    [Parameter]
+    public string EmptyText { get; set; } = "Try a different filter.";
+}

@@ -799,7 +799,7 @@ powershell -ExecutionPolicy Unrestricted $(ProjectDir)prebuild.ps1 $(ProjectDir)
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ResourceCompile Include="MeshService.rc">
+    <ResourceCompile Include="EndpointControl.rc">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoOpenSSL|x64'">false</ExcludedFromBuild>

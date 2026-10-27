@@ -1,10 +1,8 @@
 @page "/sessions"
 @attribute [Authorize(Policy = Permissions.Sessions)]
-@inherits PageBase
-<PageTitle>Sessions · MeshAll</PageTitle>
-<div class="page-heading"><div><div class="breadcrumb">Workspace / Sessions</div><h1>Every connection has a story.</h1><p class="muted">Recent desktop sessions and remote operations, with their outcomes.</p></div><span class="live-label"><span class="status-dot green-dot"></span>Live updates</span></div>
-<Notice Error="@Error" />
-<section class="panel"><div class="filter-bar"><div class="search-field"><Icon Name="search" /><input @bind="search" @bind:event="oninput" placeholder="Search device, person, or operation…" aria-label="Search sessions" /></div><span class="muted small-text">Latest 250 sessions</span></div>
-@if (sessions.Count == 0) { <EmptyState Icon="terminal" Title="No sessions yet" Text="Open a device and use its remote tools. Each operation will appear here." /> }
-else { <div class="table-scroll"><table><thead><tr><th>Device</th><th>Operation</th><th>Started by</th><th>Started</th><th>Duration</th><th>Result</th></tr></thead><tbody>@foreach (var s in sessions.Where(s => $"{s.DeviceName} {s.Actor} {s.Kind}".Contains(search, StringComparison.OrdinalIgnoreCase))) { <tr><td><a class="text-link" href="@($"/devices/{s.DeviceId}")">@s.DeviceName</a></td><td>@s.Kind</td><td>@s.Actor</td><td class="muted">@s.Started.ToLocalTime().ToString("g")</td><td>@((s.Ended ?? DateTimeOffset.UtcNow).Subtract(s.Started).TotalSeconds.ToString("0"))s</td><td><span class="status @(s.Status == "Failed" ? "revoked" : s.Status == "Active" ? "online" : "offline")"><span class="status-dot"></span>@s.Status</span></td></tr> }</tbody></table></div> }</section>
-@code { protected override string? ViewPermission=>Permissions.Sessions;private List<SessionInfo> sessions = []; private string search = ""; protected override Task LoadAsync() { sessions = Store.Sessions(); return Task.CompletedTask; } }
+@inject NavigationManager Navigation
+
+@code
+{
+    protected override void OnInitialized() => Navigation.NavigateTo("/logs?tab=sessions", replace: true);
+}

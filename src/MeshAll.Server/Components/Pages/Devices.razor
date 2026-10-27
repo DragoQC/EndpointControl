@@ -1,23 +1,79 @@
 @page "/devices"
 @attribute [Authorize(Policy = Permissions.Inventory)]
-@inherits PageBase
-<PageTitle>Devices · MeshAll</PageTitle>
-<div class="page-heading"><div><div class="breadcrumb">Workspace / Devices</div><h1>Your devices</h1><p class="muted">A clear view of everything you manage.</p></div>@if (Can(Permissions.Enroll)) { <a class="button primary" href="/enroll"><Icon Name="plus" />Add device</a> }</div>
+@inherits PagedPageBase<DeviceInfo>
+
+<PageTitle>@Ui["Devices"] · @ProductBrand.Name</PageTitle>
+<PageHeader Title="Devices">
+    <Actions>
+        <a class="button" href="/">@Ui["Dashboard"]</a>
+        @if (Can(Permissions.Enroll))
+        {
+            <a class="button primary" href="/enroll"><Icon Name="plus" />@Ui["Add device"]</a>
+        }
+    </Actions>
+</PageHeader>
 <Notice Error="@Error" />
-<section class="panel"><div class="filter-bar"><div class="search-field"><Icon Name="search" /><input @bind="search" @bind:event="oninput" placeholder="Search devices, IPs, or tags…" aria-label="Search devices" /></div>
-<select @bind="status" aria-label="Connection status"><option value="all">All statuses</option><option value="online">Online</option><option value="offline">Offline</option><option value="revoked">Revoked</option></select>
-<select @bind="group" aria-label="Device group"><option value="">All groups</option>@foreach (var g in groups) { <option value="@g.Id">@g.Name</option> }</select><span class="result-count">@Filtered.Count() results</span></div>
-@if (!Filtered.Any()) { <EmptyState Title="No devices to show" Text="Try a different filter, or enroll a new device to get started." /> }
-else { <FleetTable Items="Filtered" Groups="groups" /> }
-<div class="panel-foot"><span>Inventory refreshes automatically</span><span>@devices.Count total devices</span></div></section>
-@code {
-    [SupplyParameterFromQuery(Name = "group")] public string? InitialGroup { get; set; }
-    private string search = "", status = "all", group = "";
-    private List<DeviceInfo> devices = []; private List<GroupInfo> groups = [];
-    private IEnumerable<DeviceInfo> Filtered => devices.Where(d =>
-        (string.IsNullOrEmpty(group) || d.GroupId == group) &&
-        (status == "all" || status == "revoked" && d.Disabled || status == "online" && Gateway.Online(d.Id) || status == "offline" && !Gateway.Online(d.Id) && !d.Disabled) &&
-        $"{d.Name} {d.Tags} {d.Inventory?.Ip} {d.Inventory?.Os}".Contains(search, StringComparison.OrdinalIgnoreCase));
-    protected override void OnParametersSet() { if (InitialGroup is not null) group = InitialGroup; }
-    protected override Task LoadAsync() { devices = Store.Devices(); groups = Store.Groups(); return Task.CompletedTask; }
+
+<section class="panel">
+    <div class="filter-bar">
+        <SearchField Value="@Search" ValueChanged="ChangeSearchAsync" Label="Search devices"
+                     Placeholder="Search devices, IPs, or tags…" />
+        <SelectField TValue="string" Value="@status" Changed="StatusChangedAsync" aria-label="@Ui["Connection status"]">
+            <option value="all">@Ui["All statuses"]</option><option value="online">@Ui["Online"]</option>
+            <option value="offline">@Ui["Offline"]</option><option value="revoked">@Ui["Blocked"]</option>
+        </SelectField>
+        <SelectField TValue="string" Value="@group" Changed="GroupChangedAsync" aria-label="@Ui["Device group"]">
+            <option value="">@Ui["All groups"]</option>
+            @foreach (GroupInfo item in groups)
+            {
+                <option value="@item.Id">@Ui.GroupName(item.Name, item.Id)</option>
+            }
+        </SelectField>
+        <span class="result-count">@Ui.Plural(Rows.TotalCount, "{0} result", "{0} results")</span>
+    </div>
+    <DeviceTable Items="Rows.Items" Groups="groups" ConnectedIds="connectedIds" />
+    <Pagination TotalCount="Rows.TotalCount" PageNumber="Rows.PageNumber" PageSize="Rows.PageSize"
+                PageChanged="ChangePageAsync" PageSizeChanged="ChangePageSizeAsync" Label="Device pages" />
+</section>
+
+@code
+{
+    [SupplyParameterFromQuery(Name = "group")]
+    public string? InitialGroup { get; set; }
+
+    [SupplyParameterFromQuery(Name = "status")]
+    public string? InitialStatus { get; set; }
+
+    private string status = "all";
+    private string group = "";
+    private List<GroupInfo> groups = [];
+    private HashSet<string> connectedIds = new(StringComparer.Ordinal);
+    protected override async Task OnParametersSetAsync()
+    {
+        group = InitialGroup ?? "";
+        status = InitialStatus ?? "all";
+        if (CurrentUser is not null)
+        {
+            await ResetPageAsync();
+        }
+    }
+
+    protected override PageResult<DeviceInfo> ReadPage(PageRequest request)
+    {
+        groups = Store.Groups();
+        connectedIds = Gateway.ConnectedDeviceIds();
+        return Store.DevicePage(request, connectedIds, Search, status, group);
+    }
+
+    private Task StatusChangedAsync(ChangeEventArgs arguments)
+    {
+        status = arguments.Value?.ToString() ?? "all";
+        return ResetPageAsync();
+    }
+
+    private Task GroupChangedAsync(ChangeEventArgs arguments)
+    {
+        group = arguments.Value?.ToString() ?? "";
+        return ResetPageAsync();
+    }
 }

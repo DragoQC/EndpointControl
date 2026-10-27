@@ -1,37 +1,158 @@
 @page "/users"
 @attribute [Authorize(Policy = Permissions.Users)]
-@inherits PageBase
+@inherits PagedPageBase<UserInfo>
 @inject IJSRuntime JS
-<PageTitle>Users · MeshAll</PageTitle>
-<div class="page-heading"><div><div class="breadcrumb">Workspace / Users</div><h1>The people behind your fleet.</h1><p class="muted">Assign roles and see each account's two-factor status.</p></div><div class="inline-actions">@if(Can(Permissions.Roles)){<a class="button" href="/roles">Manage roles</a>}<button class="button primary" @onclick="() => adding = !adding"><Icon Name="plus" />Add user</button></div></div>
+
+<PageTitle>@Ui["Users"] · @ProductBrand.Name</PageTitle>
+<PageHeader Title="Users">
+    <Actions>
+        @if (Can(Permissions.Roles))
+        {
+            <a class="button" href="/roles">@Ui["Manage roles"]</a>
+        }
+        <button class="button primary" @onclick="() => adding = !adding"><Icon Name="plus" />@Ui["Add user"]</button>
+    </Actions>
+</PageHeader>
 <Notice Error="@Error" Success="@Success" />
-@if(adding){
-    <section class="panel editor-panel"><h2>Add a workspace user</h2><form @onsubmit="Add" @onsubmit:preventDefault>
-        <div class="form-grid"><label>Username<input @bind="name" required maxlength="50" autocomplete="off" /></label><label>Role<select aria-label="Role" @bind="role">@foreach(var item in roles){<option value="@item.Id">@item.Name</option>}</select></label><label>Initial password<input @bind="password" type="password" required minlength="12" maxlength="256" autocomplete="new-password" /></label></div>
-        <p class="muted small-text">Roles grant specific capabilities throughout the workspace. Two-factor authentication is configured by each user in their profile.</p>
-        <div class="form-actions"><button type="button" class="button" @onclick="() => adding = false">Cancel</button><button class="button primary" disabled="@Busy">Create user</button></div>
-    </form></section>
+
+@if (adding)
+{
+    <section class="panel editor-panel">
+        <h2>@Ui["Add a workspace user"]</h2>
+        <form @onsubmit="Add" @onsubmit:preventDefault>
+            <div class="form-grid three-column">
+                <label>@Ui["Username"]<input @bind="name" required maxlength="50" autocomplete="off" /></label>
+                <label>@Ui["Role"]
+                    <SelectField TValue="string" Expand="true" aria-label="@Ui["Role"]" @bind-Value="role">
+                        @foreach (RoleInfo item in roles)
+                        {
+                            <option value="@item.Id">@Ui.RoleName(item.Name, item.BuiltIn)</option>
+                        }
+                    </SelectField>
+                </label>
+                <label>@Ui["Initial password"]<input @bind="password" type="password" required minlength="12" maxlength="256" autocomplete="new-password" /></label>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="button" @onclick="() => adding = false">@Ui["Cancel"]</button>
+                <button class="button primary" disabled="@Busy">@Ui["Create user"]</button>
+            </div>
+        </form>
+    </section>
 }
-@if(resetUser is not null){
-    <section class="panel editor-panel"><h2>Reset password for @resetUser.Name</h2><form @onsubmit="ResetPassword" @onsubmit:preventDefault><label>New password<input @bind="newPassword" type="password" required minlength="12" maxlength="256" autocomplete="new-password" /></label><div class="form-actions"><button type="button" class="button" @onclick="() => resetUser = null">Cancel</button><button class="button primary" disabled="@Busy">Reset password</button></div><small class="muted">Existing sessions are invalidated. Two-factor authentication remains enabled.</small></form></section>
+
+@if (resetUser is not null)
+{
+    <section class="panel editor-panel">
+        <h2>@Ui["Reset password for {0}", resetUser.Name]</h2>
+        <form @onsubmit="ResetPassword" @onsubmit:preventDefault>
+            <label>@Ui["New password"]<input @bind="newPassword" type="password" required minlength="12" maxlength="256" autocomplete="new-password" /></label>
+            <div class="form-actions">
+                <button type="button" class="button" @onclick="() => resetUser = null">@Ui["Cancel"]</button>
+                <button class="button primary" disabled="@Busy">@Ui["Reset password"]</button>
+            </div>
+            <small class="muted">@Ui["Existing sessions are invalidated. Two-factor authentication remains enabled."]</small>
+        </form>
+    </section>
 }
-<section class="panel"><div class="table-scroll"><table><thead><tr><th>User</th><th>Role</th><th>Two-factor</th><th>Status</th><th></th></tr></thead><tbody>
-@foreach(var user in users){
-    <tr><td><div class="user-name"><span class="avatar light">@user.Name[..1].ToUpperInvariant()</span><strong>@user.Name</strong>@if(user.Id==CurrentUser?.Id){<span class="muted small-text">You</span>}</div></td>
-        <td><select aria-label="@($"Role for {user.Name}")" value="@user.Role" @onchange="e => ChangeRole(user,e)" disabled="@Busy">@foreach(var item in roles){<option value="@item.Id">@item.Name</option>}</select></td>
-        <td>@(user.TwoFactorEnabled?"Enabled":"Not set up")</td><td><span class="status @(user.Disabled?"offline":"online")"><span class="status-dot"></span>@(user.Disabled?"Disabled":"Active")</span></td>
-        <td><div class="inline-actions"><button class="link-button" @onclick="() => { resetUser=user;newPassword=string.Empty; }">Reset password</button>@if(user.Id!=CurrentUser?.Id){<button class="link-button @(user.Disabled?"":"danger-text")" disabled="@Busy" @onclick="() => Toggle(user)">@(user.Disabled?"Enable":"Disable")</button>}</div></td>
-    </tr>
-}
-</tbody></table></div></section>
-@code{
-    protected override string? ViewPermission=>Permissions.Users;
-    protected override string? ChangePermission=>Permissions.Users;
-    private List<UserInfo> users=[];private List<RoleInfo> roles=[];private bool adding;
-    private string name="",password="",role="Viewer",newPassword="";private UserInfo? resetUser;
-    protected override Task LoadAsync(){users=Store.Users();roles=Store.Roles();return Task.CompletedTask;}
-    private Task Add()=>Act(()=>{Store.AddUser(name,password,role);Store.Audit(CurrentUser!.Name,"User created",name,role);password=name="";adding=false;},"User created.");
-    private async Task Toggle(UserInfo user){if(await JS.InvokeAsync<bool>("confirm",$"{(user.Disabled?"Enable":"Disable")} {user.Name}?"))await Act(()=>{Store.SetUserDisabled(user.Id,!user.Disabled,CurrentUser!.Id);Store.Audit(CurrentUser.Name,user.Disabled?"User enabled":"User disabled",user.Name);},"User updated.");}
-    private Task ResetPassword()=>Act(()=>{Store.ChangePassword(resetUser!.Id,newPassword);Store.Audit(CurrentUser!.Name,"Password reset",resetUser.Name);resetUser=null;newPassword="";},"Password reset. Existing sessions must sign in again.");
-    private Task ChangeRole(UserInfo user,ChangeEventArgs args)=>Act(()=>{Store.ChangeUserRole(user.Id,args.Value?.ToString()??"");Store.Audit(CurrentUser!.Name,"User role changed",user.Name);},"Role changed. Existing sessions must sign in again.");
+
+<PagedTable Result="Rows" Label="Workspace users" ItemKey="user => user.Id"
+            PageChanged="ChangePageAsync" PageSizeChanged="ChangePageSizeAsync">
+    <Header><th>@Ui["User"]</th><th>@Ui["Role"]</th><th>@Ui["Two-factor"]</th><th>@Ui["Status"]</th><th></th></Header>
+    <RowTemplate Context="user">
+        <td>
+            <div class="user-name">
+                <span class="avatar light">@user.Name[..1].ToUpperInvariant()</span><strong>@user.Name</strong>
+                @if (user.Id == CurrentUser?.Id)
+                {
+                    <span class="muted small-text">@Ui["You"]</span>
+                }
+            </div>
+        </td>
+        <td>
+            @if (Store.CanManageUser(CurrentUser, user))
+            {
+            <SelectField TValue="string" aria-label="@Ui["Role for {0}", user.Name]" Value="@user.Role" Changed="arguments => ChangeRole(user, arguments)" disabled="@Busy">
+                @foreach (RoleInfo item in roles)
+                {
+                    <option value="@item.Id">@Ui.RoleName(item.Name, item.BuiltIn)</option>
+                }
+            </SelectField>
+            }
+            else
+            {
+                <span>@Ui.RoleName(Store.FindRole(user.Role)?.Name ?? user.Role, Store.FindRole(user.Role)?.BuiltIn ?? false)</span>
+            }
+        </td>
+        <td>@Ui[user.TwoFactorEnabled ? "Enabled" : "Not set up"]</td>
+        <td><span class="status @(user.Disabled ? "offline" : "online")"><span class="status-dot"></span>@Ui[user.Disabled ? "Disabled" : "Active"]</span></td>
+        <td>
+            <div class="inline-actions">
+                <button class="link-button" disabled="@(!Store.CanManageUser(CurrentUser, user))" @onclick="() => BeginPasswordReset(user)">@Ui["Reset password"]</button>
+                @if (user.Id != CurrentUser?.Id && Store.CanManageUser(CurrentUser, user))
+                {
+                    <button class="link-button @(user.Disabled ? "" : "danger-text")" disabled="@Busy" @onclick="() => Toggle(user)">
+                        @Ui[user.Disabled ? "Enable" : "Disable"]
+                    </button>
+                }
+            </div>
+        </td>
+    </RowTemplate>
+</PagedTable>
+
+@code
+{
+    protected override string? ViewPermission => Permissions.Users;
+    protected override string? ChangePermission => Permissions.Users;
+
+    private List<RoleInfo> roles = [];
+    private bool adding;
+    private string name = "";
+    private string password = "";
+    private string role = "Viewer";
+    private string newPassword = "";
+    private UserInfo? resetUser;
+    protected override PageResult<UserInfo> ReadPage(PageRequest request)
+    {
+        roles = CurrentUser is null ? [] : Store.AssignableRoles(CurrentUser);
+        if (!roles.Any(item => item.Id == role)) role = roles.FirstOrDefault()?.Id ?? "";
+        return Store.UserPage(request);
+    }
+
+    private void BeginPasswordReset(UserInfo user)
+    {
+        resetUser = user;
+        newPassword = "";
+    }
+
+    private Task Add() => Act(() =>
+    {
+        Store.ManageAddUser(CurrentUser!, name, password, role);
+        Store.Audit(CurrentUser!.Name, "User created", name, role);
+        password = name = "";
+        adding = false;
+    }, "User created.");
+    private async Task Toggle(UserInfo user)
+    {
+        if (await JS.InvokeAsync<bool>("confirm", Ui[user.Disabled ? "Enable {0}?" : "Disable {0}?", user.Name]))
+        {
+            await Act(() =>
+            {
+                Store.ManageUserDisabled(CurrentUser!, user.Id, !user.Disabled);
+                Store.Audit(CurrentUser!.Name, user.Disabled ? "User enabled" : "User disabled", user.Name);
+            }, "User updated.");
+        }
+    }
+
+    private Task ResetPassword() => Act(() =>
+    {
+        Store.ManagePassword(CurrentUser!, resetUser!.Id, newPassword);
+        Store.Audit(CurrentUser!.Name, "Password reset", resetUser.Name);
+        resetUser = null;
+        newPassword = "";
+    }, "Password reset. Existing sessions must sign in again.");
+    private Task ChangeRole(UserInfo user, ChangeEventArgs arguments) => Act(() =>
+    {
+        Store.ManageUserRole(CurrentUser!, user.Id, arguments.Value?.ToString() ?? "");
+        Store.Audit(CurrentUser!.Name, "User role changed", user.Name);
+    }, "Role changed. Existing sessions must sign in again.");
 }

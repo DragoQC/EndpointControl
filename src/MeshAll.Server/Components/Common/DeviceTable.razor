@@ -1,0 +1,39 @@
+<DataTable Items="Items" Label="Devices" CssClass="devices-table" ItemKey="device => device.Id"
+           EmptyTitle="No devices to show" EmptyText="Try another filter, or enroll a new device.">
+    <Header>
+        <th>@Ui["Device"]</th><th>@Ui["Status"]</th><th>@Ui["Operating system"]</th><th>@Ui["Group"]</th><th>@Ui["Last seen"]</th><th></th>
+    </Header>
+    <RowTemplate Context="device">
+        <td>
+            <a class="device-link" href="@($"/devices/{device.Id}")">
+                <span class="device-symbol @(device.Inventory?.Platform == "Windows" ? "blue" : "slate")">
+                    <Icon Name="@(device.Inventory?.Platform == "Windows" ? "windows" : "server")" />
+                </span>
+                <span><strong>@device.Name</strong><small>@(device.Inventory?.Ip ?? Ui["Awaiting inventory"])</small></span>
+            </a>
+        </td>
+        <td>
+            <span class="status @(device.Disabled ? "revoked" : IsConnected(device) ? "online" : "offline")">
+                <span class="status-dot"></span>@Ui[device.Disabled ? "Blocked" : IsConnected(device) ? "Online" : "Offline"]
+            </span>
+        </td>
+        <td><span>@(device.Inventory?.Platform ?? Ui["Pending"])</span><small class="os-detail">@(device.Inventory?.Architecture ?? "—")</small></td>
+        <td><span class="group-pill">@Ui.GroupName(Groups.FirstOrDefault(group => group.Id == device.GroupId)?.Name ?? "Unassigned", device.GroupId)</span></td>
+        <td class="muted">@(IsConnected(device) ? Ui["Connected now"] : DisplayFormat.RelativeTime(device.LastSeen))</td>
+        <td><a class="row-action" href="@($"/devices/{device.Id}")" aria-label="@Ui["Open {0}", device.Name]"><Icon Name="arrow" /></a></td>
+    </RowTemplate>
+</DataTable>
+
+@code
+{
+    [Parameter, EditorRequired]
+    public IReadOnlyList<DeviceInfo> Items { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlyList<GroupInfo> Groups { get; set; } = [];
+
+    [Parameter]
+    public IReadOnlySet<string> ConnectedIds { get; set; } = new HashSet<string>();
+
+    private bool IsConnected(DeviceInfo device) => !device.Disabled && ConnectedIds.Contains(device.Id);
+}

@@ -1,0 +1,63 @@
+@inherits PageBase
+
+<Notice Error="@Error" />
+<section class="panel">
+    <div class="panel-header">
+        <h2>@Ui["Running processes"]</h2>
+        <button class="button" disabled="@Busy" @onclick="RefreshProcesses">@Ui["Refresh processes"]</button>
+    </div>
+    @if (!loaded)
+    {
+        <EmptyState Icon="activity" Title="No process snapshot" Text="Select Refresh processes to load the current list." />
+    }
+    else
+    {
+        <DataTable Items="rows.Items" Label="Running processes" ItemKey="process => process.Id">
+            <Header><th>@Ui["PID"]</th><th>@Ui["Name"]</th><th>@Ui["Memory"]</th></Header>
+            <RowTemplate Context="process">
+                <td>@process.Id</td><td>@process.Name</td><td>@DisplayFormat.Bytes(process.Memory)</td>
+            </RowTemplate>
+        </DataTable>
+        <Pagination TotalCount="rows.TotalCount" PageNumber="rows.PageNumber" PageSize="rows.PageSize"
+                    PageChanged="ChangePage" PageSizeChanged="ChangePageSize" Label="Process pages" />
+    }
+</section>
+
+@code
+{
+    [Parameter, EditorRequired]
+    public string DeviceId { get; set; } = "";
+    protected override string? ViewPermission => Permissions.Processes;
+
+    private ProcessInfo[] processes = [];
+    private bool loaded;
+    private int page = 1;
+    private int pageSize = PageRequest.MaximumSize;
+    private PageResult<ProcessInfo> rows = PageResult<ProcessInfo>.Empty();
+    private Task RefreshProcesses() => Act(async () =>
+    {
+        ProcessInfo[] snapshot = await Workspace.RunAsync<ProcessInfo[]>(DeviceId, "processes", new { });
+        processes = snapshot.OrderByDescending(process => process.Memory).ThenBy(process => process.Id).ToArray();
+        loaded = true;
+        page = 1;
+        UpdatePage();
+    }, permission: Permissions.Processes);
+    private void ChangePage(int number)
+    {
+        page = number;
+        UpdatePage();
+    }
+
+    private void ChangePageSize(int size)
+    {
+        page = 1;
+        pageSize = size;
+        UpdatePage();
+    }
+
+    private void UpdatePage()
+    {
+        rows = PageResult<ProcessInfo>.FromSnapshot(processes, new PageRequest(page, pageSize));
+        page = rows.PageNumber;
+    }
+}

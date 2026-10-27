@@ -1,0 +1,33 @@
+<section class="stat-card dashboard-stat" data-tone="@Tone" aria-label="@Ui[Label]">
+    <div class="stat-card-heading">
+        <span class="stat-label">@Ui[Label]</span>
+        <span class="stat-icon @Tone"><Icon Name="@IconName" /></span>
+    </div>
+    <strong class="stat-value" data-stat="@Label">@Value</strong>
+    <p class="stat-detail">@Ui.Message(Detail)</p>
+    @if (ChildContent is not null)
+    {
+        <div class="stat-card-foot">@ChildContent</div>
+    }
+</section>
+
+@code
+{
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = "";
+
+    [Parameter, EditorRequired]
+    public string Value { get; set; } = "";
+
+    [Parameter]
+    public string Detail { get; set; } = "";
+
+    [Parameter]
+    public string IconName { get; set; } = "activity";
+
+    [Parameter]
+    public string Tone { get; set; } = "teal";
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

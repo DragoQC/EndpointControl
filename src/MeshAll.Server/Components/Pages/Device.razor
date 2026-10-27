@@ -3,72 +3,187 @@
 @inherits PageBase
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
-<PageTitle>@(device?.Name??"Device") · MeshAll</PageTitle>
+
+<PageTitle>@(device?.Name ?? Ui["Device"]) · @ProductBrand.Name</PageTitle>
 <Notice Error="@Error" Success="@Success" />
-@if(device is not null){
-    <div class="page-heading"><div><div class="breadcrumb"><a href="/devices">Devices</a> / @device.Name</div><div class="device-title"><span class="device-symbol large blue"><Icon Name="@(device.Inventory?.Platform=="Windows"?"windows":"server")" /></span><div><h1>@device.Name</h1><p class="muted">@device.Inventory?.Os</p></div><span class="status @(Gateway.Online(Id)?"online":"offline")"><span class="status-dot"></span>@(device.Disabled?"Revoked":Gateway.Online(Id)?"Online":"Offline")</span></div></div>
-        <div class="inline-actions">@if(Gateway.Online(Id)){<button class="button" disabled="@Busy" @onclick="RefreshInventory">Refresh inventory</button>}@if(Can(Permissions.EditDevices)&&!device.Disabled){<button class="button" @onclick="EditDevice"><Icon Name="settings" />Edit device</button>}</div>
+
+@if (device is not null)
+{
+    <div class="page-heading">
+        <div>
+            <div class="breadcrumb"><a href="/devices">@Ui["Devices"]</a> / @device.Name</div>
+            <div class="device-title">
+                <span class="device-symbol large blue"><Icon Name="@(device.Inventory?.Platform == "Windows" ? "windows" : "server")" /></span>
+                <div><h1>@device.Name</h1><p class="muted">@device.Inventory?.Os</p></div>
+                <span class="status @(online ? "online" : "offline")">
+                    <span class="status-dot"></span>@Ui[device.Disabled ? "Blocked" : online ? "Online" : "Offline"]
+                </span>
+            </div>
+        </div>
+        <div class="inline-actions">
+            @if (online)
+            {
+                <button class="button" disabled="@Busy" @onclick="RefreshInventory">@Ui["Refresh inventory"]</button>
+            }
+            @if (Can(Permissions.EditDevices) && !device.Disabled)
+            {
+                <button class="button" @onclick="EditDevice"><Icon Name="settings" />@Ui["Edit device"]</button>
+            }
+        </div>
     </div>
-    @if(editing){<section class="panel editor-panel"><h2>Device settings</h2><form @onsubmit="SaveDevice" @onsubmit:preventDefault><div class="form-grid"><label>Display name<input @bind="name" maxlength="100" required /></label><label>Device group<select @bind="group">@foreach(var g in groups){<option value="@g.Id">@g.Name</option>}</select></label><label>Tags<input @bind="tags" maxlength="300" /></label><label>Notes<textarea @bind="notes" maxlength="4000" rows="2"></textarea></label></div><div class="form-actions"><button type="button" class="button" @onclick="() => editing=false">Cancel</button><button class="button primary" disabled="@Busy">Save changes</button></div></form></section>}
-    <div class="tab-bar" role="navigation" aria-label="Device views">@foreach(var item in Tabs.Where(Allowed)){<button class="@(tab==item?"active":"")" @onclick="() => SelectTab(item)">@item</button>}</div>
-    @if(!Allowed(tab)){<EmptyState Icon="shield" Title="Capability not granted" Text="Your role does not grant this capability." />}
-    else if(tab=="Overview"){
-        @if(device.Inventory is {} inv){
-            @if(!string.IsNullOrWhiteSpace(inv.Diagnostic)){<Notice Error="@inv.Diagnostic" />}
-            <div class="device-overview"><section class="panel editor-panel"><h2>Device information</h2><dl class="details-grid">
-                <dt>Hostname</dt><dd>@Reported(inv.Hostname)</dd><dt>Operating system</dt><dd>@Reported(inv.Os)</dd>
-                <dt>Architecture</dt><dd>@Reported(inv.Architecture)</dd><dt>Signed-in user</dt><dd>@(string.IsNullOrWhiteSpace(inv.Username)?"No active user reported":inv.Username)</dd>
-                <dt>Primary IP address</dt><dd>@Reported(inv.Ip)</dd><dt>MAC address</dt><dd>@Reported(inv.Mac)</dd>
-                <dt>Connection address</dt><dd>@Reported(inv.ConnectionAddress)</dd><dt>CPU model</dt><dd>@Reported(inv.CpuModel)</dd>
-                <dt>Logical CPU cores</dt><dd>@(inv.Cores>0?inv.Cores.ToString():"Not reported")</dd>
-                <dt>Manufacturer / model</dt><dd>@Reported(string.Join(" / ",new[]{inv.Manufacturer,inv.Model}.Where(s=>!string.IsNullOrWhiteSpace(s))))</dd>
-                <dt>Uptime</dt><dd>@(inv.ReportedAt is not null?TimeSpan.FromSeconds(Math.Max(0,inv.Uptime)).ToString(@"d\d\ hh\h\ mm\m"):"Not reported")</dd>
-                <dt>Native agent build</dt><dd>@Reported(inv.Version)</dd><dt>Agent platform ID</dt><dd>@(inv.AgentArchitecture>0?inv.AgentArchitecture.ToString():"Not reported")</dd>
-                <dt>Last inventory</dt><dd>@(inv.ReportedAt is {} reported?Ago(reported):"Waiting for a complete inventory report")</dd><dt>Last contact</dt><dd>@Ago(device.LastSeen)</dd>
-                <dt>Group</dt><dd>@groups.FirstOrDefault(g=>g.Id==device.GroupId)?.Name</dd><dt>Tags</dt><dd>@(string.IsNullOrWhiteSpace(device.Tags)?"No tags":device.Tags)</dd>
-            </dl></section>
-            <div><section class="panel editor-panel"><h2>Resource use</h2>
-                @if(inv.ReportedAt is not null&&inv.MemoryTotal>0){
-                    <div class="resource-row"><span>CPU</span><strong>@(inv.Cpu>=0?inv.Cpu.ToString("0.0")+"%":"Sampling…")</strong></div>@if(inv.Cpu>=0){<progress max="100" value="@inv.Cpu"></progress>}
-                    <div class="resource-row"><span>Memory</span><strong>@Bytes(inv.MemoryUsed) / @Bytes(inv.MemoryTotal)</strong></div><progress max="@inv.MemoryTotal" value="@inv.MemoryUsed"></progress>
-                }else{<p class="muted">Waiting for the agent's hardware and resource report.</p>}
-                @foreach(var disk in inv.Disks){<div class="resource-row"><span>@disk.Name</span><strong>@Bytes(disk.Free) free of @Bytes(disk.Total)</strong></div><progress max="@Math.Max(1,disk.Total)" value="@(disk.Total-disk.Free)"></progress>}
-            </section><section class="panel editor-panel"><h2>Notes</h2><p class="preserve-lines muted">@(string.IsNullOrWhiteSpace(device.Notes)?"Add notes to keep useful details close to this device.":device.Notes)</p></section></div></div>
-            @if(inv.Interfaces is {Length:>0}){<section class="panel"><div class="panel-header"><h2>Reported network interfaces</h2></div><div class="table-scroll"><table><thead><tr><th>Interface</th><th>Address</th><th>MAC</th><th>Family</th></tr></thead><tbody>@foreach(var nic in inv.Interfaces){<tr><td>@nic.Name</td><td>@nic.Address</td><td>@Reported(nic.Mac)</td><td>@nic.Family</td></tr>}</tbody></table></div></section>}
-        }else{<EmptyState Title="Waiting for inventory" Text="The native agent reports hardware and resource information automatically." />}
-        @if(Can(Permissions.Power)&&Gateway.Online(Id)){<section class="panel editor-panel"><h2>Power management</h2><div class="inline-actions"><button class="button" disabled="@Busy" @onclick='() => Power("restart")'>Restart device</button><button class="button danger" disabled="@Busy" @onclick='() => Power("shutdown")'>Shut down device</button></div></section>}
-        @if(Can(Permissions.BlockDevices)){<section class="panel editor-panel"><h2>Device access in MeshAll</h2><button class="button @(device.Disabled?"primary":"danger")" disabled="@Busy" @onclick="Revoke">@(device.Disabled?"Restore MeshAll access":"Block MeshAll access")</button></section>}
-        @if(Can(Permissions.RemoveDevices)){<section class="panel editor-panel"><h2>Remove from this website</h2><p class="muted">Remove this device from your list. A registered agent will reappear if it reconnects.</p><button class="button danger mt-4" disabled="@Busy" @onclick="Remove">Remove device</button></section>}
-    }else if(tab=="Remote tools"&&!device.Disabled){<NetworkTools DeviceId="@Id" @key="Id" />}
-    else if(device.Disabled||!Gateway.Online(Id)){<EmptyState Title="This device is offline" Text="Start the MeshAll agent on the device to use remote tools." />}
-    else if(tab=="Terminal"){<section class="panel"><iframe class="remote-frame" src="@($"/remote/{Id}/terminal")" title="Interactive agent terminal"></iframe></section>}
-    else if(tab=="Commands"){
-        <section class="panel command-panel"><div class="panel-header"><div><h2>Remote commands</h2><p>@ScriptTypes.Label(commandShell=="auto"?(device.Inventory?.Platform=="Windows"?".ps1":".sh"):commandShell) · Executes as the agent service account</p></div><button class="button small" @onclick="() => transcript=string.Empty">Clear output</button></div>
-            <pre class="terminal-output" role="log" aria-label="Command output">@(string.IsNullOrEmpty(transcript)?"Connected. Run a command to get started.\n":transcript)@if(Busy){<span class="terminal-pending">Running…</span>}</pre>
-            <form class="command-form" @onsubmit="RunCommand" @onsubmit:preventDefault><div class="form-grid"><label>Working directory<input @bind="directory" placeholder="Agent home directory" /></label><label>Execution shell<select aria-label="Execution shell" @bind="commandShell"><option value="auto">Platform default</option>@if(device.Inventory?.Platform=="Windows"){<option value=".ps1">PowerShell (.ps1)</option><option value=".cmd">Command Prompt (.cmd)</option>}else{<option value=".sh">Shell (.sh)</option>}</select></label><label>Saved script<select aria-label="Saved script" value="" @onchange="UseScript"><option value="">Choose a script…</option>@foreach(var script in scripts.Where(s=>(s.Platform=="Any"||s.Platform==device.Inventory?.Platform)&&ScriptTypes.Compatible(s.Kind,device.Inventory?.Platform=="Windows"))){<option value="@script.Id">@script.Name · @ScriptTypes.Label(script.Kind)</option>}</select></label></div><label>Command<textarea class="code-input" @bind="command" rows="3" required maxlength="16000"></textarea></label><div class="form-actions"><small class="muted">Saved script types select the interpreter automatically. Explicitly typed scripts run as isolated script files.</small><button class="button primary" disabled="@Busy">Run command</button></div></form>
+
+    @if (editing)
+    {
+        <section class="panel editor-panel">
+            <h2>@Ui["Device settings"]</h2>
+            <form @onsubmit="SaveDevice" @onsubmit:preventDefault>
+                <div class="form-grid">
+                    <label>@Ui["Display name"]<input @bind="name" maxlength="100" required /></label>
+                    <label>@Ui["Device group"]
+                        <SelectField TValue="string" Expand="true" @bind-Value="group">
+                            @foreach (GroupInfo item in groups)
+                            {
+                                <option value="@item.Id">@Ui.GroupName(item.Name, item.Id)</option>
+                            }
+                        </SelectField>
+                    </label>
+                    <label>@Ui["Tags"]<input @bind="tags" maxlength="300" /></label>
+                    <label>@Ui["Notes"]<textarea @bind="notes" maxlength="4000" rows="2"></textarea></label>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="button" @onclick="() => editing = false">@Ui["Cancel"]</button>
+                    <button class="button primary" disabled="@Busy">@Ui["Save changes"]</button>
+                </div>
+            </form>
         </section>
-    }else if(tab=="Files"){<FileBrowser DeviceId="@Id" @key="Id" />}
-    else if(tab=="Desktop"){<DesktopPanel DeviceId="@Id" Supported="true" @key="Id" />}
-    else if(tab=="Processes"){<section class="panel"><div class="panel-header"><h2>Running processes</h2><button class="button" disabled="@Busy" @onclick="LoadProcesses">Refresh processes</button></div>@if(processes is null){<EmptyState Icon="activity" Title="Take a look under the hood" Text="Refresh to load a snapshot of running processes." />}else{<div class="table-scroll"><table><thead><tr><th>PID</th><th>Name</th><th>Memory</th></tr></thead><tbody>@foreach(var process in processes.OrderByDescending(p=>p.Memory)){<tr><td>@process.Id</td><td>@process.Name</td><td>@Bytes(process.Memory)</td></tr>}</tbody></table></div>}</section>}
-}else if(CurrentUser is not null && Error is null){<EmptyState Title="Device removed or not found" Text="This device is no longer in your list. Registered agents reappear when they reconnect."><a class="button" href="/devices">Back to devices</a></EmptyState>}
-@code{
-    [Parameter]public string Id{get;set;}="";
-    private DeviceInfo? device;private List<GroupInfo> groups=[];private List<ScriptInfo> scripts=[];
-    private readonly string[] Tabs=["Overview","Commands","Terminal","Files","Desktop","Remote tools","Processes"];
-    private string tab="Overview",command="",directory="",transcript="",name="",group="",tags="",notes="";private bool editing;private ProcessInfo[]? processes;
-    private string commandShell="auto";
-    private bool Allowed(string item)=>item switch{"Overview"=>Can(Permissions.Inventory),"Commands"=>Can(Permissions.Commands),"Terminal"=>Can(Permissions.Terminal),"Files"=>Can(Permissions.FilesRead),"Desktop"=>Can(Permissions.Desktop),"Processes"=>Can(Permissions.Processes),"Remote tools"=>new[]{Permissions.Rdp,Permissions.Vnc,Permissions.Ssh,Permissions.Amt,Permissions.Terminal}.Any(Can),_=>false};
-    private static string Reported(string? value)=>string.IsNullOrWhiteSpace(value)?"Not reported":value;
-    private void SelectTab(string item){if(item=="Desktop")Navigation.NavigateTo($"/remote/{Id}/desktop?connect=true");else tab=item;}
-    protected override Task LoadAsync(){device=Store.FindDevice(Id);groups=Store.Groups();scripts=Can(Permissions.Scripts)?Store.Scripts():[];return Task.CompletedTask;}
-    protected override async Task OnParametersSetAsync(){if(CurrentUser is not null)await LoadAsync();}
-    private void EditDevice(){name=device!.Name;group=device.GroupId;tags=device.Tags;notes=device.Notes;editing=true;}
-    private Task SaveDevice()=>Act(async()=>{await Gateway.SaveDeviceAsync(Id,name,group,tags,notes);Store.Audit(CurrentUser!.Name,"Device updated",name);editing=false;},"Device saved.",Permissions.EditDevices);
-    private Task RefreshInventory()=>Act(async()=>await Workspace.RunAsync<string>(Id,"inventory.refresh",new{}),"Inventory refresh requested. Reports update automatically.",Permissions.Inventory);
-    private Task RunCommand()=>Act(async()=>{if(string.IsNullOrWhiteSpace(command))return;var input=command;transcript+=$"\n› {input}\n";var result=await Workspace.RunAsync<CommandOutput>(Id,"command",new CommandInput(input,directory,Shell:commandShell));directory=result.Directory;transcript+=result.Output+(result.ExitCode<0?"\n[Exit status not reported]\n":$"\n[exit {result.ExitCode}]\n");if(transcript.Length>150000)transcript=transcript[^150000..];command="";},permission:Permissions.Commands);
-    private void UseScript(ChangeEventArgs e){var script=scripts.FirstOrDefault(s=>s.Id==e.Value?.ToString());if(script is not null){command=script.Code;commandShell=script.Kind;}}
-    private Task LoadProcesses()=>Act(async()=>processes=await Workspace.RunAsync<ProcessInfo[]>(Id,"processes",new{}),permission:Permissions.Processes);
-    private async Task Power(string action){if(await JS.InvokeAsync<bool>("confirm",$"{(action=="restart"?"Restart":"Shut down")} {device!.Name} now?"))await Act(async()=>await Workspace.RunAsync<string>(Id,"power",new PowerInput(action)),"Power action sent.",Permissions.Power);}
-    private async Task Revoke(){if(await JS.InvokeAsync<bool>("confirm",$"{(device!.Disabled?"Restore":"Block")} MeshAll access for {device.Name}?"))await Act(()=>{var blocked=!device.Disabled;Store.SetDeviceBlocked(Id,blocked);if(blocked)Gateway.Disconnect(Id);Store.Audit(CurrentUser!.Name,blocked?"Device access blocked":"Device access restored",device.Name);},"MeshAll access updated.",Permissions.BlockDevices);}
-    private async Task Remove(){if(await JS.InvokeAsync<bool>("confirm",$"Remove {device!.Name} from the website? A registered agent can return when it reconnects."))await Act(()=>{Store.RemoveDevice(Id);Store.Audit(CurrentUser!.Name,"Device removed from website",device.Name);Navigation.NavigateTo("/devices");},permission:Permissions.RemoveDevices);}
+    }
+
+    <div class="tab-bar" role="navigation" aria-label="@Ui["Device views"]">
+        @foreach (string item in Tabs.Where(Allowed))
+        {
+            <button class="@(tab == item ? "active" : "")" @onclick="() => SelectTab(item)">@Ui[item]</button>
+        }
+    </div>
+
+    @if (!Allowed(tab))
+    {
+        <EmptyState Icon="shield" Title="Capability not granted" Text="Your role does not grant this capability." />
+    }
+    else if (tab == "Overview")
+    {
+        @if (device.Inventory is Inventory inventory)
+        {
+            @if (!string.IsNullOrWhiteSpace(inventory.Diagnostic))
+            {
+                <Notice Error="@inventory.Diagnostic" />
+            }
+            <DeviceResourceStats Inventory="inventory" Online="online" />
+            <div class="device-overview">
+                <section class="panel editor-panel">
+                    <h2>@Ui["Device information"]</h2>
+                    <dl class="details-grid">
+                        <dt>@Ui["Hostname"]</dt><dd>@Reported(inventory.Hostname)</dd>
+                        <dt>@Ui["Operating system"]</dt><dd>@Reported(inventory.Os)</dd>
+                        <dt>@Ui["Architecture"]</dt><dd>@Reported(inventory.Architecture)</dd>
+                        <dt>@Ui["Signed-in user"]</dt><dd>@(string.IsNullOrWhiteSpace(inventory.Username) ? Ui["No active user"] : inventory.Username)</dd>
+                        <dt>@Ui["Primary IP address"]</dt><dd>@Reported(inventory.Ip)</dd>
+                        <dt>@Ui["MAC address"]</dt><dd>@Reported(inventory.Mac)</dd>
+                        <dt>@Ui["Connection address"]</dt><dd>@Reported(inventory.ConnectionAddress)</dd>
+                        <dt>@Ui["CPU model"]</dt><dd>@Reported(inventory.CpuModel)</dd>
+                        <dt>@Ui["Logical CPU cores"]</dt><dd>@(inventory.Cores > 0 ? inventory.Cores.ToString() : Ui["Not reported"])</dd>
+                        <dt>@Ui["Manufacturer / model"]</dt><dd>@Reported(string.Join(" / ", new[] { inventory.Manufacturer, inventory.Model }.Where(value => !string.IsNullOrWhiteSpace(value))))</dd>
+                        <dt>@Ui["Uptime"]</dt><dd>@(inventory.ReportedAt is not null ? DisplayFormat.Uptime(inventory.Uptime) : Ui["Not reported"])</dd>
+                        <dt>@Ui["Native agent build"]</dt><dd>@Reported(inventory.Version)</dd>
+                        <dt>@Ui["Agent platform ID"]</dt><dd>@(inventory.AgentArchitecture > 0 ? inventory.AgentArchitecture.ToString() : Ui["Not reported"])</dd>
+                        <dt>@Ui["Last inventory"]</dt><dd>@DisplayFormat.RelativeTime(inventory.ReportedAt)</dd>
+                        <dt>@Ui["Last contact"]</dt><dd>@DisplayFormat.RelativeTime(device.LastSeen)</dd>
+                        <dt>@Ui["Group"]</dt><dd>@Ui.GroupName(groups.FirstOrDefault(item => item.Id == device.GroupId)?.Name ?? "Unassigned", device.GroupId)</dd>
+                        <dt>@Ui["Tags"]</dt><dd>@(string.IsNullOrWhiteSpace(device.Tags) ? Ui["No tags"] : device.Tags)</dd>
+                    </dl>
+                </section>
+                <section class="panel editor-panel">
+                    <h2>@Ui["Notes"]</h2>
+                    <p class="preserve-lines muted">@(string.IsNullOrWhiteSpace(device.Notes) ? Ui["No notes"] : device.Notes)</p>
+                </section>
+            </div>
+
+            @if (interfaceRows.TotalCount > 0)
+            {
+                <PagedTable Result="interfaceRows" Label="Reported network interfaces" ItemKey="InterfaceKey"
+                            PageChanged="ChangeInterfacePage" PageSizeChanged="ChangeInterfacePageSize">
+                    <Toolbar><h2>@Ui["Reported network interfaces"]</h2></Toolbar>
+                    <Header><th>@Ui["Interface"]</th><th>@Ui["Address"]</th><th>@Ui["MAC"]</th><th>@Ui["Family"]</th></Header>
+                    <RowTemplate Context="network">
+                        <td>@network.Name</td><td>@network.Address</td><td>@Reported(network.Mac)</td><td>@network.Family</td>
+                    </RowTemplate>
+                </PagedTable>
+            }
+        }
+        else
+        {
+            <EmptyState Title="Waiting for inventory" Text="The native agent reports hardware and resource information automatically." />
+        }
+
+        @if (Can(Permissions.Power) && online)
+        {
+            <section class="panel editor-panel">
+                <h2>@Ui["Power management"]</h2>
+                <div class="inline-actions">
+                    <button class="button" disabled="@Busy" @onclick='() => Power("restart")'>@Ui["Restart device"]</button>
+                    <button class="button danger" disabled="@Busy" @onclick='() => Power("shutdown")'>@Ui["Shut down device"]</button>
+                </div>
+            </section>
+        }
+        @if (Can(Permissions.BlockDevices))
+        {
+            <section class="panel editor-panel">
+                <h2>@Ui["Device access in EndpointControl"]</h2>
+                <button class="button @(device.Disabled ? "primary" : "danger")" disabled="@Busy" @onclick="Revoke">
+                    @Ui[device.Disabled ? "Restore EndpointControl access" : "Block EndpointControl access"]
+                </button>
+            </section>
+        }
+        @if (Can(Permissions.RemoveDevices))
+        {
+            <section class="panel editor-panel">
+                <h2>@Ui["Remove device"]</h2>
+                <p class="muted">@Ui["Removes this entry. The device returns when its agent reconnects."]</p>
+                <button class="button danger" disabled="@Busy" @onclick="Remove">@Ui["Remove device"]</button>
+            </section>
+        }
+    }
+    else if (tab == "Remote tools" && !device.Disabled)
+    {
+        <NetworkTools DeviceId="@Id" @key="Id" />
+    }
+    else if (device.Disabled || !online)
+    {
+        <EmptyState Title="Device offline" Text="The agent must be connected to use this tool." />
+    }
+    else if (tab == "Terminal")
+    {
+        <RemoteViewer Id="@Id" Tool="terminal" Inline="true" @key="Id" />
+    }
+    else if (tab == "Commands")
+    {
+        <CommandPanel DeviceId="@Id" Platform="@(device.Inventory?.Platform ?? "Unknown")" @key="Id" />
+    }
+    else if (tab == "Files")
+    {
+        <FileBrowser DeviceId="@Id" @key="Id" />
+    }
+    else if (tab == "Desktop")
+    {
+        <DesktopPanel DeviceId="@Id" @key="Id" />
+    }
+    else if (tab == "Processes")
+    {
+        <ProcessPanel DeviceId="@Id" @key="Id" />
+    }
+}
+else if (CurrentUser is not null && Error is null)
+{
+    <EmptyState Title="Device not found" Text="The device is unavailable or has been removed.">
+        <a class="button" href="/devices">@Ui["Back to devices"]</a>
+    </EmptyState>
 }

@@ -9,12 +9,16 @@ JavaScript server is not part of the runtime.
 
 - C# native authentication/core delivery: `Services/NativeAgentHub.cs`,
   `NativeCoreBuilder.cs`.
-- C# agent orchestration/file/command transport: `Services/NativeAgentPeer.cs`.
-- C# relays: `NativeTunnelHub.cs`, `AgentGateway.cs`, `NetworkGateway.cs`.
-- On-PC consent/remote behavior: `components/agent-core/meshcore.js`.
-- Windows consent window: `components/agent-native/modules/win-userconsent.js`.
+- C# agent orchestration/commands: `Services/NativeAgentPeer.cs`; native file
+  operations: `NativeAgentPeer.Files.cs`.
+- C# relays: `NativeTunnelHub.cs`, `AgentGateway.cs`, `AgentGateway.Desktop.cs`,
+  `NetworkGateway.cs`.
+- On-PC remote behavior: `components/agent-core/meshcore.js`.
+- Approval/session binding: `modules_meshcore/meshall-screen-consent.js`; native
+  Windows dialog and branding: `meshall-consent-dialog.js`, `meshall-consent-logo.js`.
 - Browser desktop renderer: `components/viewers/scripts/`.
-- Browser adapters/UI: `src/MeshAll.Server/wwwroot/app.js`, Razor components.
+- Browser bootstrap: `src/MeshAll.Server/wwwroot/app.js`; transport adapters:
+  `wwwroot/remote/`; UI and lifecycle: `RemoteViewer.razor`, `RemoteViewer.razor.cs`.
 
 ## Windows native build
 
@@ -26,7 +30,7 @@ msbuild components\agent-native\MeshAgent-2022.sln /m /p:Configuration=Release /
 ```
 
 The architecture filename is used by the native build/update tooling; packages
-and policies expose `MeshAllAgent.exe` / `MeshAllAgent` to users. The agent
+and downloads expose `EndpointControlAgent.exe` / `EndpointControlAgent` to users. The agent
 installer's display name/service/file name come from the generated policy.
 
 ## Linux native build
@@ -39,7 +43,7 @@ make -C components/agent-native linux ARCHID=6 -j2
 
 `KVM=0` is a headless diagnostic build, not a desktop-capable release. Baseline
 native binaries included for development are SHA384-verified against their
-published provenance. Rebuilt MeshAll artifacts should replace those baseline
+published provenance. Rebuilt EndpointControl artifacts should replace those baseline
 files through the same reviewed package/update process.
 
 ## Agent-side core
@@ -47,7 +51,7 @@ files through the same reviewed package/update process.
 `NativeCoreBuilder` constructs platform-specific cores from local source and
 computes their SHA384 hashes. The C# server delivers them through the native
 core-update protocol. Changes to your local core/modules therefore reach your
-enrolled agents through MeshAll, without editing a separate server installation.
+enrolled agents through EndpointControl, without editing a separate server installation.
 
 `modules_meshcore/meshall-inventory.js` collects device hardware, interfaces,
 memory/CPU, disks and uptime. `NativeInventory.cs` validates/merges its reports;

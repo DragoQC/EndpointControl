@@ -1,32 +1,131 @@
 @page "/scripts"
 @attribute [Authorize(Policy = Permissions.Scripts)]
-@inherits PageBase
+@inherits PagedPageBase<ScriptInfo>
 @inject IJSRuntime JS
-<PageTitle>Scripts · MeshAll</PageTitle>
-<div class="page-heading"><div><div class="breadcrumb">Workspace / Scripts</div><h1>The right script, in the right shell.</h1><p class="muted">Save PowerShell, Command Prompt and Unix shell scripts. Run them from a device's Commands tab.</p></div><button class="button primary" @onclick="New"><Icon Name="plus" />New script</button></div>
+
+<PageTitle>@Ui["Scripts"] · @ProductBrand.Name</PageTitle>
+<PageHeader Title="Scripts" Description="Run saved scripts from a device's Commands tab.">
+    <Actions><button class="button primary" @onclick="New"><Icon Name="plus" />@Ui["New script"]</button></Actions>
+</PageHeader>
 <Notice Error="@Error" Success="@Success" />
-@if(editing){
-    <section class="panel editor-panel"><h2>@(editId is null?"New script":"Edit script")</h2><form @onsubmit="Save" @onsubmit:preventDefault>
-        <div class="form-grid"><label>Script name<input @bind="name" required maxlength="80" /></label>
-        <label>Script type<select aria-label="Script type" @bind="kind" @bind:after="KindChanged">@foreach(var type in ScriptTypes.All){<option value="@type">@ScriptTypes.Label(type)</option>}</select></label>
-        <label>Platform<select aria-label="Platform" @bind="platform">@foreach(var target in Targets){<option>@target</option>}</select></label></div>
-        <p class="muted small-text">PowerShell scripts use powershell.exe and .ps1. Command Prompt scripts use cmd.exe and .cmd, including batch labels and exit /b. The filename extension is added automatically.</p>
-        <label>Script<textarea class="code-input" @bind="code" rows="12" required maxlength="16000" spellcheck="false"></textarea></label>
-        <div class="form-actions"><button type="button" class="button" @onclick="() => editing=false">Cancel</button><button class="button primary" disabled="@Busy">Save script</button></div>
-    </form></section>
+
+@if (editing)
+{
+    <section class="panel editor-panel">
+        <h2>@Ui[editId is null ? "New script" : "Edit script"]</h2>
+        <form @onsubmit="Save" @onsubmit:preventDefault>
+            <div class="form-grid three-column">
+                <label>@Ui["Script name"]<input @bind="name" required maxlength="80" /></label>
+                <label>@Ui["Script type"]
+                    <SelectField TValue="string" Expand="true" aria-label="@Ui["Script type"]" @bind-Value="kind" @bind-Value:after="KindChanged">
+                        @foreach (string type in ScriptTypes.All)
+                        {
+                            <option value="@type">@Ui[ScriptTypes.Label(type)]</option>
+                        }
+                    </SelectField>
+                </label>
+                <label>@Ui["Platform"]
+                    <SelectField TValue="string" Expand="true" aria-label="@Ui["Platform"]" @bind-Value="platform">
+                        @foreach (string target in Targets)
+                        {
+                            <option value="@target">@Ui[target]</option>
+                        }
+                    </SelectField>
+                </label>
+            </div>
+            <p class="muted small-text">@Ui["The script type selects the interpreter and file extension."]</p>
+            <label>@Ui["Script"]<textarea class="code-input" @bind="code" rows="12" required maxlength="16000" spellcheck="false"></textarea></label>
+            <div class="form-actions">
+                <button type="button" class="button" @onclick="() => editing = false">@Ui["Cancel"]</button>
+                <button class="button primary" disabled="@Busy">@Ui["Save script"]</button>
+            </div>
+        </form>
+    </section>
 }
-<section class="panel">@if(scripts.Count==0){<EmptyState Icon="terminal" Title="Build your own toolkit" Text="Save a script you use often. Its type determines the remote interpreter." />}else{<div class="table-scroll"><table><thead><tr><th>Script</th><th>Type</th><th>Platform</th><th>Preview</th><th></th></tr></thead><tbody>
-@foreach(var script in scripts){<tr><td><strong>@script.Name</strong></td><td><span class="group-pill">@ScriptTypes.Label(script.Kind)</span></td><td>@script.Platform</td><td><code class="script-preview">@script.Code.Split('\n')[0]</code></td><td><div class="inline-actions"><button class="link-button" @onclick="() => Edit(script)">Edit</button><button class="link-button danger-text" disabled="@Busy" @onclick="() => Delete(script)">Delete</button></div></td></tr>}
-</tbody></table></div>}</section>
-@code{
-    protected override string? ViewPermission=>Permissions.Scripts;
-    protected override string? ChangePermission=>Permissions.Scripts;
-    private List<ScriptInfo> scripts=[];private bool editing;private string? editId;private string name="",platform="Windows",code="",kind=".ps1";
-    private string[] Targets=>kind is ".ps1" or ".cmd"?["Windows"]:kind==".sh"?["Linux","macOS","Any"]:["Windows","Linux","macOS","Any"];
-    private void KindChanged(){if(kind is ".ps1" or ".cmd")platform="Windows";else if(kind==".sh"&&platform=="Windows")platform="Linux";}
-    protected override Task LoadAsync(){scripts=Store.Scripts();return Task.CompletedTask;}
-    private void New(){editId=null;name=code="";platform="Windows";kind=".ps1";editing=true;}
-    private void Edit(ScriptInfo script){editId=script.Id;name=script.Name;code=script.Code;platform=script.Platform;kind=script.Kind;editing=true;}
-    private Task Save()=>Act(()=>{Store.SaveScript(editId,name,platform,code,kind);Store.Audit(CurrentUser!.Name,"Script saved",name,ScriptTypes.Label(kind));editing=false;},"Script saved.");
-    private async Task Delete(ScriptInfo script){if(await JS.InvokeAsync<bool>("confirm",$"Delete {script.Name}?"))await Act(()=>{Store.DeleteScript(script.Id);Store.Audit(CurrentUser!.Name,"Script deleted",script.Name);},"Script deleted.");}
+
+<PagedTable Result="Rows" Label="Saved scripts" ItemKey="script => script.Id"
+            PageChanged="ChangePageAsync" PageSizeChanged="ChangePageSizeAsync"
+            EmptyTitle="No saved scripts" EmptyText="Create a script to use it on compatible devices.">
+    <Header><th>@Ui["Script"]</th><th>@Ui["Type"]</th><th>@Ui["Platform"]</th><th>@Ui["Preview"]</th><th></th></Header>
+    <RowTemplate Context="script">
+        <td><strong>@script.Name</strong></td>
+        <td><span class="group-pill">@Ui[ScriptTypes.Label(script.Kind)]</span></td>
+        <td>@Ui[script.Platform]</td>
+        <td><code class="script-preview">@script.Code.Split('\n')[0]</code></td>
+        <td>
+            <div class="inline-actions">
+                <button class="link-button" @onclick="() => Edit(script)">@Ui["Edit"]</button>
+                <button class="link-button danger-text" disabled="@Busy" @onclick="() => Delete(script)">@Ui["Delete"]</button>
+            </div>
+        </td>
+    </RowTemplate>
+</PagedTable>
+
+@code
+{
+    protected override string? ViewPermission => Permissions.Scripts;
+    protected override string? ChangePermission => Permissions.Scripts;
+
+    private bool editing;
+    private string? editId;
+    private string name = "";
+    private string platform = "Windows";
+    private string code = "";
+    private string kind = ".ps1";
+    private string[] Targets => kind switch
+    {
+        ".ps1" or ".cmd" => ["Windows"],
+        ".sh" or "bash" => ["Linux", "macOS", "Any"],
+        _ => ["Windows", "Linux", "macOS", "Any"]
+    };
+
+    protected override PageResult<ScriptInfo> ReadPage(PageRequest request) => Store.ScriptPage(request);
+    private void KindChanged()
+    {
+        if (kind is ".ps1" or ".cmd")
+        {
+            platform = "Windows";
+        }
+        else if (kind is ".sh" or "bash" && platform == "Windows")
+        {
+            platform = "Linux";
+        }
+    }
+
+    private void New()
+    {
+        editId = null;
+        name = code = "";
+        platform = "Windows";
+        kind = ".ps1";
+        editing = true;
+    }
+
+    private void Edit(ScriptInfo script)
+    {
+        editId = script.Id;
+        name = script.Name;
+        code = script.Code;
+        platform = script.Platform;
+        kind = script.Kind;
+        editing = true;
+    }
+
+    private Task Save() => Act(() =>
+    {
+        Store.SaveScript(editId, name, platform, code, kind);
+        Store.Audit(CurrentUser!.Name, "Script saved", name, ScriptTypes.Label(kind));
+        editing = false;
+    }, "Script saved.");
+    private async Task Delete(ScriptInfo script)
+    {
+        if (await JS.InvokeAsync<bool>("confirm", Ui["Delete {0}?", script.Name]))
+        {
+            await Act(() =>
+            {
+                Store.DeleteScript(script.Id);
+                Store.Audit(CurrentUser!.Name, "Script deleted", script.Name);
+            }, "Script deleted.");
+        }
+    }
 }

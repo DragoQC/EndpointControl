@@ -4,5 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Product>EndpointControl</Product>
+    <Company>EndpointControl</Company>
   </PropertyGroup>
 </Project>

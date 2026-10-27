@@ -1,6 +1,6 @@
 # Third-party notices
 
-MeshAll's original C#, Razor, browser adapters, scripts, and documentation are
+EndpointControl's original C#, Razor, browser adapters, scripts, and documentation are
 MIT-licensed. This does not replace the licenses of its dependencies.
 
 | Component | License | Use |
@@ -18,12 +18,12 @@ MIT-licensed. This does not replace the licenses of its dependencies.
 
 Third-party browser assets retain their license files beside the generated
 assets. NuGet/npm package licenses remain applicable to those packages. Native
-protocol workers are dependencies, not MeshAll-owned source.
+protocol workers are dependencies, not EndpointControl-owned source.
 
 The product does not include or launch the original MeshCentral JavaScript
 server/orchestrator. Native agent/viewer technology is intentionally retained,
 attributed, and maintained in this repository. Baseline binary provenance is in
 `components/agent-binaries/provenance.json`; retained source keeps its own notices.
-Single-file agent downloads embed the native Apache-2.0 license, MeshAll MIT
+Single-file agent downloads embed the native Apache-2.0 license, EndpointControl MIT
 license and these notices ahead of the native embedded-policy trailer. The same
 notices are available from the instance's `/licenses/agent` endpoint.

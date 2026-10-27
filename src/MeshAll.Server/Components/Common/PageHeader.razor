@@ -1,0 +1,32 @@
+<div class="page-heading">
+    <div>
+        @if (!string.IsNullOrWhiteSpace(Breadcrumb))
+        {
+            <div class="breadcrumb">@Ui[Breadcrumb]</div>
+        }
+        <h1>@Ui[Title]</h1>
+        @if (!string.IsNullOrWhiteSpace(Description))
+        {
+            <p class="muted">@Ui.Message(Description)</p>
+        }
+    </div>
+    @if (Actions is not null)
+    {
+        <div class="inline-actions">@Actions</div>
+    }
+</div>
+
+@code
+{
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = "";
+
+    [Parameter]
+    public string? Breadcrumb { get; set; }
+
+    [Parameter]
+    public string? Description { get; set; }
+
+    [Parameter]
+    public RenderFragment? Actions { get; set; }
+}

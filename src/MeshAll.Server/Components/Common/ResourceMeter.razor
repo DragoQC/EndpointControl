@@ -1,0 +1,41 @@
+<div class="resource-meter @ToneClass @(Compact ? "compact" : "")">
+    <div class="resource-meter-label">
+        <span>@Ui[Label]</span>
+        <strong>@DisplayFormat.Percent(Percent)</strong>
+    </div>
+    @if (Percent is double value && double.IsFinite(value))
+    {
+        <meter min="0" max="100" value="@DisplayFormat.CssNumber(Math.Clamp(value, 0, 100))"
+               aria-label="@Ui[Label]" aria-valuetext="@DisplayFormat.Percent(value)"></meter>
+    }
+    else
+    {
+        <div class="resource-meter-empty" aria-hidden="true"></div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Detail))
+    {
+        <small>@Ui.Message(Detail)</small>
+    }
+</div>
+
+@code
+{
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = "";
+
+    [Parameter]
+    public double? Percent { get; set; }
+
+    [Parameter]
+    public string? Detail { get; set; }
+
+    [Parameter]
+    public bool Compact { get; set; }
+
+    [Parameter]
+    public double WarningAt { get; set; } = 85;
+
+    [Parameter]
+    public double CriticalAt { get; set; } = 97;
+    private string ToneClass => Percent is null ? "unknown" : Percent >= CriticalAt ? "critical" : Percent >= WarningAt ? "warning" : "healthy";
+}

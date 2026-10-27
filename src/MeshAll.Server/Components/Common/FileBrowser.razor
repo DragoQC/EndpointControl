@@ -1,35 +1,167 @@
 @inherits PageBase
 @inject IJSRuntime JS
+
 <Notice Error="@Error" Success="@Success" />
-<section class="panel"><div class="panel-header"><div><h2>File manager</h2><p>Browse, upload, and download files. Up to 5 MB per transfer.</p></div><div class="inline-actions">@if(Can(Permissions.FilesWrite)){<label class="button upload-button"><Icon Name="plus" />Upload file<InputFile OnChange="Upload" disabled="@Busy" /></label>}</div></div>
-<form class="file-path" @onsubmit="Navigate" @onsubmit:preventDefault><button type="button" class="button small" disabled="@(Busy || listing?.Parent is null)" @onclick="Up">Up</button><input @bind="path" aria-label="Remote path" placeholder="Agent file root" /><button class="button small" disabled="@Busy">Open path</button></form>
-<div class="folder-create">@if(Can(Permissions.FilesWrite)){<input @bind="folderName" placeholder="New folder name" aria-label="New folder name" maxlength="150" /><button class="button small" disabled="@Busy" @onclick="CreateFolder">Create folder</button>}<span class="muted small-text">@listing?.Entries.Length items</span></div>
-@if (listing is null) { <EmptyState Icon="folder" Title="Open the remote filesystem" Text="Choose Open path to browse the agent’s configured file root." /> }
-else { <div class="table-scroll"><table><thead><tr><th>Name</th><th>Size</th><th>Modified</th><th></th></tr></thead><tbody>@foreach (var f in listing.Entries) { <tr><td><span class="file-name"><Icon Name="@(f.Directory ? "folder" : "file")" />@if (f.Directory) { <button class="link-button" @onclick="() => OpenFolder(f.Path)">@f.Name</button> } else { <strong>@f.Name</strong> }</span></td><td>@(f.Directory ? "Folder" : Bytes(f.Size))</td><td class="muted">@f.Modified.ToLocalTime().ToString("g")</td><td><div class="inline-actions">@if (!f.Directory) { <a class="text-link" href="@($"/api/devices/{DeviceId}/file?path={Uri.EscapeDataString(f.Path)}")" download>Download</a> }@if(Can(Permissions.FilesWrite)){<button class="link-button danger-text" disabled="@Busy" @onclick="() => Delete(f)">Delete</button>}</div></td></tr> }</tbody></table></div>@if (listing.Entries.Length == 0) { <EmptyState Icon="folder" Title="An empty folder" Text="Upload a file or create a folder to get started." /> } }
-</section>
-@code {
-    [Parameter] public string DeviceId { get; set; } = "";
-    protected override string? ViewPermission => Permissions.FilesRead;
-    private string path = "", folderName = ""; private FileListing? listing;
-    private Task Navigate() => Act(async () => { listing = await Workspace.RunAsync<FileListing>(DeviceId, "files.list", new FileInput(path)); path = listing.Path; });
-    private async Task OpenFolder(string value) { path = value; await Navigate(); }
-    private async Task Up() { if (listing?.Parent is { } parent) await OpenFolder(parent); }
-    private string Combine(string name) => (listing?.Path ?? path).TrimEnd('/', '\\') + "/" + name;
-    private Task CreateFolder() => Act(async () => {
-        CheckName(folderName); await Workspace.RunAsync<string>(DeviceId, "files.mkdir", new FileInput(Combine(folderName))); folderName = "";
-        listing = await Workspace.RunAsync<FileListing>(DeviceId, "files.list", new FileInput(path)); path = listing.Path;
-    }, "Folder created.");
-    private Task Upload(InputFileChangeEventArgs e) => Act(async () => {
-        var file = e.File; CheckName(file.Name);
-        using var stream = new MemoryStream(); await file.OpenReadStream(Wire.MaxFileBytes).CopyToAsync(stream);
-        await Workspace.RunAsync<string>(DeviceId, "files.write", new FileInput(Combine(file.Name), Convert.ToBase64String(stream.ToArray())));
-        listing = await Workspace.RunAsync<FileListing>(DeviceId, "files.list", new FileInput(path)); path = listing.Path;
-    }, "File uploaded.");
-    private async Task Delete(RemoteFile f) {
-        if (await JS.InvokeAsync<bool>("confirm", $"Delete {f.Name}? Folders must be empty.")) await Act(async () => {
-            await Workspace.RunAsync<string>(DeviceId, "files.delete", new FileInput(f.Path));
-            listing = await Workspace.RunAsync<FileListing>(DeviceId, "files.list", new FileInput(path));
-        }, "Item deleted.");
+<section class="panel">
+    <div class="panel-header">
+        <div><h2>@Ui["File manager"]</h2><p>@Ui["Maximum transfer size: 5 MiB."]</p></div>
+        <div class="inline-actions">
+            @if (Can(Permissions.FilesWrite))
+            {
+                <label class="button upload-button">
+                    <Icon Name="plus" />@Ui["Upload file"]<InputFile OnChange="Upload" disabled="@Busy" />
+                </label>
+            }
+        </div>
+    </div>
+    <form class="file-path" @onsubmit="Navigate" @onsubmit:preventDefault>
+        <button type="button" class="button small" disabled="@(Busy || listing?.Parent is null)" @onclick="Up">@Ui["Up"]</button>
+        <input @bind="path" aria-label="@Ui["Remote path"]" placeholder="@Ui["Agent file root"]" />
+        <button class="button small" disabled="@Busy">@Ui["Open path"]</button>
+    </form>
+    <div class="folder-create">
+        @if (Can(Permissions.FilesWrite))
+        {
+            <input @bind="folderName" placeholder="@Ui["New folder name"]" aria-label="@Ui["New folder name"]" maxlength="150" />
+            <button class="button small" disabled="@Busy" @onclick="CreateFolder">@Ui["Create folder"]</button>
+        }
+        <span class="muted small-text">@Ui.Plural(listing?.Entries.Length ?? 0, "{0} item", "{0} items")</span>
+    </div>
+    @if (listing is null)
+    {
+        <EmptyState Icon="folder" Title="Open the remote filesystem" Text="Choose Open path to browse the agent’s configured file root." />
     }
-    private static void CheckName(string name) { if (string.IsNullOrWhiteSpace(name) || name.IndexOfAny(['/', '\\']) >= 0 || name is "." or "..") throw new InvalidOperationException("Enter a file or folder name without a path."); }
+    else
+    {
+        <DataTable Items="files.Items" Label="Remote files" ItemKey="file => file.Path"
+                   EmptyTitle="An empty folder" EmptyText="Upload a file or create a folder to get started.">
+            <Header><th>@Ui["Name"]</th><th>@Ui["Size"]</th><th>@Ui["Modified"]</th><th></th></Header>
+            <RowTemplate Context="file">
+                <td>
+                    <span class="file-name">
+                        <Icon Name="@(file.Directory ? "folder" : "file")" />
+                        @if (file.Directory)
+                        {
+                            <button class="link-button" @onclick="() => OpenFolder(file.Path)">@file.Name</button>
+                        }
+                        else
+                        {
+                            <strong>@file.Name</strong>
+                        }
+                    </span>
+                </td>
+                <td>@(file.Directory ? Ui["Folder"] : DisplayFormat.Bytes(file.Size))</td>
+                <td class="muted">@file.Modified.ToLocalTime().ToString("g")</td>
+                <td>
+                    <div class="inline-actions">
+                        @if (!file.Directory)
+                        {
+                            <a class="text-link" href="@($"/api/devices/{DeviceId}/file?path={Uri.EscapeDataString(file.Path)}")" download>@Ui["Download"]</a>
+                        }
+                        @if (Can(Permissions.FilesWrite))
+                        {
+                            <button class="link-button danger-text" disabled="@Busy" @onclick="() => Delete(file)">@Ui["Delete"]</button>
+                        }
+                    </div>
+                </td>
+            </RowTemplate>
+        </DataTable>
+        <Pagination TotalCount="files.TotalCount" PageNumber="files.PageNumber" PageSize="files.PageSize"
+                    PageChanged="ChangePage" PageSizeChanged="ChangePageSize" Label="Remote file pages" />
+    }
+</section>
+
+@code
+{
+    [Parameter]
+    public string DeviceId { get; set; } = "";
+    protected override string? ViewPermission => Permissions.FilesRead;
+
+    private string path = "";
+    private string folderName = "";
+    private FileListing? listing;
+    private PageResult<RemoteFile> files = PageResult<RemoteFile>.Empty();
+    private int page = 1;
+    private int pageSize = PageRequest.MaximumSize;
+    private Task Navigate() => Act(async () =>
+    {
+        page = 1;
+        await RefreshListing();
+    });
+    private async Task RefreshListing()
+    {
+        listing = await Workspace.RunAsync<FileListing>(DeviceId, "files.list", new FileInput(path));
+        path = listing.Path;
+        UpdatePage();
+    }
+
+    private void ChangePage(int number)
+    {
+        page = number;
+        UpdatePage();
+    }
+
+    private void ChangePageSize(int size)
+    {
+        page = 1;
+        pageSize = size;
+        UpdatePage();
+    }
+
+    private void UpdatePage()
+    {
+        files = PageResult<RemoteFile>.FromSnapshot(listing?.Entries ?? [], new PageRequest(page, pageSize));
+        page = files.PageNumber;
+    }
+
+    private async Task OpenFolder(string folder)
+    {
+        path = folder;
+        await Navigate();
+    }
+
+    private async Task Up()
+    {
+        if (listing?.Parent is string parent)
+        {
+            await OpenFolder(parent);
+        }
+    }
+
+    private string Combine(string name) => (listing?.Path ?? path).TrimEnd('/', '\\') + "/" + name;
+    private Task CreateFolder() => Act(async () =>
+    {
+        CheckName(folderName);
+        await Workspace.RunAsync<string>(DeviceId, "files.mkdir", new FileInput(Combine(folderName)));
+        folderName = "";
+        await RefreshListing();
+    }, "Folder created.", Permissions.FilesWrite);
+    private Task Upload(InputFileChangeEventArgs arguments) => Act(async () =>
+    {
+        IBrowserFile file = arguments.File;
+        CheckName(file.Name);
+        using MemoryStream buffer = new();
+        await file.OpenReadStream(Wire.MaxFileBytes).CopyToAsync(buffer);
+        await Workspace.RunAsync<string>(DeviceId, "files.write", new FileInput(Combine(file.Name), Convert.ToBase64String(buffer.ToArray())));
+        await RefreshListing();
+    }, "File uploaded.", Permissions.FilesWrite);
+    private async Task Delete(RemoteFile file)
+    {
+        if (await JS.InvokeAsync<bool>("confirm", Ui["Delete {0}? Folders must be empty.", file.Name]))
+        {
+            await Act(async () =>
+            {
+                await Workspace.RunAsync<string>(DeviceId, "files.delete", new FileInput(file.Path));
+                await RefreshListing();
+            }, "Item deleted.", Permissions.FilesWrite);
+        }
+    }
+
+    private static void CheckName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name) || name.IndexOfAny(['/', '\\']) >= 0 || name is "." or "..")
+        {
+            throw new InvalidOperationException("Enter a file or folder name without a path.");
+        }
+    }
 }

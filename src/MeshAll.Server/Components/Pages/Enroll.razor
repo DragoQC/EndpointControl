@@ -1,31 +1,136 @@
 @page "/enroll"
 @attribute [Authorize(Policy = Permissions.Enroll)]
-@inherits PageBase
+@inherits PagedPageBase<TokenInfo>
 @inject NativeAgentHub NativeAgents
-<PageTitle>Add a device · MeshAll</PageTitle>
-<div class="page-heading"><div><div class="breadcrumb"><a href="/devices">Devices</a> / Add a device</div><h1>Download. Install. Connected.</h1><p class="muted">One executable with your MeshAll instance and enrollment policy already embedded.</p></div></div>
+@inject NativeMsiBuilder Msi
+@inject AgentInstallerDownloads Installers
+
+<PageTitle>@Ui["Add a device"] · @ProductBrand.Name</PageTitle>
+<PageHeader Title="Add device" Description="Create an enrollment key, then download the agent." />
 <Notice Error="@Error" Success="@Success" />
-<div class="enroll-grid"><section class="panel editor-panel"><h2>Create an enrollment key</h2><form @onsubmit="Generate" @onsubmit:preventDefault>
-    <label>Key name<input @bind="name" required maxlength="70" /></label><label>Device group<select @bind="group">@foreach(var item in groups){<option value="@item.Id">@item.Name</option>}</select></label>
-    <div class="form-grid"><label>Maximum devices<input type="number" @bind="uses" min="1" max="100" /></label><label>Expires in (hours)<input type="number" @bind="hours" min="1" max="168" /></label></div>
-    <button class="button primary" disabled="@Busy">Create enrollment key</button>
-</form></section>
-<section class="panel editor-panel"><span class="stat-icon blue"><Icon Name="windows" /></span><h2 class="mt-4">The native installation experience.</h2>
-    <p class="muted">Windows: download and run the executable, then use the native Install / Update action. The service starts and connects to this instance automatically.</p>
-    @if(token is not null){
-        <div class="download-links">@foreach(var platform in NativeAgents.AvailablePlatforms){<a class="button" href="@($"/api/agents/native-executable?token={token}&platform={platform}")"><Icon Name="download" />@Label(platform)</a>}</div>
-        <p class="muted small-text mt-4">The same single-file format includes the instance configuration for Linux and macOS. After download: <code>chmod +x MeshAllAgent; sudo ./MeshAllAgent -fullinstall</code>.</p>
-        <p class="muted small-text mt-3">Install the background service with the enrollment key before using an interactive agent identity. Enrollment expiry does not disconnect an already enrolled device.</p>
-    }else{<div class="code-placeholder">Create a key to download an enrollment-ready executable.</div>}
-    <p class="muted small-text mt-4">Native component notices are embedded in the executable and available under <a class="text-link" href="/licenses/agent" target="_blank" rel="noopener">agent licenses</a>.</p>
-</section></div>
-<section class="panel"><div class="panel-header"><h2>Enrollment keys</h2></div><div class="table-scroll"><table><thead><tr><th>Name</th><th>Expires</th><th>Uses remaining</th><th></th></tr></thead><tbody>@foreach(var item in tokens){<tr><td>@item.Name</td><td>@item.Expires.ToLocalTime().ToString("g")</td><td>@item.Remaining</td><td><button class="link-button danger-text" @onclick="() => Revoke(item)">Revoke</button></td></tr>}</tbody></table></div></section>
-@code{
-    protected override string? ViewPermission=>Permissions.Enroll;
-    protected override string? ChangePermission=>Permissions.Enroll;
-    private List<GroupInfo> groups=[];private List<TokenInfo> tokens=[];private string name="",group="default";private int uses=1,hours=24;private string? token;
-    private static string Label(string platform)=>platform switch{"win-x64"=>"Windows x64 (.exe)","win-arm64"=>"Windows ARM64 (.exe)","linux-x64"=>"Linux x64","linux-arm64"=>"Linux ARM64","osx-x64"=>"macOS Intel","osx-arm64"=>"macOS Apple Silicon",_=>platform};
-    protected override Task LoadAsync(){groups=Store.Groups();tokens=Store.Tokens();return Task.CompletedTask;}
-    private Task Generate()=>Act(()=>{token=Store.CreateToken(name,group,uses,hours).Token;Store.Audit(CurrentUser!.Name,"Enrollment key created",name);},"Enrollment key created.");
-    private Task Revoke(TokenInfo item)=>Act(()=>{Store.RevokeToken(item.Id);Store.Audit(CurrentUser!.Name,"Enrollment key revoked",item.Name);},"Enrollment key revoked.");
+
+<div class="enroll-grid">
+    <section class="panel editor-panel">
+        <h2>@Ui["Create an enrollment key"]</h2>
+        <form @onsubmit="Generate" @onsubmit:preventDefault>
+            <label>@Ui["Key name"]<input @bind="name" required maxlength="70" /></label>
+            <label>@Ui["Device group"]
+                <SelectField TValue="string" Expand="true" @bind-Value="group">
+                    @foreach (GroupInfo item in groups)
+                    {
+                        <option value="@item.Id">@Ui.GroupName(item.Name, item.Id)</option>
+                    }
+                </SelectField>
+            </label>
+            <div class="form-grid">
+                <label>@Ui["Maximum devices"]<input type="number" @bind="uses" min="1" max="@EnrollmentPolicy.MaximumDevices" /></label>
+                <label>@Ui["Expires in (hours)"]<input type="number" @bind="hours" min="1" max="@EnrollmentPolicy.MaximumHours" /></label>
+            </div>
+            <p class="muted small-text">@Ui["Set enough uses and time for every computer's first enrollment. Maximum: 10,000 devices and 90 days."]</p>
+            <button class="button primary" disabled="@Busy">@Ui["Create enrollment key"]</button>
+        </form>
+    </section>
+    <section class="panel editor-panel">
+        <span class="stat-icon blue"><Icon Name="windows" /></span>
+        <h2>@Ui["Agent installation"]</h2>
+        <p class="muted">@Ui["Windows: run the executable and select Install or Update."]</p>
+        @if (token is not null)
+        {
+            <div class="download-links">
+                @foreach (string platform in NativeAgents.AvailablePlatforms)
+                {
+                    <a class="button" href="@($"/api/agents/native-executable?token={token}&platform={platform}")" download data-enhance-nav="false">
+                        <Icon Name="download" />@Ui[PlatformLabel(platform)]
+                    </a>
+                }
+                @if (Msi.Available && NativeAgents.AvailablePlatforms.Contains(NativeMsiPackage.Platform))
+                {
+                    <a class="button" href="@($"/api/agents/native-msi?token={token}&platform={NativeMsiPackage.Platform}")" download data-enhance-nav="false">
+                        <Icon Name="download" />@Ui["Windows x64 (.msi)"]
+                    </a>
+                }
+            </div>
+            <p class="muted small-text">@Ui["GPO: assign the MSI to computers from a UNC network share. Enrollment settings are included."]</p>
+            <code class="deployment-command">msiexec /i "\\server\software\@(Msi.FileName)" /qn /norestart</code>
+            @if (!Msi.Available)
+            {
+                <p class="muted small-text">@Ui["Install wixl and msitools on the server to enable MSI downloads."]</p>
+            }
+            <p class="muted small-text">@Ui["Linux/macOS:"] <code>chmod +x EndpointControlAgent; sudo ./EndpointControlAgent -fullinstall</code></p>
+            <p class="muted small-text">@Ui["Install the service before starting the agent interactively. Key expiration does not disconnect enrolled devices."]</p>
+        }
+        else
+        {
+            <div class="code-placeholder">@Ui["Create a key to download the agent."]</div>
+        }
+        <a class="text-link" href="/licenses/agent" target="_blank" rel="noopener">@Ui["Agent licenses"]</a>
+    </section>
+</div>
+
+@if (installer is not null)
+{
+    <section class="panel editor-panel" id="windows-msi">
+        <div class="panel-header">
+            <div><h2>@Ui["Windows agent MSI"]</h2><p>@Ui["Ready for silent installation and Group Policy deployment."]</p></div>
+            <a class="button primary" href="/api/agents/windows-msi" download data-enhance-nav="false"><Icon Name="download" />@Ui["Download Windows x64 MSI"]</a>
+        </div>
+        <dl class="details-grid">
+            <dt>@Ui["Version"]</dt><dd>@installer.Version</dd>
+            <dt>@Ui["Device group"]</dt><dd>@installer.GroupName</dd>
+            <dt>@Ui["Enrollment expires"]</dt><dd>@installer.Expires.ToLocalTime().ToString("g")</dd>
+        </dl>
+        <code class="deployment-command">msiexec /i "\\server\software\@(installer.FileName)" /qn /norestart</code>
+    </section>
+}
+
+<PagedTable Result="Rows" Label="Enrollment keys" ItemKey="key => key.Id"
+            PageChanged="ChangePageAsync" PageSizeChanged="ChangePageSizeAsync"
+            EmptyTitle="No enrollment keys" EmptyText="Create a key to connect a device.">
+    <Toolbar><h2>@Ui["Enrollment keys"]</h2></Toolbar>
+    <Header><th>@Ui["Name"]</th><th>@Ui["Expires"]</th><th>@Ui["Uses remaining"]</th><th></th></Header>
+    <RowTemplate Context="key">
+        <td>@key.Name</td><td>@key.Expires.ToLocalTime().ToString("g")</td><td>@key.Remaining</td>
+        <td><button class="link-button danger-text" @onclick="() => Revoke(key)">@Ui["Revoke"]</button></td>
+    </RowTemplate>
+</PagedTable>
+
+@code
+{
+    protected override string? ViewPermission => Permissions.Enroll;
+    protected override string? ChangePermission => Permissions.Enroll;
+
+    private List<GroupInfo> groups = [];
+    private string name = "";
+    private string group = "default";
+    private int uses = 1;
+    private int hours = 24;
+    private string? token;
+    private AgentInstallerInfo? installer;
+    private static string PlatformLabel(string platform) => platform switch
+    {
+        "win-x64" => "Windows x64 (.exe)",
+        "win-arm64" => "Windows ARM64 (.exe)",
+        "linux-x64" => "Linux x64",
+        "linux-arm64" => "Linux ARM64",
+        "osx-x64" => "macOS Intel",
+        "osx-arm64" => "macOS Apple Silicon",
+        _ => platform
+    };
+    protected override PageResult<TokenInfo> ReadPage(PageRequest request)
+    {
+        groups = Store.Groups();
+        installer = Installers.Current;
+        return Store.TokenPage(request);
+    }
+
+    private Task Generate() => Act(() =>
+    {
+        token = Store.CreateToken(name, group, uses, hours).Token;
+        Store.Audit(CurrentUser!.Name, "Enrollment key created", name);
+    }, "Enrollment key created.");
+    private Task Revoke(TokenInfo key) => Act(() =>
+    {
+        Store.RevokeToken(key.Id);
+        Store.Audit(CurrentUser!.Name, "Enrollment key revoked", key.Name);
+    }, "Enrollment key revoked.");
 }

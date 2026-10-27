@@ -5,7 +5,6 @@ import asyncio
 import base64
 import io
 import secrets
-from urllib.parse import parse_qs, urlparse
 
 from PIL import Image
 from playwright.async_api import async_playwright, expect
@@ -74,9 +73,7 @@ async def main(args):
             ).click()
             link = page.locator(".download-links a").first
             await link.wait_for()
-            token = parse_qs(urlparse(await link.get_attribute("href")).query)["token"][
-                0
-            ]
+            token = await page.locator("[data-enrollment-key]").input_value()
             key_created = True
             response = await context.request.post(
                 base + "/api/agents/enroll",

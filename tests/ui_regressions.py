@@ -8,7 +8,6 @@ import json
 import secrets
 import ssl
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
 
 from PIL import Image, ImageDraw
 from playwright.async_api import async_playwright, expect
@@ -244,7 +243,7 @@ async def main(args):
         ).click()
         link = page.locator(".download-links a").first
         await link.wait_for()
-        token = parse_qs(urlparse(await link.get_attribute("href")).query)["token"][0]
+        token = await page.locator("[data-enrollment-key]").input_value()
         response = await context.request.post(
             base + "/api/agents/enroll",
             data={"token": token, "name": name, "platform": "Windows"},

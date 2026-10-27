@@ -5,6 +5,20 @@ namespace MeshAll.Server.Services;
 
 public static class NativeAgentExecutable
 {
+    public static string EmbeddedPolicy(byte[] executable)
+    {
+        if (executable.Length < 20 || !executable.AsSpan(executable.Length - 16).SequenceEqual(PolicyMarker))
+        {
+            throw new InvalidOperationException("The executable does not contain an enrollment policy.");
+        }
+        int length = BinaryPrimitives.ReadInt32BigEndian(executable.AsSpan(executable.Length - 20, 4));
+        if (length is < 1 or > 65536 || length > executable.Length - 20)
+        {
+            throw new InvalidOperationException("The executable does not contain an enrollment policy.");
+        }
+        return Encoding.UTF8.GetString(executable, executable.Length - 20 - length, length);
+    }
+
     public static string LicenseNotices() => "EndpointControl native agent\nCopyright Intel Corporation and contributors. EndpointControl modifications: DragoQC and contributors.\nSource: https://github.com/DragoQC/EndpointControl/tree/main/components/agent-native\n\n" +
         string.Join("\n\n", new[] { "LICENSE", "MeshAll-MIT-LICENSE", "NOTICES.md" }
             .Select(name => File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "NativeBinaries", name))));

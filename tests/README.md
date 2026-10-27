@@ -137,9 +137,10 @@ and payload validation, stable upgrade identities and bounded bulk-deployment ke
 See `docs/WINDOWS-GPO.md` for a domain computer-startup pilot.
 
 `tests/msi_workflows.py --base-url URL --auth-state /private/state.json` checks
-the authenticated download, anonymous rejection, no-store response, unchanged key
-uses, and English/French GPO instructions at desktop/tablet/mobile widths on a
-disposable instance with the packaging tools installed.
+per-key EXE/MSI credential/group matching, anonymous rejection, 400 shared uses,
+free downloads, registration decrement, selection after reload, exhausted view-only
+keys, and English/French modal focus/Escape/responsive behavior on a disposable
+instance. Pass `--msiextract PATH` when msitools is not installed system-wide.
 
 ## Live native-agent checks
 

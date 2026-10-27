@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using MeshAll.Shared;
 using Microsoft.Data.Sqlite;
+using Microsoft.AspNetCore.DataProtection;
 
 namespace MeshAll.Server.Services;
 
@@ -23,9 +24,17 @@ public sealed partial class Store
 
             string id = Guid.NewGuid().ToString("N");
             string token = Secret();
-            Execute("INSERT INTO tokens VALUES($0,$1,$2,$3,$4,$5)", id, Required(name, 70), Hash(token), groupId,
-                DateTimeOffset.UtcNow.AddHours(hours).ToString("O"), uses);
-            Execute("INSERT INTO native_enrollments VALUES($0,$1)", Hash(NativeMeshKey(token)), id);
+            using SqliteConnection connection = Open();
+            using SqliteTransaction transaction = connection.BeginTransaction();
+            using SqliteCommand command = Command(connection, """
+                INSERT INTO tokens VALUES($0,$1,$2,$3,$4,$5);
+                INSERT INTO native_enrollments VALUES($6,$0);
+                INSERT INTO enrollment_secrets(tokenId,secret) VALUES($0,$7)
+                """, [id, Required(name, 70), Hash(token), groupId, DateTimeOffset.UtcNow.AddHours(hours).ToString("O"), uses,
+                    Hash(NativeMeshKey(token)), enrollmentKeysProtector.CreateProtector(id).Protect(token)]);
+            command.Transaction = transaction;
+            command.ExecuteNonQuery();
+            transaction.Commit();
             return (id, token);
         }
     }
@@ -33,7 +42,22 @@ public sealed partial class Store
     public List<TokenInfo> Tokens() => Query("SELECT id,name,groupId,expires,remaining FROM tokens ORDER BY expires DESC",
         reader => new TokenInfo(reader.GetString(0), reader.GetString(1), reader.GetString(2), Date(reader.GetString(3)), reader.GetInt32(4)));
 
-    public void RevokeToken(string id) => Execute("DELETE FROM tokens WHERE id=$0", id);
+    public void RevokeToken(string id)
+    {
+        lock (gate)
+        {
+            using SqliteConnection connection = Open();
+            using SqliteTransaction transaction = connection.BeginTransaction();
+            using SqliteCommand command = Command(connection,
+                "DELETE FROM enrollment_secrets WHERE tokenId=$0; DELETE FROM tokens WHERE id=$0; DELETE FROM native_enrollments WHERE tokenId=$0", [id]);
+            command.Transaction = transaction;
+            command.ExecuteNonQuery();
+            transaction.Commit();
+        }
+    }
+
+    public TokenInfo? FindEnrollmentToken(string id) => Query("SELECT id,name,groupId,expires,remaining FROM tokens WHERE id=$0",
+        reader => new TokenInfo(reader.GetString(0), reader.GetString(1), reader.GetString(2), Date(reader.GetString(3)), reader.GetInt32(4)), id).SingleOrDefault();
 
     public bool EnrollmentTokenUsable(string id) => Scalar<long>(
         "SELECT EXISTS(SELECT 1 FROM tokens WHERE id=$0 AND expires>$1 AND remaining>0)", id, Now()) != 0;

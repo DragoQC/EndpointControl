@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 // Keep the write/check scope identical and restricted to first-party sources.
 const files = [
     'wwwroot/app.js',
+    'wwwroot/dialog.mjs',
     'wwwroot/remote/*.mjs',
     'wwwroot/desktop-session.mjs',
     'wwwroot/MeshAll.Server.lib.module.js',

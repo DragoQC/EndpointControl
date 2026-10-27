@@ -4,7 +4,6 @@ import argparse
 import asyncio
 import secrets
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
 
 from playwright.async_api import async_playwright, expect
 from localization import ready, select_language, text
@@ -63,9 +62,7 @@ async def main(args):
             ).click()
             link = page.locator(".download-links a").first
             await link.wait_for()
-            token = parse_qs(urlparse(await link.get_attribute("href")).query)["token"][
-                0
-            ]
+            token = await page.locator("[data-enrollment-key]").input_value()
             created_key = True
             response = await context.request.post(
                 base + "/api/agents/enroll",

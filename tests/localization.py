@@ -5,7 +5,6 @@ import asyncio
 import secrets
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
 
 from playwright.async_api import async_playwright, expect
 from ui_regressions import DesktopAgent
@@ -26,7 +25,7 @@ ROUTES = [
     ("/users", "Users", "Add user"),
     ("/roles", "Roles", "Create role"),
     ("/groups", "Device groups", "New group"),
-    ("/enroll", "Add device", None),
+    ("/enroll", "Enrollment keys", None),
     ("/settings", "App settings", None),
     ("/account/security", "Account security", None),
     ("/install", "Server installation", None),
@@ -124,9 +123,7 @@ async def main(args):
             ).click()
             link = page.locator(".download-links a").first
             await link.wait_for()
-            token = parse_qs(urlparse(await link.get_attribute("href")).query)["token"][
-                0
-            ]
+            token = await page.locator("[data-enrollment-key]").input_value()
             response = await context.request.post(
                 base + "/api/agents/enroll",
                 data={"token": token, "name": name, "platform": "Windows"},
@@ -155,7 +152,7 @@ async def main(args):
                     )
                     await expect(
                         page.get_by_role(
-                            "heading", name=text(heading, language), exact=True
+                            "heading", name=text(heading, language), exact=True, level=1
                         )
                     ).to_be_visible()
                     assert "fleet" not in (await page.title()).lower(), route

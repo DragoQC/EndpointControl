@@ -7,19 +7,25 @@ configuration file, a transform, or an interactive installation step.
 
 ## Generate the package
 
-1. Open **Devices → Add device** with an account that has enrollment permission.
+1. Open **Devices → Add device / Enrollment keys** with an account that has enrollment permission.
 2. Choose the destination device group and create a dedicated enrollment key.
-3. Set enough uses and time for the computers' **first successful connection**.
-   Keys support up to 10,000 devices and 2,160 hours (90 days); defaults remain one
-   device and 24 hours. Building/downloading an MSI does not consume a use.
-4. Download **Windows x64 (.msi)**. The filename includes the package version,
-   for example `EndpointControlAgent-0.10.0-win-x64.msi`.
+3. Set **Amount of uses** and expiry for the computers' **first successful connection**.
+   Keys support up to 10,000 uses and 2,160 hours (90 days); defaults remain one
+   use and 24 hours. A 400-use key allows 400 new registrations in total, whether
+   those computers use MSI, EXE, Linux or macOS installers.
+4. Select the key's name in the list. Its read-only overlay shows the key, group,
+   expiry and remaining uses. Download **Windows x64 (.msi)** beside the EXE and
+   other platform downloads. The filename includes the package version,
+   for example `EndpointControlAgent-0.11.0-win-x64.msi`.
 
-After the first MSI generation, the **Windows agent MSI** card on **Add device**
-provides a persistent **Download Windows x64 MSI** link at `/api/agents/windows-msi`.
-The package remains in private instance storage across page reloads. Only users
-with enrollment permission can download it, and an expired/revoked/exhausted key
-removes it from the available downloads.
+Return to the list and select the same key to download its installers again.
+Building/downloading an installer never consumes a use or creates a new key. Only
+new registration does. Exhausted or expired keys stay view-only; revoke a key or
+create a new one when needed. New keys are stored encrypted for this workflow.
+Legacy saved-MSI links remain compatible, while current UI downloads are explicitly
+key-scoped and require enrollment permission. Older hash-only keys recover their
+native credential from a matching saved MSI when available; otherwise the overlay
+explains why the original key cannot be displayed again.
 
 The server installer installs `wixl` and `msitools`. For an existing development or
 locally managed Debian installation, install them with:

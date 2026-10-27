@@ -29,6 +29,49 @@ public sealed class NativeMsiBuilder(IConfiguration configuration, ILogger<Nativ
         && Path.IsPathFullyQualified(DatabaseTool) && File.Exists(DatabaseTool);
     public string FileName => $"{ProductBrand.AgentDownloadName}-{Wire.Version}-win-x64.msi";
 
+    public async Task<byte[]> ExtractAgentAsync(byte[] package, CancellationToken cancellationToken)
+    {
+        string extractor = Path.Combine(Path.GetDirectoryName(DatabaseTool) ?? "", "msiextract");
+        if (!OperatingSystem.IsLinux() || !File.Exists(extractor))
+        {
+            throw new IOException("The saved installer cannot be read on this server.");
+        }
+        if (!await gate.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken))
+        {
+            throw new IOException("MSI packaging is busy. Try again shortly.");
+        }
+        DirectoryInfo? directory = null;
+        try
+        {
+            directory = Directory.CreateTempSubdirectory("endpointcontrol-key-recovery-");
+            using CancellationTokenSource timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(TimeSpan.FromSeconds(30));
+            await File.WriteAllBytesAsync(Path.Combine(directory.FullName, "agent.msi"), package, timeout.Token);
+            await RunToolAsync(extractor, ["--directory", "payload", "agent.msi"], directory.FullName, timeout.Token);
+            string? executable = Directory.EnumerateFiles(Path.Combine(directory.FullName, "payload"), NativeMsiPackage.AgentFileName, SearchOption.AllDirectories).SingleOrDefault();
+            if (executable is null || new FileInfo(executable).Length > 64 * 1024 * 1024)
+            {
+                throw new IOException("The saved installer does not contain a native agent.");
+            }
+            return await File.ReadAllBytesAsync(executable, timeout.Token);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new IOException("The saved installer could not be read in time. Try again shortly.");
+        }
+        finally
+        {
+            try
+            {
+                directory?.Delete(recursive: true);
+            }
+            finally
+            {
+                gate.Release();
+            }
+        }
+    }
+
     public async Task<byte[]> BuildAsync(byte[] executable, string notices, CancellationToken cancellationToken = default)
     {
         if (!Available)

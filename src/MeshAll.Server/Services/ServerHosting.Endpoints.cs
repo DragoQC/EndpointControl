@@ -128,6 +128,64 @@ public static partial class ServerHosting
         }).RequireAuthorization(Permissions.Enroll).RequireRateLimiting("downloads");
 
         app.MapGet("/licenses/agent", (NativeAgentHub hub) => Results.Text(hub.LicenseNotices(), "text/plain"));
+
+        app.MapGet("/api/agents/enrollment/{id}/executable", async (string id, string platform, HttpContext context,
+            Store db, EnrollmentDownloads downloads) =>
+        {
+            context.Response.Headers.CacheControl = "no-store";
+            UserInfo? actor = db.SessionUser(context.User);
+            if (actor is null)
+            {
+                return Results.Forbid();
+            }
+            try
+            {
+                byte[] executable = await downloads.ExecutableAsync(actor, id, platform, context.RequestAborted);
+                db.Audit(actor.Name, "Agent executable downloaded", db.FindEnrollmentToken(id)?.Name ?? id, platform);
+                return Results.File(executable, "application/octet-stream", ProductBrand.AgentDownloadName + (platform.StartsWith("win", StringComparison.Ordinal) ? ".exe" : ""));
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Results.Forbid();
+            }
+            catch (InvalidOperationException error)
+            {
+                return Results.BadRequest(error.Message);
+            }
+            catch (IOException)
+            {
+                return Results.Problem("The enrollment installer could not be read. Try again shortly.", statusCode: 503);
+            }
+        }).RequireAuthorization(Permissions.Enroll).RequireRateLimiting("downloads");
+
+        app.MapGet("/api/agents/enrollment/{id}/msi", async (string id, string platform, HttpContext context,
+            Store db, EnrollmentDownloads downloads, NativeMsiBuilder packages) =>
+        {
+            context.Response.Headers.CacheControl = "no-store";
+            UserInfo? actor = db.SessionUser(context.User);
+            if (actor is null)
+            {
+                return Results.Forbid();
+            }
+            try
+            {
+                byte[] package = await downloads.MsiAsync(actor, id, platform, context.RequestAborted);
+                db.Audit(actor.Name, "Agent MSI downloaded", db.FindEnrollmentToken(id)?.Name ?? id, platform);
+                return Results.File(package, "application/x-msi", packages.FileName);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Results.Forbid();
+            }
+            catch (InvalidOperationException error)
+            {
+                return Results.BadRequest(error.Message);
+            }
+            catch (IOException)
+            {
+                return Results.Problem("MSI packaging is unavailable. Check that wixl and msitools are installed on the server.", statusCode: 503);
+            }
+        }).RequireAuthorization(Permissions.Enroll).RequireRateLimiting("downloads");
         app.Map("/api/remote/{id}/desktop", (HttpContext context, string id, AgentGateway gateway) => gateway.ProxyDesktopAsync(context, id)).RequireAuthorization(Permissions.Desktop);
 
         app.MapGet("/api/remote/{id}/desktop/access", (string id, HttpContext context, Store db, AgentGateway gateway) =>

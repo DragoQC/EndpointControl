@@ -2356,4 +2356,21 @@
   <data name="Enrollment expires" xml:space="preserve"><value>Enrollment expires</value></data>
   <data name="Invalid remote protocol data." xml:space="preserve"><value>Invalid remote protocol data.</value></data>
   <data name="Invalid terminal resize request." xml:space="preserve"><value>Invalid terminal resize request.</value></data>
+  <data name="Amount of uses" xml:space="preserve"><value>Amount of uses</value></data>
+  <data name="Create a key, then select it to download its installers." xml:space="preserve"><value>Create a key, then select it to download its installers.</value></data>
+  <data name="Every installer shares this key's amount of uses. Only a new device registration consumes a use." xml:space="preserve"><value>Every installer shares this key's amount of uses. Only a new device registration consumes a use.</value></data>
+  <data name="Select a key to view its details and downloads." xml:space="preserve"><value>Select a key to view its details and downloads.</value></data>
+  <data name="Enrollment key downloads" xml:space="preserve"><value>Enrollment key downloads</value></data>
+  <data name="Enrollment key" xml:space="preserve"><value>Enrollment key</value></data>
+  <data name="Native installer key" xml:space="preserve"><value>Native installer key</value></data>
+  <data name="The original value of this older key is unavailable. Its native installer downloads use the same remaining uses." xml:space="preserve"><value>The original value of this older key is unavailable. Its native installer downloads use the same remaining uses.</value></data>
+  <data name="This older key was stored as a one-way hash. Its original value cannot be displayed again. Existing installers remain valid; create a new key for new downloads." xml:space="preserve"><value>This older key was stored as a one-way hash. Its original value cannot be displayed again. Existing installers remain valid; create a new key for new downloads.</value></data>
+  <data name="Every installer below uses this key and group. Downloads do not consume uses; each newly registered device consumes one use." xml:space="preserve"><value>Every installer below uses this key and group. Downloads do not consume uses; each newly registered device consumes one use.</value></data>
+  <data name="This enrollment key has no uses remaining." xml:space="preserve"><value>This enrollment key has no uses remaining.</value></data>
+  <data name="This enrollment key has expired." xml:space="preserve"><value>This enrollment key has expired.</value></data>
+  <data name="Downloads are unavailable for this older key." xml:space="preserve"><value>Downloads are unavailable for this older key.</value></data>
+  <data name="The saved enrollment key could not be read." xml:space="preserve"><value>The saved enrollment key could not be read.</value></data>
+  <data name="Enrollment key not found." xml:space="preserve"><value>Enrollment key not found.</value></data>
+  <data name="The installer does not match this enrollment key." xml:space="preserve"><value>The installer does not match this enrollment key.</value></data>
+  <data name="The enrollment installer could not be read. Try again shortly." xml:space="preserve"><value>The enrollment installer could not be read. Try again shortly.</value></data>
 </root>

@@ -54,9 +54,18 @@ public sealed class NativeAgentHub
     }
     public string Policy(string token)
     {
-        GroupInfo? group = store.NativeEnrollmentGroup(token);
+        return EnrollmentPolicy(store.NativeEnrollmentToken(token), Store.NativeMeshKey(token));
+    }
+
+    private string EnrollmentPolicy(TokenInfo enrollment, string nativeKey)
+    {
+        if (!store.EnrollmentTokenUsable(enrollment.Id))
+        {
+            throw new InvalidOperationException("Enrollment key is invalid, expired, or exhausted.");
+        }
+        GroupInfo group = store.Groups().Single(item => item.Id == enrollment.GroupId);
         string url = store.Setting("publicUrl", configuration["MeshAll:PublicUrl"] ?? "https://localhost:5188").TrimEnd('/');
-        return "MeshName=" + group.Name.Replace('\r', ' ').Replace('\n', ' ') + "\r\nMeshType=2\r\nMeshID=0x" + Store.NativeMeshKey(token) + "\r\nServerID=" + ServerId + "\r\nMeshServer=" + url.Replace("https://", "wss://", StringComparison.Ordinal).Replace("http://", "ws://", StringComparison.Ordinal) + "/agent.ashx\r\ndisplayName=EndpointControl Agent\r\ndescription=EndpointControl remote-management agent\r\ncompanyName=EndpointControl\r\nmeshServiceName=MeshAllAgent\r\nfileName=MeshAllAgent\r\n";
+        return "MeshName=" + group.Name.Replace('\r', ' ').Replace('\n', ' ') + "\r\nMeshType=2\r\nMeshID=0x" + nativeKey + "\r\nServerID=" + ServerId + "\r\nMeshServer=" + url.Replace("https://", "wss://", StringComparison.Ordinal).Replace("http://", "ws://", StringComparison.Ordinal) + "/agent.ashx\r\ndisplayName=EndpointControl Agent\r\ndescription=EndpointControl remote-management agent\r\ncompanyName=EndpointControl\r\nmeshServiceName=MeshAllAgent\r\nfileName=MeshAllAgent\r\n";
     }
     public static readonly string[] Platforms = ["win-x64", "win-arm64", "linux-x64", "linux-arm64", "osx-x64", "osx-arm64"];
 
@@ -67,13 +76,20 @@ public sealed class NativeAgentHub
     public string LicenseNotices() => NativeAgentExecutable.LicenseNotices();
 
     public byte[] Executable(string token, string platform)
+        => BuildExecutable(Policy(token), platform);
+
+    internal byte[] EnrollmentExecutable(EnrollmentKeyDetails key, string platform)
+        => key.CanDownload ? BuildExecutable(EnrollmentPolicy(key.Information, key.NativeKey!), platform)
+            : throw new InvalidOperationException("Enrollment key is invalid, expired, or exhausted.");
+
+    private byte[] BuildExecutable(string policy, string platform)
     {
         if (!Platforms.Contains(platform, StringComparer.Ordinal))
         {
             throw new InvalidOperationException("Unsupported native agent platform.");
         }
 
-        string policy = Policy(token) + "InstallFlags=2\r\n";
+        policy += "InstallFlags=2\r\n";
         string path = BinaryPath(platform);
         if (!File.Exists(path))
         {

@@ -262,4 +262,31 @@ public sealed class SecurityBoundaryTests
         await Login(admin, "msi-admin");
         Assert.Equal(HttpStatusCode.BadRequest, (await admin.GetAsync(path)).StatusCode);
     }
+
+    [Fact]
+    public async Task PerKeyDownloadsRequireEnrollmentPermissionAndSecretsAreNeverPrerendered()
+    {
+        using TestServer server = new();
+        server.Store.AddUser("key-admin", Password, "Admin");
+        server.Store.AddUser("key-viewer", Password, "Viewer");
+        (string Id, string Token) key = server.Store.CreateToken("Selected key", "default", 400, 24);
+        string path = $"/api/agents/enrollment/{key.Id}/executable?platform=win-x64";
+        using HttpClient anonymous = server.Browser();
+        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync(path)).StatusCode);
+        using HttpClient viewer = server.Browser();
+        await Login(viewer, "key-viewer");
+        Assert.Equal(HttpStatusCode.Forbidden, (await viewer.GetAsync(path)).StatusCode);
+        using HttpClient admin = server.Browser();
+        await Login(admin, "key-admin");
+        string html = await admin.GetStringAsync("/enroll");
+        Assert.DoesNotContain(key.Token, html);
+        Assert.DoesNotContain(Store.NativeMeshKey(key.Token), html);
+        using HttpResponseMessage executable = await admin.GetAsync(path);
+        Assert.Equal(HttpStatusCode.OK, executable.StatusCode);
+        Assert.True(executable.Headers.CacheControl!.NoStore);
+        Assert.Contains("MeshID=0x" + Store.NativeMeshKey(key.Token), NativeAgentExecutable.EmbeddedPolicy(await executable.Content.ReadAsByteArrayAsync()));
+        Assert.Equal(400, server.Store.FindEnrollmentToken(key.Id)!.Remaining);
+        server.Store.RevokeToken(key.Id);
+        Assert.Equal(HttpStatusCode.BadRequest, (await admin.GetAsync(path)).StatusCode);
+    }
 }

@@ -1,0 +1,66 @@
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<dialog class="modal-dialog" @ref="dialog" aria-labelledby="@headingId">
+    <div class="modal-header">
+        <h2 id="@headingId">@Ui[Title]</h2>
+        <button type="button" class="button small modal-close" aria-label="@Ui["Close"]" @onclick="CloseAsync"><Icon Name="close" /></button>
+    </div>
+    <div class="modal-content">@ChildContent</div>
+</dialog>
+
+@code
+{
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter, EditorRequired] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public EventCallback Closed { get; set; }
+    private readonly string headingId = "dialog-" + Guid.NewGuid().ToString("N");
+    private ElementReference dialog;
+    private IJSObjectReference? module;
+    private DotNetObjectReference<ModalDialog>? reference;
+    private bool disposed;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            IJSObjectReference loaded = await JS.InvokeAsync<IJSObjectReference>("import", "./dialog.mjs");
+            if (disposed)
+            {
+                await loaded.DisposeAsync();
+                return;
+            }
+            module = loaded;
+            reference = DotNetObjectReference.Create(this);
+            await module.InvokeVoidAsync("open", dialog, reference);
+        }
+    }
+
+    private async Task CloseAsync()
+    {
+        if (module is not null)
+        {
+            await module.InvokeVoidAsync("close", dialog);
+        }
+    }
+
+    [JSInvokable]
+    public Task ClosedAsync() => disposed ? Task.CompletedTask : Closed.InvokeAsync();
+
+    public async ValueTask DisposeAsync()
+    {
+        disposed = true;
+        if (module is not null)
+        {
+            try
+            {
+                await module.InvokeVoidAsync("dispose", dialog);
+                await module.DisposeAsync();
+            }
+            catch (Exception error) when (error is JSDisconnectedException or JSException or TaskCanceledException or ObjectDisposedException)
+            {
+            }
+        }
+        reference?.Dispose();
+    }
+}

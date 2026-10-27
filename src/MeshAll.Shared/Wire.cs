@@ -6,7 +6,7 @@ namespace MeshAll.Shared;
 /// <summary>Serialization, framing and size limits shared by the server and managed agent.</summary>
 public static class Wire
 {
-    public const string Version = "0.10.1";
+    public const string Version = "0.11.0";
     public const int MaxMessageBytes = 12 * 1024 * 1024;
     public const int MaxFileBytes = 5 * 1024 * 1024;
     public static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);

@@ -30,6 +30,7 @@ public sealed partial class Store
     private readonly object gate = new();
     private readonly IDataProtector securityProtector;
     private readonly IDataProtector connectionPreferencesProtector;
+    private readonly IDataProtector enrollmentKeysProtector;
 
     public string DataDirectory
     {
@@ -41,6 +42,7 @@ public sealed partial class Store
     {
         securityProtector = protection.CreateProtector("MeshAll.AccountSecurity.v1");
         connectionPreferencesProtector = protection.CreateProtector("MeshAll.UserConnections.v1");
+        enrollmentKeysProtector = protection.CreateProtector("MeshAll.EnrollmentKeys.v1");
         DataDirectory = Path.GetFullPath(config["MeshAll:DataDirectory"] ?? "Data", environment.ContentRootPath);
         string publicDirectory = Path.GetFullPath(environment.WebRootPath ?? "wwwroot", environment.ContentRootPath).TrimEnd(Path.DirectorySeparatorChar);
         StringComparison pathComparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
@@ -70,6 +72,7 @@ public sealed partial class Store
               disabled INTEGER NOT NULL DEFAULT 0,lastSeen TEXT NOT NULL,inventory TEXT,removed INTEGER NOT NULL DEFAULT 0);
             CREATE TABLE IF NOT EXISTS tokens(id TEXT PRIMARY KEY,name TEXT NOT NULL,hash TEXT NOT NULL UNIQUE,
               groupId TEXT NOT NULL,expires TEXT NOT NULL,remaining INTEGER NOT NULL);
+            CREATE TABLE IF NOT EXISTS enrollment_secrets(tokenId TEXT PRIMARY KEY,secret TEXT,nativeSecret TEXT);
             CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY AUTOINCREMENT,time TEXT NOT NULL,
               actor TEXT NOT NULL,action TEXT NOT NULL,target TEXT NOT NULL,detail TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS sessions(id TEXT PRIMARY KEY,deviceId TEXT NOT NULL,deviceName TEXT NOT NULL,
@@ -147,7 +150,7 @@ public sealed partial class Store
 
         lock (gate)
         {
-            Execute("UPDATE devices SET groupId='default' WHERE groupId=$0; DELETE FROM tokens WHERE groupId=$0; DELETE FROM groups WHERE id=$0", id);
+            Execute("UPDATE devices SET groupId='default' WHERE groupId=$0; DELETE FROM enrollment_secrets WHERE tokenId IN (SELECT id FROM tokens WHERE groupId=$0); DELETE FROM tokens WHERE groupId=$0; DELETE FROM groups WHERE id=$0", id);
         }
     }
 

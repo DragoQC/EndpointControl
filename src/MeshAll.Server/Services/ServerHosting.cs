@@ -28,6 +28,7 @@ public static partial class ServerHosting
         builder.Services.AddSingleton<NativeMsiBuilder>();
         builder.Services.AddSingleton<INativeMsiBuilder>(services => services.GetRequiredService<NativeMsiBuilder>());
         builder.Services.AddSingleton<AgentInstallerDownloads>();
+        builder.Services.AddSingleton<EnrollmentDownloads>();
         builder.Services.AddSingleton<AgentGateway>();
         builder.Services.AddScoped<Workspace>();
         builder.Services.AddLocalization();

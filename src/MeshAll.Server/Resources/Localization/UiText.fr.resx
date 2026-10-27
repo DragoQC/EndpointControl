@@ -2356,4 +2356,21 @@
   <data name="Enrollment expires" xml:space="preserve"><value>Expiration de l’inscription</value></data>
   <data name="Invalid remote protocol data." xml:space="preserve"><value>Données de protocole distant invalides.</value></data>
   <data name="Invalid terminal resize request." xml:space="preserve"><value>Demande de redimensionnement du terminal invalide.</value></data>
+  <data name="Amount of uses" xml:space="preserve"><value>Nombre d’utilisations</value></data>
+  <data name="Create a key, then select it to download its installers." xml:space="preserve"><value>Créez une clé, puis sélectionnez-la pour télécharger ses programmes d’installation.</value></data>
+  <data name="Every installer shares this key's amount of uses. Only a new device registration consumes a use." xml:space="preserve"><value>Tous les programmes d’installation partagent le nombre d’utilisations de cette clé. Seule l’inscription d’un nouvel appareil consomme une utilisation.</value></data>
+  <data name="Select a key to view its details and downloads." xml:space="preserve"><value>Sélectionnez une clé pour afficher ses détails et téléchargements.</value></data>
+  <data name="Enrollment key downloads" xml:space="preserve"><value>Téléchargements de la clé d’inscription</value></data>
+  <data name="Enrollment key" xml:space="preserve"><value>Clé d’inscription</value></data>
+  <data name="Native installer key" xml:space="preserve"><value>Clé des programmes d’installation natifs</value></data>
+  <data name="The original value of this older key is unavailable. Its native installer downloads use the same remaining uses." xml:space="preserve"><value>La valeur d’origine de cette ancienne clé n’est pas disponible. Ses téléchargements natifs partagent les mêmes utilisations restantes.</value></data>
+  <data name="This older key was stored as a one-way hash. Its original value cannot be displayed again. Existing installers remain valid; create a new key for new downloads." xml:space="preserve"><value>Cette ancienne clé a été conservée sous forme de hachage irréversible. Sa valeur d’origine ne peut plus être affichée. Les programmes d’installation existants restent valides; créez une nouvelle clé pour de nouveaux téléchargements.</value></data>
+  <data name="Every installer below uses this key and group. Downloads do not consume uses; each newly registered device consumes one use." xml:space="preserve"><value>Chaque programme d’installation ci-dessous utilise cette clé et ce groupe. Les téléchargements ne consomment pas d’utilisations; chaque nouvel appareil inscrit en consomme une.</value></data>
+  <data name="This enrollment key has no uses remaining." xml:space="preserve"><value>Cette clé d’inscription n’a plus d’utilisations restantes.</value></data>
+  <data name="This enrollment key has expired." xml:space="preserve"><value>Cette clé d’inscription a expiré.</value></data>
+  <data name="Downloads are unavailable for this older key." xml:space="preserve"><value>Les téléchargements ne sont pas disponibles pour cette ancienne clé.</value></data>
+  <data name="The saved enrollment key could not be read." xml:space="preserve"><value>La clé d’inscription enregistrée n’a pas pu être lue.</value></data>
+  <data name="Enrollment key not found." xml:space="preserve"><value>Clé d’inscription introuvable.</value></data>
+  <data name="The installer does not match this enrollment key." xml:space="preserve"><value>Le programme d’installation ne correspond pas à cette clé d’inscription.</value></data>
+  <data name="The enrollment installer could not be read. Try again shortly." xml:space="preserve"><value>Le programme d’installation n’a pas pu être lu. Réessayez sous peu.</value></data>
 </root>

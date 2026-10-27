@@ -1,0 +1,79 @@
+@inject NativeAgentHub NativeAgents
+@inject NativeMsiBuilder Msi
+
+<ModalDialog Title="Enrollment key downloads" Closed="Closed">
+    <div class="form-grid enrollment-key-details">
+        <label>@Ui["Key name"]<input value="@Details.Information.Name" readonly /></label>
+        <label>@Ui["Device group"]<input value="@GroupName" readonly /></label>
+        <label>@Ui["Uses remaining"]<input value="@Details.Information.Remaining" readonly /></label>
+        <label>@Ui["Expires"]<input value="@Details.Information.Expires.ToLocalTime().ToString("g")" readonly /></label>
+    </div>
+    @if (Details.Key is not null)
+    {
+        <label>@Ui[Details.NativeOnly ? "Native installer key" : "Enrollment key"]
+            <input class="code-input" value="@Details.Key" readonly autocomplete="off" spellcheck="false" data-enrollment-key />
+        </label>
+        @if (Details.NativeOnly)
+        {
+            <p class="muted small-text">@Ui["The original value of this older key is unavailable. Its native installer downloads use the same remaining uses."]</p>
+        }
+    }
+    else
+    {
+        <p class="muted">@Ui["This older key was stored as a one-way hash. Its original value cannot be displayed again. Existing installers remain valid; create a new key for new downloads."]</p>
+    }
+    <p class="muted small-text">@Ui["Every installer below uses this key and group. Downloads do not consume uses; each newly registered device consumes one use."]</p>
+    @if (!Details.CanDownload)
+    {
+        <p class="muted">@Ui[Details.Information.Remaining == 0 ? "This enrollment key has no uses remaining." : Details.Information.Expires <= DateTimeOffset.UtcNow ? "This enrollment key has expired." : "Downloads are unavailable for this older key."]</p>
+    }
+    <div class="download-links">
+        @foreach (string platform in NativeAgents.AvailablePlatforms)
+        {
+            @InstallerLink(platform, false)
+            @if (platform == NativeMsiPackage.Platform && Msi.Available)
+            {
+                @InstallerLink(platform, true)
+            }
+        }
+    </div>
+    @if (!Msi.Available)
+    {
+        <p class="muted small-text">@Ui["Install wixl and msitools on the server to enable MSI downloads."]</p>
+    }
+    <p class="muted small-text">@Ui["Windows: run the executable and select Install or Update."]</p>
+    <p class="muted small-text">@Ui["GPO: assign the MSI to computers from a UNC network share. Enrollment settings are included."]</p>
+    <code class="deployment-command">msiexec /i "\\server\software\@(Msi.FileName)" /qn /norestart</code>
+    <p class="muted small-text">@Ui["Linux/macOS:"] <code>chmod +x EndpointControlAgent; sudo ./EndpointControlAgent -fullinstall</code></p>
+    <p class="muted small-text">@Ui["Install the service before starting the agent interactively. Key expiration does not disconnect enrolled devices."]</p>
+    <a class="text-link" href="/licenses/agent" target="_blank" rel="noopener">@Ui["Agent licenses"]</a>
+</ModalDialog>
+
+@code
+{
+    [Parameter, EditorRequired] public EnrollmentKeyDetails Details { get; set; } = default!;
+    [Parameter, EditorRequired] public string GroupName { get; set; } = "";
+    [Parameter] public EventCallback Closed { get; set; }
+
+    private RenderFragment InstallerLink(string platform, bool msi) => @<text>
+        @if (Details.CanDownload)
+        {
+            <a class="button" href="@($"/api/agents/enrollment/{Details.Information.Id}/{(msi ? "msi" : "executable")}?platform={platform}")" download data-enhance-nav="false"><Icon Name="download" />@Ui[msi ? "Windows x64 (.msi)" : PlatformLabel(platform)]</a>
+        }
+        else
+        {
+            <button type="button" class="button" disabled><Icon Name="download" />@Ui[msi ? "Windows x64 (.msi)" : PlatformLabel(platform)]</button>
+        }
+    </text>;
+
+    private static string PlatformLabel(string platform) => platform switch
+    {
+        "win-x64" => "Windows x64 (.exe)",
+        "win-arm64" => "Windows ARM64 (.exe)",
+        "linux-x64" => "Linux x64",
+        "linux-arm64" => "Linux ARM64",
+        "osx-x64" => "macOS Intel",
+        "osx-arm64" => "macOS Apple Silicon",
+        _ => platform
+    };
+}

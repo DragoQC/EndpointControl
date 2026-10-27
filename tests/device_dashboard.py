@@ -8,7 +8,6 @@ import secrets
 import sqlite3
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
 
 from playwright.async_api import async_playwright, expect
 from ui_regressions import DesktopAgent
@@ -160,15 +159,13 @@ async def main(args):
         try:
             await ready(page, base + "/enroll")
             await page.get_by_label("Key name", exact=True).fill(prefix)
-            await page.get_by_label("Maximum devices", exact=True).fill("3")
+            await page.get_by_label("Amount of uses", exact=True).fill("3")
             await page.get_by_role(
                 "button", name="Create enrollment key", exact=True
             ).click()
             link = page.locator(".download-links a").first
             await link.wait_for()
-            token = parse_qs(urlparse(await link.get_attribute("href")).query)["token"][
-                0
-            ]
+            token = await page.locator("[data-enrollment-key]").input_value()
             metrics = [
                 {
                     "cores": 2,

@@ -93,13 +93,14 @@ omits the optional protocol dependency for environments that do not use it.
 
 ## Windows MSI and GPO deployment
 
-**Add device** also offers an enrollment-ready **Windows x64 (.msi)** for silent,
+**Enrollment keys** offers enrollment-ready **Windows x64 (.exe)** and **Windows x64 (.msi)** downloads together for silent,
 computer-assigned Group Policy deployment. It installs the native agent as an
 automatic LocalSystem service, with the server/group settings included. Deployment
-keys support up to 10,000 computers and 90 days for their first enrollment.
+keys support up to 10,000 uses and 90 days for first enrollment. Set **Amount of uses**
+to 400 to allow 400 new device registrations across every installer made from that key.
 
 ```powershell
-msiexec.exe /i "\\fileserver\software\EndpointControlAgent-0.10.0-win-x64.msi" /qn /norestart
+msiexec.exe /i "\\fileserver\software\EndpointControlAgent-0.11.0-win-x64.msi" /qn /norestart
 ```
 
 The Debian installer provides the local MSI build tools (`wixl` and `msitools`).
@@ -107,10 +108,18 @@ See [Windows GPO deployment](docs/WINDOWS-GPO.md) for UNC share permissions,
 computer assignment, updates/repair/removal, existing-agent handling and the local
 C# packaging commands.
 
-After generating an MSI, **Add device → Windows agent MSI** retains an authenticated
-**Download Windows x64 MSI** link across page reloads. The package lives in the
-instance's private data directory and is served with no-store caching and enrollment
-permission checks. Revoked, expired or exhausted deployment keys hide that download.
+Select a key's name in the enrollment list to open a read-only overlay showing its
+group, key, expiry, remaining uses and platform downloads. EXE, MSI, Linux and macOS
+downloads all use the selected key's single shared budget. Viewing or downloading
+does not consume a use; a newly registered device consumes one. Existing native
+devices reconnect without spending another use.
+
+New keys are retained with ID-bound Data Protection encryption so they can be
+reopened later. Key material is excluded from summary JSON, logs and prerendered
+pages; download URLs use the non-secret record ID and require enrollment permission.
+For older hash-only keys, an existing saved MSI can recover the matching native
+installer credential without resetting the key or its uses. Unrecoverable old keys
+remain view-only with an explanation; their existing installers keep working.
 
 ## EndpointControl branding and upgrade compatibility
 

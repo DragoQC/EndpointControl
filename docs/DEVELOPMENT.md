@@ -74,6 +74,7 @@ branding travel over its private stdin pipe.
 | `RdpCredentialsSettings` | Current user's protected connection defaults editor |
 | `SelectField<TValue>` | Shared native dropdown, arrow spacing, typed value and optional full width |
 | `SessionLogs`, `AuditLogs` | Separate capability-checked tables under the Logs tabs |
+| `ModalDialog`, `EnrollmentKeyDialog` | Native modal focus/close lifecycle and read-only per-key downloads |
 
 String parameters containing C# values need Razor expressions (`Value="@Search"`).
 Typed parameters such as `Result="Rows"` are C# expressions.
@@ -226,6 +227,13 @@ native payload extraction. `NativeMsiPackage` owns declarative authoring/identit
 `NativeMsiBuilder` owns bounded local tool execution and private temporary files.
 The MSI route requires enrollment permission. See [Windows deployment](WINDOWS-GPO.md)
 for lifecycle and runtime-state ownership.
+
+Enrollment summaries never contain plaintext keys. `Store.EnrollmentSecrets.cs`
+protects reusable key material with the enrollment ID in its Data Protection
+purpose. Decrypt only for a current authorized action, never page prerendering or
+list/export DTOs. `EnrollmentDownloads` resolves installers from that selected ID;
+each format must use the same native credential and leave its remaining-use count
+unchanged. New device registration is the only use-consuming operation.
 
 Native artifact imports are safe to import as a Python module; only the CLI entry
 point downloads/writes files. Pinned hash and size validation uses explicit errors,

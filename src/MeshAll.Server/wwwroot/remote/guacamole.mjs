@@ -1,4 +1,5 @@
 import { socketUrl } from './assets.mjs';
+import { encodeGuacamoleInstruction, GuacamoleInstructionParser } from './guacamole-protocol.mjs';
 
 export async function connectGuacamole(session, options) {
     const { default: Guacamole } = await import('/vendor/guacamole/dist/esm/guacamole-common.js');
@@ -57,14 +58,13 @@ export async function connectGuacamole(session, options) {
 
 function createTunnel(session, options, Guacamole) {
     const tunnel = new Guacamole.Tunnel();
-    const parser = new Guacamole.Parser();
-    const decoder = new TextDecoder();
+    const parser = new GuacamoleInstructionParser();
+    const decoder = new TextDecoder('utf-8', { fatal: true });
     let socket;
     session.addCleanup(() => socket?.close());
     parser.oninstruction = (opcode, args) => tunnel.oninstruction?.(opcode, args);
     tunnel.sendMessage = (...parts) => {
-        if (socket?.readyState === WebSocket.OPEN)
-            socket.send(parts.map((value) => String(value).length + '.' + value).join(',') + ';');
+        if (socket?.readyState === WebSocket.OPEN) socket.send(encodeGuacamoleInstruction(parts));
     };
     tunnel.connect = (data) => {
         socket = new WebSocket(
@@ -80,12 +80,16 @@ function createTunnel(session, options, Guacamole) {
             tunnel.setState(Guacamole.Tunnel.State.OPEN);
         };
         socket.onmessage = (event) => {
-            if (session.isActive())
+            if (!session.isActive()) return;
+            try {
                 parser.receive(
                     typeof event.data === 'string'
                         ? event.data
                         : decoder.decode(new Uint8Array(event.data), { stream: true })
                 );
+            } catch {
+                session.end('Invalid remote protocol data.');
+            }
         };
         socket.onerror = () =>
             tunnel.onerror?.(new Guacamole.Status(0x0200, 'Remote protocol connection failed.'));

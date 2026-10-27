@@ -35,6 +35,9 @@ public sealed partial class Store
 
     public void RevokeToken(string id) => Execute("DELETE FROM tokens WHERE id=$0", id);
 
+    public bool EnrollmentTokenUsable(string id) => Scalar<long>(
+        "SELECT EXISTS(SELECT 1 FROM tokens WHERE id=$0 AND expires>$1 AND remaining>0)", id, Now()) != 0;
+
     public TokenInfo NativeEnrollmentToken(string token)
     {
         TokenInfo? enrollment = Query("SELECT id,name,groupId,expires,remaining FROM tokens WHERE hash=$0",

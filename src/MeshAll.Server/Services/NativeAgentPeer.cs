@@ -410,6 +410,7 @@ public sealed partial class NativeAgentPeer : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         await stop.CancelAsync();
+        coreReady.TrySetCanceled(stop.Token);
         await heartbeat;
         foreach (TaskCompletionSource<JsonElement>? request in requests.Values)
         {

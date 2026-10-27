@@ -290,6 +290,10 @@ network services follow. Cards use an icon followed by their title and descripti
 
 ## Parity and verification
 
+[Company-readiness tracking](docs/READINESS.md) records reproducible reliability
+findings, regression coverage, continuing dependency checks and the next acceptance
+gates for production operations and deployment scale.
+
 **100% functionality is the acceptance target.** Retaining working low-level
 technology is intentional; it does not automatically prove complete parity of
 the new C# orchestration/UI. `docs/COMPATIBILITY.md` tracks implementation and

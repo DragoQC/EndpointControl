@@ -2354,4 +2354,6 @@
   <data name="Ready for silent installation and Group Policy deployment." xml:space="preserve"><value>Prêt pour l’installation silencieuse et le déploiement par stratégie de groupe.</value></data>
   <data name="Download Windows x64 MSI" xml:space="preserve"><value>Télécharger le MSI Windows x64</value></data>
   <data name="Enrollment expires" xml:space="preserve"><value>Expiration de l’inscription</value></data>
+  <data name="Invalid remote protocol data." xml:space="preserve"><value>Données de protocole distant invalides.</value></data>
+  <data name="Invalid terminal resize request." xml:space="preserve"><value>Demande de redimensionnement du terminal invalide.</value></data>
 </root>

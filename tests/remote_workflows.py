@@ -113,6 +113,7 @@ async def main(args):
         agent = DesktopAgent(base, identity["deviceId"], identity["secret"], name)
         await agent.start()
         sockets, packets, messages = [], [], []
+        reconnected = asyncio.Event()
         image = io.BytesIO()
         Image.new("RGB", (640, 400), "#2b8a7f").save(image, "JPEG")
         jpeg = image.getvalue()
@@ -125,6 +126,8 @@ async def main(args):
 
         def route_socket(socket):
             sockets.append(socket)
+            if len(sockets) >= 2:
+                reconnected.set()
 
             def message(data):
                 messages.append(repr(data)[:150])
@@ -167,6 +170,7 @@ async def main(args):
         await expect(control).to_be_checked()
         await expect(control).to_be_enabled()
         await sockets[0].close()
+        await asyncio.wait_for(reconnected.wait(), timeout=15)
         await expect(np.get_by_role("status")).to_have_text("Connected", timeout=15000)
         assert len(sockets) >= 2
         await expect(control).to_be_checked()

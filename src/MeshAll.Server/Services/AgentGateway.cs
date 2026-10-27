@@ -289,7 +289,8 @@ public sealed partial class AgentGateway(Store store, ILogger<AgentGateway> logg
         private readonly Func<byte[], CancellationToken, Task>? externalWrite;
         private readonly Func<ValueTask>? externalClose;
         private readonly Func<int, int, CancellationToken, Task>? externalResize;
-        private bool disposed;
+        private readonly object disposalGate = new();
+        private Task? disposal;
 
         public string Id
         {
@@ -321,14 +322,16 @@ public sealed partial class AgentGateway(Store store, ILogger<AgentGateway> logg
 
         public Task ResizeAsync(int columns, int rows, CancellationToken ct) => externalResize is not null ? externalResize(columns, rows, ct) : gateway!.ExecuteAsync<string>(device, "stream.resize", new SessionInput(Id, Columns: columns, Rows: rows), ct);
 
-        public async ValueTask DisposeAsync()
+        public ValueTask DisposeAsync()
         {
-            if (disposed)
+            lock (disposalGate)
             {
-                return;
+                return new(disposal ??= DisposeCoreAsync());
             }
+        }
 
-            disposed = true;
+        private async Task DisposeCoreAsync()
+        {
             if (externalClose is not null)
             {
                 await externalClose();

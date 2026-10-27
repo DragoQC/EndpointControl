@@ -107,17 +107,10 @@ public sealed class NetworkGateway(Store store, AgentGateway agents, ProtocolWor
 
                     if (tool is "terminal" or "powershell" && bytes.Length > 0 && bytes[0] == '{')
                     {
-                        try
+                        if (TryReadTerminalResize(bytes, out int columns, out int rows))
                         {
-                            using JsonDocument doc = JsonDocument.Parse(bytes);
-                            if (doc.RootElement.TryGetProperty("type", out JsonElement type) && type.GetString() == "resize")
-                            {
-                                await remote.ResizeAsync(doc.RootElement.GetProperty("columns").GetInt32(), doc.RootElement.GetProperty("rows").GetInt32(), stop.Token);
-                                continue;
-                            }
-                        }
-                        catch (JsonException)
-                        {
+                            await remote.ResizeAsync(columns, rows, stop.Token);
+                            continue;
                         }
                     }
                     if (protocol is not null)
@@ -195,11 +188,38 @@ public sealed class NetworkGateway(Store store, AgentGateway agents, ProtocolWor
         }
     }
 
+    internal static bool TryReadTerminalResize(byte[] bytes, out int columns, out int rows)
+    {
+        columns = rows = 0;
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(bytes);
+            if (document.RootElement.ValueKind == JsonValueKind.Object
+                && document.RootElement.TryGetProperty("type", out JsonElement type)
+                && type.ValueKind == JsonValueKind.String && type.GetString() == "resize")
+            {
+                if (!document.RootElement.TryGetProperty("columns", out JsonElement width) || width.ValueKind != JsonValueKind.Number || !width.TryGetInt32(out columns)
+                    || !document.RootElement.TryGetProperty("rows", out JsonElement height) || height.ValueKind != JsonValueKind.Number || !height.TryGetInt32(out rows))
+                {
+                    throw new IOException("Invalid terminal resize request.");
+                }
+                columns = Math.Clamp(columns, 20, 300);
+                rows = Math.Clamp(rows, 5, 150);
+                return true;
+            }
+        }
+        catch (JsonException)
+        {
+        }
+        return false;
+    }
+
     private static string SafeReason(string message) => message switch
     {
         "Connect the agent once to verify the remote host identity, or configure a trusted host identity." => message,
         "The remote host identity could not be verified through the agent." => message,
         "Invalid remote connection options." => message,
+        "Invalid terminal resize request." => message,
         _ => "Remote session failed."
     };
 }

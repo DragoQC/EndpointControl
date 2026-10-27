@@ -15,7 +15,7 @@ and capture detachment, local-stop acknowledgement, bounded cleanup and native
 connection-count preservation:
 
 ```bash
-node --test tests/desktop-session.test.mjs tests/remote-session.test.mjs tests/screen-consent.test.cjs tests/consent-dialog.test.cjs tests/notifybar.test.cjs tests/inventory.test.cjs
+node --test tests/desktop-session.test.mjs tests/remote-session.test.mjs tests/screen-consent.test.cjs tests/consent-dialog.test.cjs tests/notifybar.test.cjs tests/inventory.test.cjs tests/guacamole-protocol.test.mjs
 ```
 
 `tests/remote_workflows.py --base-url URL --auth-state /private/state.json` runs on
@@ -23,6 +23,12 @@ a disposable instance. It drives the actual native viewer against a simulated KV
 transport, forces a disconnect, verifies automatic recovery/input and local-user
 stop, tests `.cmd`/`.ps1` library-to-device routing, and negotiates VNC None/password
 authentication against isolated loopback fixtures.
+
+`tests/guacamole_workflows.py --base-url URL --auth-state /private/state.json`
+drives the retained Guacamole renderer with fragmented UTF-8, supplementary Unicode
+and a real graphical stream. A malformed frame must end the session cleanly with
+no unhandled browser exception. The fixture uses a disposable device and browser-only
+WebSocket interception.
 
 ## Device dashboard and paged tables
 

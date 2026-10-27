@@ -2354,4 +2354,6 @@
   <data name="Ready for silent installation and Group Policy deployment." xml:space="preserve"><value>Ready for silent installation and Group Policy deployment.</value></data>
   <data name="Download Windows x64 MSI" xml:space="preserve"><value>Download Windows x64 MSI</value></data>
   <data name="Enrollment expires" xml:space="preserve"><value>Enrollment expires</value></data>
+  <data name="Invalid remote protocol data." xml:space="preserve"><value>Invalid remote protocol data.</value></data>
+  <data name="Invalid terminal resize request." xml:space="preserve"><value>Invalid terminal resize request.</value></data>
 </root>

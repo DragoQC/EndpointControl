@@ -111,16 +111,15 @@ public static partial class ServerHosting
         app.MapGet("/api/agents/windows-msi", async (HttpContext context, AgentInstallerDownloads installers, Store db) =>
         {
             context.Response.Headers.CacheControl = "no-store";
-            AgentInstallerInfo? information = installers.Current;
-            if (information is null)
-            {
-                return Results.NotFound("Create an enrollment key and generate a Windows MSI first.");
-            }
             try
             {
-                byte[] package = await installers.ReadAsync(information, context.RequestAborted);
-                db.Audit(context.User.Identity!.Name!, "Agent MSI downloaded", information.GroupName);
-                return Results.File(package, "application/x-msi", information.FileName);
+                AgentInstallerDownload? download = await installers.ReadCurrentAsync(context.RequestAborted);
+                if (download is null)
+                {
+                    return Results.NotFound("Create an enrollment key and generate a Windows MSI first.");
+                }
+                db.Audit(context.User.Identity!.Name!, "Agent MSI downloaded", download.Information.GroupName);
+                return Results.File(download.Bytes, "application/x-msi", download.Information.FileName);
             }
             catch (IOException)
             {

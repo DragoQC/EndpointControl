@@ -2,6 +2,7 @@
   <PropertyGroup><IsTestProject>true</IsTestProject><IsPackable>false</IsPackable></PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/MeshAll.Server/MeshAll.Server.csproj" />
+    <ProjectReference Include="../../src/MeshAll.Agent/MeshAll.Agent.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.13" />
     <PackageReference Include="xunit" Version="2.9.3" />

@@ -40,7 +40,14 @@ public sealed class AgentClient(AgentSettings settings)
 
                         if (message.Kind == "cancel" && message.Id is not null && requests.TryGetValue(message.Id, out (CancellationTokenSource Stop, Task Work) request))
                         {
-                            request.Stop.Cancel();
+                            try
+                            {
+                                request.Stop.Cancel();
+                            }
+                            catch (ObjectDisposedException)
+                            {
+                                // The request completed between lookup and cancellation.
+                            }
                             continue;
                         }
                         if (message.Kind == "stream")
@@ -56,7 +63,11 @@ public sealed class AgentClient(AgentSettings settings)
                         CancellationTokenSource requestStop = CancellationTokenSource.CreateLinkedTokenSource(lifetime.Token);
                         string id = message.Id;
                         TaskCompletionSource finished = new(TaskCreationOptions.RunContinuationsAsynchronously);
-                        requests[id] = (requestStop, finished.Task);
+                        if (!requests.TryAdd(id, (requestStop, finished.Task)))
+                        {
+                            requestStop.Dispose();
+                            continue;
+                        }
 
                         async Task Execute()
                         {
@@ -92,12 +103,11 @@ public sealed class AgentClient(AgentSettings settings)
                     await lifetime.CancelAsync();
                     try
                     {
-                        await inventory;
+                        await Task.WhenAll(inventory, Task.WhenAll(requests.Values.Select(request => request.Work)));
                     }
                     catch (OperationCanceledException)
                     {
                     }
-                    await Task.WhenAll(requests.Values.Select(r => r.Work));
                 }
             }
             catch (OperationCanceledException) when (stop.IsCancellationRequested)

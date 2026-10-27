@@ -6,6 +6,7 @@ namespace MeshAll.Server.Services;
 public sealed partial class Store
 {
     private const int PasswordHashIterations = 210_000;
+    private static readonly string DummyPasswordHash = Convert.ToBase64String(new byte[16]) + ":" + Convert.ToBase64String(new byte[32]);
     private const string UserColumns = "SELECT id,name,role,disabled,version,EXISTS(SELECT 1 FROM two_factor f WHERE f.userId=users.id) FROM users";
 
     public bool HasUsers => Scalar<long>("SELECT COUNT(*) FROM users") > 0;
@@ -22,7 +23,7 @@ public sealed partial class Store
     {
         (string Id, string Hash, bool Disabled) row = Query("SELECT id,password,disabled FROM users WHERE name=$0 COLLATE NOCASE",
             reader => (Id: reader.GetString(0), Hash: reader.GetString(1), Disabled: reader.GetBoolean(2)), name).SingleOrDefault();
-        bool valid = VerifyPassword(password, row.Hash ?? HashPassword("constant-time-dummy-password"));
+        bool valid = VerifyPassword(password, row.Hash ?? DummyPasswordHash);
         return valid && !row.Disabled && row.Id is not null ? FindUser(row.Id) : null;
     }
 
@@ -99,8 +100,15 @@ public sealed partial class Store
         try
         {
             string[] pieces = hash.Split(':');
-            return CryptographicOperations.FixedTimeEquals(Convert.FromBase64String(pieces[1]),
-                Rfc2898DeriveBytes.Pbkdf2(value, Convert.FromBase64String(pieces[0]), PasswordHashIterations, HashAlgorithmName.SHA256, 32));
+            if (pieces.Length != 2)
+            {
+                return false;
+            }
+            byte[] salt = Convert.FromBase64String(pieces[0]);
+            byte[] expected = Convert.FromBase64String(pieces[1]);
+            return salt.Length == 16 && expected.Length == 32
+                && CryptographicOperations.FixedTimeEquals(expected,
+                    Rfc2898DeriveBytes.Pbkdf2(value, salt, PasswordHashIterations, HashAlgorithmName.SHA256, 32));
         }
         catch (FormatException)
         {

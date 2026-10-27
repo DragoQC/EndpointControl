@@ -212,7 +212,7 @@ device once even when multiple disks are nearly full.
 
 ```bash
 dotnet test tests/MeshAll.Tests/MeshAll.Tests.csproj
-node --test tests/desktop-session.test.mjs tests/remote-session.test.mjs tests/screen-consent.test.cjs tests/consent-dialog.test.cjs tests/notifybar.test.cjs tests/inventory.test.cjs
+node --test tests/desktop-session.test.mjs tests/remote-session.test.mjs tests/screen-consent.test.cjs tests/consent-dialog.test.cjs tests/notifybar.test.cjs tests/inventory.test.cjs tests/guacamole-protocol.test.mjs
 python3 tests/source_packaging.py
 python3 -O tests/native_artifact_import.py
 dotnet format whitespace MeshAll.slnx --verify-no-changes --no-restore

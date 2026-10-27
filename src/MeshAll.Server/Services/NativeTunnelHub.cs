@@ -113,13 +113,11 @@ public sealed class NativeTunnelHub
             pending.TryRemove(id, out _);
             if (!returned)
             {
-                if (slot.Connected.Task.IsCompletedSuccessfully)
+                // Cancellation and connection race for the same completion source.
+                // Cancel first; if a connection already won, this caller must release it.
+                if (!slot.Connected.TrySetCanceled() && slot.Connected.Task.IsCompletedSuccessfully)
                 {
                     await slot.Connected.Task.Result.DisposeAsync();
-                }
-                else
-                {
-                    slot.Connected.TrySetCanceled();
                 }
             }
         }

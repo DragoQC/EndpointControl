@@ -13,6 +13,8 @@ public sealed class StreamSession : IAsyncDisposable
     private readonly CancellationTokenSource stop = new();
     private readonly SemaphoreSlim write = new(1);
     private readonly Task reading;
+    private readonly object disposalGate = new();
+    private Task? disposal;
 
     private StreamSession(string id, Stream input, Stream output, Func<ValueTask> close, Action<int, int>? resize, Func<AgentMessage, Task> send)
     {
@@ -46,11 +48,20 @@ public sealed class StreamSession : IAsyncDisposable
         }
     }
 
-    public static Task<StreamSession> TerminalAsync(string id, bool powershell, Func<AgentMessage, Task> send, CancellationToken ct)
+    public static async Task<StreamSession> TerminalAsync(string id, bool powershell, Func<AgentMessage, Task> send, CancellationToken ct)
     {
-        NativeTerminal terminal = NativeTerminal.Start(powershell);
         ct.ThrowIfCancellationRequested();
-        return Task.FromResult(new StreamSession(id, terminal.Input, terminal.Output, terminal.DisposeAsync, terminal.Resize, send));
+        NativeTerminal terminal = NativeTerminal.Start(powershell);
+        try
+        {
+            ct.ThrowIfCancellationRequested();
+            return new StreamSession(id, terminal.Input, terminal.Output, terminal.DisposeAsync, terminal.Resize, send);
+        }
+        catch
+        {
+            await terminal.DisposeAsync();
+            throw;
+        }
     }
 
     private async Task ReadAsync(string id, Func<AgentMessage, Task> send)
@@ -95,23 +106,39 @@ public sealed class StreamSession : IAsyncDisposable
 
     public void Resize(int columns, int rows) => resize?.Invoke(Math.Clamp(columns, 20, 300), Math.Clamp(rows, 5, 150));
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
+    {
+        lock (disposalGate)
+        {
+            return new(disposal ??= DisposeCoreAsync());
+        }
+    }
+
+    private async Task DisposeCoreAsync()
     {
         await stop.CancelAsync();
-        await close();
-        input.Dispose();
-        if (!ReferenceEquals(input, output))
-        {
-            output.Dispose();
-        }
-
         try
         {
-            await reading.WaitAsync(TimeSpan.FromSeconds(5));
+            await close();
         }
-        catch (TimeoutException)
+        finally
         {
+            input.Dispose();
+            if (!ReferenceEquals(input, output))
+            {
+                output.Dispose();
+            }
+            try
+            {
+                await reading.WaitAsync(TimeSpan.FromSeconds(5));
+            }
+            catch (TimeoutException)
+            {
+            }
+            finally
+            {
+                stop.Dispose();
+            }
         }
-        stop.Dispose();
     }
 }

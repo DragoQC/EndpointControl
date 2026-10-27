@@ -5,8 +5,21 @@ using MeshAll.Shared;
 
 namespace MeshAll.Server.Services;
 
+public interface INativeMsiBuilder
+{
+    bool Available
+    {
+        get;
+    }
+    string FileName
+    {
+        get;
+    }
+    Task<byte[]> BuildAsync(byte[] executable, string notices, CancellationToken cancellationToken = default);
+}
+
 /// <summary>Builds a self-contained MSI locally, without sending enrollment data to another service.</summary>
-public sealed class NativeMsiBuilder(IConfiguration configuration, ILogger<NativeMsiBuilder> logger)
+public sealed class NativeMsiBuilder(IConfiguration configuration, ILogger<NativeMsiBuilder> logger) : INativeMsiBuilder
 {
     private readonly SemaphoreSlim gate = new(1);
     private string Compiler => configuration["MeshAll:MsiCompilerPath"] ?? "/usr/bin/wixl";
@@ -47,11 +60,17 @@ public sealed class NativeMsiBuilder(IConfiguration configuration, ILogger<Nativ
                 "-q", "UPDATE `ServiceInstall` SET `ErrorControl` = 32769 WHERE `ServiceInstall` = 'InstallAgentService'"],
                 directory.FullName, timeout.Token);
             string package = Path.Combine(directory.FullName, "agent.msi");
-            if (!File.Exists(package) || new FileInfo(package).Length > 64 * 1024 * 1024)
+            if (!File.Exists(package) || new FileInfo(package).Length is < 512 or > 64 * 1024 * 1024)
             {
                 throw new IOException("MSI packaging did not produce a valid package.");
             }
-            return await File.ReadAllBytesAsync(package, timeout.Token);
+            byte[] bytes = await File.ReadAllBytesAsync(package, timeout.Token);
+            if (bytes.Length is < 512 or > 64 * 1024 * 1024
+                || !bytes.AsSpan(0, 8).SequenceEqual(new byte[] { 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1 }))
+            {
+                throw new IOException("MSI packaging did not produce a valid package.");
+            }
+            return bytes;
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {

@@ -1,4 +1,5 @@
 using System.Net;
+using System.Buffers;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
@@ -171,63 +172,79 @@ public sealed class ProtocolWorker(IConfiguration configuration)
         await stream.WriteAsync(Encoding.UTF8.GetBytes(value), ct);
         await stream.FlushAsync(ct);
     }
-    private static async Task<string[]> ReadAsync(Stream reader, CancellationToken ct)
+    internal static async Task<string[]> ReadAsync(Stream reader, CancellationToken ct)
     {
         List<string> result = new List<string>();
         byte[] one = new byte[1];
+        byte[] character = new byte[4];
         int instructionBytes = 0;
+        async Task<byte> ReadByte()
+        {
+            await reader.ReadExactlyAsync(one, ct);
+            if (++instructionBytes > 65536)
+            {
+                throw new IOException("Protocol instruction exceeds the size limit.");
+            }
+            return one[0];
+        }
         while (result.Count < 512)
         {
             int length = 0;
             int digits = 0;
             while (true)
             {
-                if (await reader.ReadAsync(one, ct) != 1)
+                byte digit = await ReadByte();
+                if (digit == '.')
                 {
-                    throw new IOException("Protocol worker closed the connection.");
-                }
-
-                if (one[0] == '.')
-                {
+                    if (digits == 0)
+                    {
+                        throw new IOException("Invalid protocol instruction.");
+                    }
                     break;
                 }
 
-                if (one[0] is < 48 or > 57 || length > 1638 || ++digits > 5)
+                if (digit is < 48 or > 57 || length > 1638 || ++digits > 5)
                 {
                     throw new IOException("Invalid protocol instruction.");
                 }
 
-                length = checked(length * 10 + one[0] - '0');
+                length = checked(length * 10 + digit - '0');
             }
-            instructionBytes += length;
-            if (length > 16384 || instructionBytes > 65536)
+            if (length > 16384)
             {
                 throw new IOException("Protocol instruction exceeds the size limit.");
             }
-            byte[] text = new byte[length];
-            int offset = 0;
-            while (offset < length)
+            using MemoryStream text = new();
+            for (int index = 0; index < length; index++)
             {
-                int count = await reader.ReadAsync(text.AsMemory(offset), ct);
-                if (count == 0)
+                character[0] = await ReadByte();
+                int bytes = character[0] switch
                 {
-                    throw new IOException("Protocol worker closed the connection.");
+                    < 0x80 => 1,
+                    >= 0xC2 and <= 0xDF => 2,
+                    >= 0xE0 and <= 0xEF => 3,
+                    >= 0xF0 and <= 0xF4 => 4,
+                    _ => throw new IOException("Invalid UTF-8 protocol instruction.")
+                };
+                if ((instructionBytes += bytes - 1) > 65536)
+                {
+                    throw new IOException("Protocol instruction exceeds the size limit.");
                 }
-
-                offset += count;
+                await reader.ReadExactlyAsync(character.AsMemory(1, bytes - 1), ct);
+                if (Rune.DecodeFromUtf8(character.AsSpan(0, bytes), out _, out int consumed) != OperationStatus.Done || consumed != bytes)
+                {
+                    throw new IOException("Invalid UTF-8 protocol instruction.");
+                }
+                text.Write(character, 0, bytes);
             }
-            result.Add(Encoding.UTF8.GetString(text));
-            if (await reader.ReadAsync(one, ct) != 1)
-            {
-                throw new IOException("Protocol worker closed the connection.");
-            }
-
-            if (one[0] == ';')
+            result.Add(Encoding.UTF8.GetString(text.GetBuffer(), 0, (int)text.Length));
+            byte separator = await ReadByte();
+            if (separator == ';')
             {
                 return result.ToArray();
             }
 
-            if (one[0] != ',')
+            if (separator != ',')
             {
                 throw new IOException("Invalid protocol instruction separator.");
             }

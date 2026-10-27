@@ -240,7 +240,7 @@ public sealed class NativeAgentHub
                 await Send(Packet(11, [0, 0]));
             }
         }
-        catch (Exception ex) when (ex is IOException or WebSocketException or OperationCanceledException or CryptographicException or ArgumentException or UnauthorizedAccessException)
+        catch (Exception ex) when (ex is IOException or WebSocketException or OperationCanceledException or CryptographicException or ArgumentException or UnauthorizedAccessException or JsonException)
         {
             logger.LogInformation("Native agent connection ended: {Reason}", ex.Message);
             if (!authenticated)
